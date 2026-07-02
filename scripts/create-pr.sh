@@ -82,7 +82,7 @@ echo "branch: $BRANCH ($HTTP)"
 # ---------------------------------------------------------------------------
 # 3. Get existing file SHA on main (empty string if new file)
 # ---------------------------------------------------------------------------
-FILE_SHA=$(curl -sf "$API/repos/$REPO/contents/${FILE_PATH}" \
+FILE_SHA=$(curl -sf "$API/repos/$REPO/contents/${FILE_PATH}?ref=${BRANCH}" \
     -H "$(auth)" \
     | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('sha',''))" 2>/dev/null || true)
 
