@@ -67,7 +67,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_IMAGE=ghcr.io/nousresearch/hermes-agent:main
+            BASE_IMAGE=ghcr.io/johanmillberg/hermes-agent:main
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

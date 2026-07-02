@@ -6,7 +6,7 @@
 # The training plugin and coach-brain knowledge are baked into the image.
 # User-specific data (API keys, workout cache) lives on the PVC at /opt/data.
 
-ARG BASE_IMAGE=ghcr.io/nousresearch/hermes-agent:main
+ARG BASE_IMAGE=ghcr.io/johanmillberg/hermes-agent:main
 FROM ${BASE_IMAGE}
 
 # Switch to root for plugin installation
