@@ -43,32 +43,32 @@ spec:
 
               # Model provider
               if [ -n "${HERMES_INFERENCE_PROVIDER:-}" ]; then
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.provider '$HERMES_INFERENCE_PROVIDER'"
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set model.provider "$HERMES_INFERENCE_PROVIDER"
               fi
               if [ -n "${HERMES_INFERENCE_MODEL:-}" ]; then
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.default '$HERMES_INFERENCE_MODEL'"
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set model.default "$HERMES_INFERENCE_MODEL"
               fi
               if [ -n "${HERMES_INFERENCE_BASE_URL:-}" ]; then
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.base_url '$HERMES_INFERENCE_BASE_URL'"
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set model.base_url "$HERMES_INFERENCE_BASE_URL"
               fi
 
               # Auxiliary tasks use Flash model (cheap)
               for t in compression curator title_generation triage_specifier \
                        profile_describer approval mcp skills_hub web_extract vision; do
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go"
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.base_url '$HERMES_INFERENCE_BASE_URL'"
-                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.model deepseek-v4-flash"
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.base_url "$HERMES_INFERENCE_BASE_URL"
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model deepseek-v4-flash
               done
 
               # Memory limits — enough for several user profiles
-              su hermes -c "/opt/hermes/.venv/bin/hermes config set memory.memory_char_limit 8000"
-              su hermes -c "/opt/hermes/.venv/bin/hermes config set memory.user_char_limit 12000"
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set memory.memory_char_limit 8000
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set memory.user_char_limit 12000
 
               # Loop safety
-              su hermes -c "/opt/hermes/.venv/bin/hermes config set tool_loop_guardrails.hard_stop_enabled true"
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tool_loop_guardrails.hard_stop_enabled true
 
               # Discord platform toolsets: members get training tools only
-              su hermes -c "/opt/hermes/.venv/bin/hermes config set tools.discord.enabled '[\"training\",\"weather\",\"memory\",\"skills\",\"clarify\"]'"
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tools.discord.enabled '["training","weather","memory","skills","clarify"]'
 
               # Discord channel skill binding: auto-load coaching skill in #coach
               # This is set via the gateway config extra, not hermes config set.
