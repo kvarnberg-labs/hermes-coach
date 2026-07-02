@@ -1,0 +1,49 @@
+---
+# Sleep Optimization for Endurance Athletes
+# Sources: Halson (2014), Fullagar et al. (2015), Lastella et al. (2015),
+#          Simpson et al. (2017), Vitale et al. (2019).
+
+sleep_optimization:
+
+  overview:
+    description: >
+      Sleep is the most potent recovery tool available. Training adaptations —
+      muscle repair, glycogen restoration, hormone release (GH, testosterone) —
+      occur predominantly during deep sleep. Chronic sleep restriction
+      (< 7h/night) impairs endurance performance, increases injury risk,
+      and blunts training adaptations.
+    minimum: "7–9 hours/night for athletes in training; 8–10h during heavy blocks or altitude camps"
+
+  training_impact:
+    evening_sessions: "High-intensity work delays sleep onset. Schedule threshold/VO2max ≥ 3h before bed."
+    early_morning: "Sleep loss from early starts accumulates. Prioritise 7h minimum; 20-min nap if < 6h."
+    altitude: "Sleep quality degrades first 3–5 nights at altitude. Disruption normalises by day 7."
+
+  sleep_deprivation_thresholds:
+    acute_less_than_5h:
+      action: "Skip high-intensity. Easy Z1–Z2 acceptable if athlete feels up to it."
+    chronic_less_than_7h_3_plus_nights:
+      action: "Reduce volume 20–30%. Prioritise sleep over training. Watch HRV for declining trend."
+    rationale: >
+      One night of poor sleep reduces time-to-exhaustion ~10% and elevates RPE.
+      Chronic restriction suppresses immune function — training through it raises illness risk.
+
+  sleep_hygiene:
+    schedule: "Wake and sleep at same time daily (±30 min). Anchors circadian rhythm."
+    temperature: "Bedroom 16–19°C. Core temperature must drop for sleep onset."
+    light: "Dim lights 60 min before bed; no screens. Morning sunlight anchors rhythm."
+    caffeine: "None within 6h of bed. Half-life is 3–7h and varies individually."
+    alcohol: "Avoid within 3h of bed — fragments sleep architecture."
+    nutrition: "Finish large meals ≥ 2h before bed. Small protein snack before bed may aid overnight recovery."
+
+  hrv_cross_check:
+    description: >
+      Morning HRV is sensitive to sleep quality. A drop > 10% below baseline
+      after full sleep suggests incomplete recovery — independent of TSB.
+      Use when TSB is borderline (-10 to -20) and sleep was < 6h.
+    action: "If HRV > 10% below baseline AND sleep < 6h: easy day or rest."
+
+  practical:
+    tracking: "Use wearable trends, not absolute accuracy. Declining 5+ day trend is actionable."
+    travel: "Time-zone shift > 3h: arrive 1 day per hour of shift before race day."
+    shift_workers: "Schedule training around best sleep windows. Consistency > optimisation."
