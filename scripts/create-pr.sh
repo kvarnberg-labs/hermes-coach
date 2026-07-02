@@ -80,7 +80,7 @@ fi
 echo "branch: $BRANCH ($HTTP)"
 
 # ---------------------------------------------------------------------------
-# 3. Get existing file SHA on main (empty string if new file)
+# 3. Get existing file SHA on target branch (empty string if new file)
 # ---------------------------------------------------------------------------
 FILE_SHA=$(curl -sf "$API/repos/$REPO/contents/${FILE_PATH}?ref=${BRANCH}" \
     -H "$(auth)" \
