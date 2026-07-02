@@ -17,7 +17,7 @@ spec:
         app: hermes
       annotations:
         # Bump this string to force a rolling restart without changing config
-        hermes.kvarnberg.io/config-generation: "coach-v2"
+        hermes.kvarnberg.io/config-generation: "coach-v3"
     spec:
       serviceAccountName: hermes-autonomy
       imagePullSecrets:
@@ -160,9 +160,9 @@ spec:
               cpu: "2"
               memory: 4Gi
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 10000
-            runAsGroup: 10000
+            # runAsUser/NonRoot omitted: s6-overlay (the base image init) must start
+            # as root to chown /run, then drops to uid 10000 via suexec internally.
+            # Forcing non-root here causes preinit to fatal on /run ownership.
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
