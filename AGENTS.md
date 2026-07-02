@@ -56,7 +56,7 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 Use the helper script — it handles token resolution, branch creation, file upload, and PR opening in one call:
 
 ```sh
-sh /opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
+/opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
 ```
 
 Arguments:
@@ -71,7 +71,7 @@ It exits 0 and prints the PR URL on success, exits 1 with a clear error on failu
 
 Example:
 ```sh
-sh /opt/data/scripts/create-pr.sh \
+/opt/data/scripts/create-pr.sh \
   coach-brain/heat.yaml \
   add-heat-knowledge \
   "improve: heat acclimatization knowledge" \
