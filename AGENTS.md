@@ -53,30 +53,36 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 
 ## Creating a GitHub PR (in the loop)
 
-Use `curl` with the `GITHUB_TOKEN` env var (fine-grained repo-scoped token).
+Use `curl` with a fine-grained repo-scoped token for `kvarnberg-labs/hermes-coach`.
 
-**Important:** Always check the token with `printenv GITHUB_TOKEN` (not `echo $GITHUB_TOKEN` — the cron terminal sandbox may strip shell variable expansion). If `printenv GITHUB_TOKEN` returns empty, output the diff to ops Discord instead.
+**Important:** Cron terminal sandboxes may strip env-var expansion. Resolve the token like this first:
+
+```sh
+TOKEN="$(printenv GITHUB_TOKEN 2>/dev/null)"
+[ -n "$TOKEN" ] || TOKEN="$(cat /opt/data/.github_token 2>/dev/null)"
+```
+
+If both are empty, output the proposed diff to ops Discord instead and note that a human must apply it.
 
 ```sh
 # 1. Create branch
-curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-lab/git/refs \
-  -H "Authorization: Bearer $GITHUB_TOKEN" \
+curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-coach/git/refs \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"ref\":\"refs/heads/improve/<slug>\",\"sha\":\"<base-sha>\"}"
 
 # 2. Get current file SHA (needed to update)
-curl -s https://api.github.com/repos/kvarnberg-labs/hermes-lab/contents/coach-brain/<file>.yaml \
-  -H "Authorization: Bearer $GITHUB_TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])"
+curl -s https://api.github.com/repos/kvarnberg-labs/hermes-coach/contents/coach-brain/<file>.yaml \
+  -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])"
 
 # 3. Update file (base64-encode content first)
-curl -sX PUT https://api.github.com/repos/kvarnberg-labs/hermes-lab/contents/coach-brain/<file>.yaml \
-  -H "Authorization: Bearer $GITHUB_TOKEN" \
+curl -sX PUT https://api.github.com/repos/kvarnberg-labs/hermes-coach/contents/coach-brain/<file>.yaml \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"message\":\"improve: <title>\",\"content\":\"<base64>\",\"sha\":\"<file-sha>\",\"branch\":\"improve/<slug>\"}"
 
 # 4. Open PR
-curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-lab/pulls \
-  -H "Authorization: Bearer $GITHUB_TOKEN" \
+curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-coach/pulls \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{\"title\":\"improve: <title>\",\"body\":\"<body>\",\"head\":\"improve/<slug>\",\"base\":\"main\"}"
 ```
 
-If `GITHUB_TOKEN` is not set, output the proposed diff to the ops Discord channel instead
-and note that a human needs to apply it.
+Do not use git clone/push inside the loop. Use the GitHub REST API only.
