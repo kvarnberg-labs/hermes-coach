@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hermes
+  strategy:
+    # Recreate avoids two gateway instances fighting over Discord events
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hermes
+      annotations:
+        # Bump this string to force a rolling restart without changing config
+        hermes.kvarnberg.io/config-generation: "coach-v1"
+    spec:
+      serviceAccountName: hermes-autonomy
+      imagePullSecrets:
+        - name: ghcr-registry-secret
+      initContainers:
+        # Ensure PVC ownership is correct before Hermes starts
+        - name: fix-data-permissions
+          image: busybox:1.36
+          command: ["sh", "-c", "chown -R 10000:10000 /opt/data"]
+          volumeMounts:
+            - name: data
+              mountPath: /opt/data
+
+        # Configure hermes settings that can't be set via env vars
+        - name: configure-hermes
+          image: ghcr.io/kvarnberg-labs/hermes-coach:main
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              chown -R 10000:10000 /opt/data
+
+              # Model provider
+              if [ -n "${HERMES_INFERENCE_PROVIDER:-}" ]; then
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.provider '$HERMES_INFERENCE_PROVIDER'"
+              fi
+              if [ -n "${HERMES_INFERENCE_MODEL:-}" ]; then
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.default '$HERMES_INFERENCE_MODEL'"
+              fi
+              if [ -n "${HERMES_INFERENCE_BASE_URL:-}" ]; then
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set model.base_url '$HERMES_INFERENCE_BASE_URL'"
+              fi
+
+              # Auxiliary tasks use Flash model (cheap)
+              for t in compression curator title_generation triage_specifier \
+                       profile_describer approval mcp skills_hub web_extract vision; do
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go"
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.base_url '$HERMES_INFERENCE_BASE_URL'"
+                su hermes -c "/opt/hermes/.venv/bin/hermes config set auxiliary.$t.model deepseek-v4-flash"
+              done
+
+              # Memory limits — enough for several user profiles
+              su hermes -c "/opt/hermes/.venv/bin/hermes config set memory.memory_char_limit 8000"
+              su hermes -c "/opt/hermes/.venv/bin/hermes config set memory.user_char_limit 12000"
+
+              # Loop safety
+              su hermes -c "/opt/hermes/.venv/bin/hermes config set tool_loop_guardrails.hard_stop_enabled true"
+
+              # Discord platform toolsets: members get training tools only
+              su hermes -c "/opt/hermes/.venv/bin/hermes config set tools.discord.enabled '[\"training\",\"weather\",\"memory\",\"skills\",\"clarify\"]'"
+
+              # Discord channel skill binding: auto-load coaching skill in #coach
+              # This is set via the gateway config extra, not hermes config set.
+              # The configmap env var DISCORD_FREE_RESPONSE_CHANNELS handles the channel.
+          envFrom:
+            - configMapRef:
+                name: hermes-config
+          env:
+            - name: HERMES_HOME
+              value: /opt/data
+          volumeMounts:
+            - name: data
+              mountPath: /opt/data
+
+      containers:
+        - name: hermes
+          image: ghcr.io/kvarnberg-labs/hermes-coach:main
+          imagePullPolicy: Always
+          args: ["gateway", "run"]
+          ports:
+            - name: api
+              containerPort: 8642
+          envFrom:
+            - configMapRef:
+                name: hermes-config
+            - secretRef:
+                name: hermes-discord-secret
+            - secretRef:
+                name: hermes-model-secret
+          env:
+            - name: HERMES_HOME
+              value: /opt/data
+          volumeMounts:
+            - name: data
+              mountPath: /opt/data
+          startupProbe:
+            httpGet:
+              path: /health
+              port: api
+            failureThreshold: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: api
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: api
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hermes-data

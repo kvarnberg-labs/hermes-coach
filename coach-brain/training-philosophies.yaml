@@ -1,0 +1,116 @@
+---
+# Training Philosophies
+# These are the evidence-based approaches to structuring endurance training.
+# Hermes should choose the appropriate model per athlete based on their history,
+# goals, and response to training.
+
+training_philosophies:
+
+  polarized:
+    summary: >
+      ~80% of training volume at low intensity (below first lactate threshold),
+      ~20% at high intensity (above second lactate threshold / VO2max zone).
+      Minimal time at moderate intensity (the "grey zone").
+    best_for:
+      - athletes with 8+ hours/week available
+      - experienced athletes with solid aerobic base
+      - performance-focused athletes targeting races
+    evidence: >
+      Strong support from Seiler et al. research on elite endurance athletes.
+      Reduces accumulation of moderate-intensity fatigue while building both
+      aerobic base and top-end capacity.
+    caution: >
+      Requires honest zone enforcement. Many athletes drift into moderate intensity
+      during "easy" sessions without power or HR monitoring.
+
+  pyramidal:
+    summary: >
+      Most volume at low intensity, progressively less at moderate, least at high.
+      Similar to polarized but includes meaningful moderate-intensity work.
+    best_for:
+      - athletes building base fitness
+      - recreational athletes with limited training time
+      - athletes who struggle with the discipline of full polarization
+    evidence: >
+      Most observed distribution in competitive age-group and masters athletes.
+      Pragmatic and sustainable for those who cannot strictly enforce polarized zones.
+
+  threshold_focused:
+    summary: >
+      Significant volume at lactate threshold (FTP ±5%), typically 1–2 sessions/week
+      at threshold alongside moderate base volume.
+    best_for:
+      - time-crunched athletes (5–8 hours/week)
+      - athletes preparing for events where sustained power at threshold matters
+      - athletes with strong aerobic base who can recover from threshold work
+    caution: >
+      High fatigue accumulation. Requires careful monitoring of HRV and
+      wellness scores. Do not stack multiple threshold sessions in one week.
+
+  base_building:
+    summary: >
+      Extended period of predominantly low-intensity aerobic work.
+      Volume prioritized over intensity. Prepares the aerobic system for
+      harder training blocks to follow.
+    duration: 6–12 weeks
+    intensity_distribution: "90–95% zone 1–2, remainder zone 3 max"
+    adaptations:
+      - increased mitochondrial density
+      - improved fat oxidation
+      - enhanced cardiac stroke volume
+      - better capillary density
+
+
+# Periodization Models
+periodization:
+
+  linear:
+    summary: Gradual, progressive increase in load over time. Simple and effective for beginners.
+    cycle: "4 weeks: 3 build + 1 recovery"
+    best_for: novice to intermediate athletes
+
+  block:
+    summary: >
+      Concentrated loading of one fitness quality per block (accumulation →
+      intensification → realization). Used by advanced athletes before key events.
+    phases:
+      accumulation: "High volume, low intensity. 3–5 weeks."
+      intensification: "Moderate volume, high intensity. 2–3 weeks."
+      realization: "Low volume, race-pace work, peak. 1–2 weeks."
+    best_for: advanced athletes with specific race targets
+
+  reverse:
+    summary: >
+      High intensity early in the season when fatigue is low; build volume
+      as the season progresses. Less common but used for time-crunched athletes
+      or in short race-prep blocks.
+
+
+# Intensity Zones
+intensity_zones:
+
+  coggan_power_7_zone:
+    description: Coggan 7-zone power model (most common in cycling)
+    zones:
+      Z1_active_recovery: "< 55% FTP"
+      Z2_endurance: "56–75% FTP"
+      Z3_tempo: "76–90% FTP"
+      Z4_threshold: "91–105% FTP"
+      Z5_vo2max: "106–120% FTP"
+      Z6_anaerobic: "121–150% FTP"
+      Z7_neuromuscular: "> 150% FTP"
+    coaching_note: >
+      Z2 is the primary base-building zone. Most athletes spend too little time
+      here and too much in Z3 (the grey zone). Z4 threshold work is where
+      most structured training sessions should target.
+
+  heart_rate_3_zone:
+    description: Simple 3-zone HR model based on ventilatory thresholds
+    zones:
+      Z1_aerobic: "< VT1 / first threshold"
+      Z2_threshold: "VT1 to VT2"
+      Z3_anaerobic: "> VT2 / second threshold"
+    coaching_note: >
+      Zone 2 HR training (below VT1) is the most underused and most important
+      for long-term aerobic development. If the athlete cannot hold a conversation,
+      they are above Zone 1.

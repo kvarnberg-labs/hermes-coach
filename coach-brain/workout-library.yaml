@@ -1,0 +1,136 @@
+---
+# Workout Library
+# Common structured training sessions for cycling and endurance sports.
+# Each entry describes purpose, execution, and when to prescribe.
+
+workout_library:
+
+  # ── Zone 2 / Aerobic Base ─────────────────────────────────────────────────
+  z2_endurance:
+    name: "Zone 2 Endurance"
+    duration: "60–180 min"
+    intensity: "56–75% FTP / conversational pace"
+    purpose: >
+      Primary aerobic base builder. Stimulates mitochondrial biogenesis,
+      fat oxidation, and cardiac output with low fatigue cost.
+    when_to_prescribe:
+      - "Most training days (polarized model)"
+      - "Day after a hard session"
+      - "Base building phase"
+    execution: >
+      Strict zone enforcement — if HR drifts above zone, reduce power.
+      Longer is better when well-rested. Most athletes do this too hard.
+    avoid_when:
+      - "TSB < -25 (rest instead)"
+
+  # ── Threshold ──────────────────────────────────────────────────────────────
+  sweetspot:
+    name: "Sweetspot Training"
+    intensity: "88–94% FTP"
+    structure: "2–4 × 10–20 min @ sweetspot, 5 min rest"
+    purpose: >
+      High training stress per hour. Builds FTP with less recovery demand
+      than true threshold work.
+    when_to_prescribe:
+      - "Build phase with limited time"
+      - "TSB > -10, athlete well-rested"
+    avoid_when:
+      - "Back-to-back hard days"
+      - "Athlete reports fatigue or poor sleep"
+
+  threshold_intervals:
+    name: "Lactate Threshold Intervals"
+    intensity: "95–105% FTP"
+    structure: "2–4 × 8–20 min @ FTP, 5 min easy between"
+    purpose: "Raise FTP. Recruit more slow-twitch muscle at threshold pace."
+    session_load: "High"
+    recovery_needed: "48 hours"
+    when_to_prescribe:
+      - "Intensification phase"
+      - "TSB between -5 and +10"
+      - "No more than 1–2/week"
+
+  # ── VO2max ─────────────────────────────────────────────────────────────────
+  vo2max_intervals:
+    name: "VO2max Intervals"
+    intensity: "106–120% FTP"
+    structure:
+      classic: "5 × 3–5 min @ 110% FTP, equal rest"
+      short: "30/15s or 40/20s repeats × 20–30 min"
+    purpose: >
+      Elevate VO2max and maximal aerobic power.
+      High adaptation stimulus, high fatigue cost.
+    session_load: "Very high"
+    recovery_needed: "48–72 hours"
+    when_to_prescribe:
+      - "Peak/race-prep phase"
+      - "Athlete has solid threshold base"
+      - "TSB > 0 preferred"
+      - "No more than 1/week during build"
+    avoid_when:
+      - "TSB < -15"
+      - "HRV significantly suppressed"
+      - "Athlete reports fatigue, illness, or motivation issues"
+
+  # ── Anaerobic / Sprints ────────────────────────────────────────────────────
+  anaerobic_capacity:
+    name: "Anaerobic Capacity Intervals"
+    intensity: "> 120% FTP"
+    structure: "8–12 × 30–60 sec max effort, 3–5 min full recovery"
+    purpose: "Develop top-end power, W', and race-winning ability."
+    when_to_prescribe:
+      - "Race preparation for events with repeated attacks or sprints"
+      - "TSB > +5"
+    recovery_needed: "48–72 hours"
+
+  # ── Recovery ───────────────────────────────────────────────────────────────
+  active_recovery:
+    name: "Active Recovery Ride"
+    intensity: "< 55% FTP / very easy spin"
+    duration: "30–45 min"
+    purpose: "Promote blood flow and recovery without adding training stress."
+    when_to_prescribe:
+      - "Day after a race or very hard session"
+      - "TSB < -20 but athlete wants to ride"
+    execution: "If in doubt, do less. Spin easily, keep HR low."
+
+  # ── Long Ride ──────────────────────────────────────────────────────────────
+  long_ride:
+    name: "Long Endurance Ride"
+    duration: "3–6 hours"
+    intensity: "Mostly Z1–Z2, with some Z3 naturally on climbs"
+    purpose: >
+      Build aerobic endurance and fat oxidation. Train the body to
+      sustain effort over race distances.
+    nutrition_note: >
+      60–90g carbohydrate per hour required for efforts > 90 min.
+      Practice race nutrition during long rides.
+    when_to_prescribe:
+      - "Once per week in base and build phases"
+      - "TSB > -10 at minimum"
+      - "Adequate sleep and nutrition available"
+
+
+# Race Preparation
+race_preparation:
+
+  taper_guidelines:
+    description: >
+      Reduce volume 40–60% in the final 1–2 weeks before an A-race
+      while maintaining intensity. This allows adaptation from the
+      preceding training block to be expressed on race day.
+    typical_taper:
+      1_week_event: "Reduce volume 30–40%, keep 1–2 short intensity sessions"
+      2_week_event: "Week -2: reduce 20%; Week -1: reduce 40–50%"
+      long_event_70_3_or_longer: "2–3 week taper with progressive volume reduction"
+    common_mistake: >
+      Cutting intensity during taper. Maintain short intensity sessions to
+      keep neuromuscular sharpness. Cut volume, not quality.
+
+  race_week:
+    days_out_7: "Last long or moderate session"
+    days_out_5: "Short intensity — 3×5 min @ threshold or 4×1 min @ VO2max"
+    days_out_3: "Easy ride with a few race-pace surges (30–60 sec)"
+    days_out_2: "Easy spin 30–45 min or rest"
+    days_out_1: "Rest or very easy 20 min spin"
+    race_day: "Warm up 20–30 min, including activation efforts"

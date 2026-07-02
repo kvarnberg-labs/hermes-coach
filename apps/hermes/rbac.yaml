@@ -1,0 +1,31 @@
+# Role: allow Hermes to coordinate via Kubernetes Leases (implementation lock)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hermes-autonomy-lease
+  namespace: hermes
+rules:
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hermes-autonomy-lease
+  namespace: hermes
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hermes-autonomy-lease
+subjects:
+  - kind: ServiceAccount
+    name: hermes-autonomy
+    namespace: hermes

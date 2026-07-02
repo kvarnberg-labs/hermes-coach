@@ -1,0 +1,12 @@
+# Sandbox pods have NO network access whatsoever.
+# This is the primary security boundary for generated tool code.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sandbox-default-deny-all
+  namespace: hermes-sandbox
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

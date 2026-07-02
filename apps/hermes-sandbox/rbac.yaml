@@ -1,0 +1,28 @@
+# Grants the hermes-autonomy service account full control over
+# the hermes-sandbox namespace so Hermes can create/delete Jobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hermes-sandbox-admin
+  namespace: hermes-sandbox
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hermes-sandbox-admin
+  namespace: hermes-sandbox
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hermes-sandbox-admin
+subjects:
+  - kind: ServiceAccount
+    name: hermes-autonomy
+    namespace: hermes

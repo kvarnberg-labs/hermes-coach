@@ -1,0 +1,78 @@
+# Default-deny all ingress and egress for the hermes namespace,
+# then explicitly allow what Hermes needs:
+#   - DNS (kube-dns, UDP+TCP 53)
+#   - k8s API server (for sandbox Job submission)
+#   - All outbound HTTPS (model provider, intervals.icu, Open-Meteo, Discord, GitHub)
+#   - Inbound health-check from kube-system probes
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-default-deny
+  namespace: hermes
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-allow-egress
+  namespace: hermes
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # kube-dns
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # k8s API server (for sandbox Job submission)
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # All outbound HTTPS (model provider, Discord, intervals.icu, Open-Meteo, GHCR)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-allow-health-ingress
+  namespace: hermes
+spec:
+  podSelector:
+    matchLabels:
+      app: hermes
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow kubelet health probes from any source in the cluster
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 8642

@@ -1,0 +1,82 @@
+---
+# Nutrition Guidelines for Endurance Athletes
+# Evidence-based nutritional guidance to support training and racing.
+
+nutrition:
+
+  daily_baseline:
+    carbohydrates:
+      easy_day: "3–5 g/kg body weight"
+      moderate_training: "5–7 g/kg"
+      hard_training_or_long: "7–10 g/kg"
+      note: "Carbohydrate needs scale with training load. Do not restrict carbs on hard training days."
+    protein:
+      general: "1.6–2.0 g/kg body weight per day"
+      heavy_training_or_masters: "2.0–2.4 g/kg"
+      note: "Distribute evenly across meals. 25–40g per meal maximises muscle protein synthesis."
+    fat:
+      minimum: "1.0 g/kg body weight"
+      note: "Adequate fat supports hormone production. Do not go below 20% of total calories."
+    hydration:
+      baseline: "35–45 ml/kg body weight per day"
+      add_for_training: "500–750 ml per hour of exercise"
+
+  during_exercise:
+    under_60_min:
+      carbs_needed: "None required (water sufficient)"
+    60_to_90_min:
+      carbs_needed: "30–60g/hour"
+      sources: ["energy gels", "sports drink", "banana", "rice cakes"]
+    over_90_min:
+      carbs_needed: "60–90g/hour"
+      multiple_sources: >
+        Use glucose + fructose combination (2:1 ratio) to maximise absorption.
+        Single carbohydrate sources max out at ~60g/hour.
+      sources: ["gel + sports drink", "multiple gel flavours", "chews + drink"]
+    long_events_over_3h:
+      carbs_needed: "up to 90–120g/hour (trained gut only)"
+      note: "Gut training required. Start at 60g/hour and train the gut up over weeks."
+    sodium:
+      rate: "300–1000mg/hour depending on sweat rate and heat"
+      importance: "Prevents hyponatremia in events > 3 hours. Critical in heat."
+
+  pre_workout:
+    3_4_hours_before: "Full meal: carbs + protein + minimal fat/fibre"
+    1_2_hours_before: "Small snack: 30–60g carbs, low fat and fibre"
+    under_60_min: "Small snack or nothing if not hungry"
+    caffeine: "3–6 mg/kg body weight, 45–60 min before. Proven ergogenic."
+
+  post_workout:
+    recovery_window: "Within 30–60 minutes after hard sessions"
+    carbs: "1–1.2 g/kg body weight"
+    protein: "25–40g (0.3–0.4 g/kg)"
+    example: "500ml chocolate milk, or rice + chicken, or recovery shake"
+    note: >
+      Recovery nutrition is most important after sessions > 90 min or
+      when another session follows within 8 hours. Less critical for
+      easy sessions or when next session is > 24 hours away.
+
+  weight_management:
+    caution: >
+      Avoid caloric restriction during heavy training blocks.
+      Low Energy Availability (LEA) impairs adaptation, hormonal function,
+      bone density, and immune function. RED-S (Relative Energy Deficiency
+      in Sport) is a serious risk in athletes who restrict intake.
+    if_weight_loss_is_goal: >
+      Pursue modest deficit (250–500 kcal/day) only during easy training blocks.
+      Maintain adequate protein and carbohydrates to support training quality.
+      Never cut carbs on hard training days.
+
+  supplements:
+    evidence_based:
+      caffeine: "3–6 mg/kg, well-established ergogenic"
+      creatine: "3–5g/day, useful for strength training. Limited benefit for pure endurance."
+      beetroot_nitrate: "300–500mg nitrate 2–3 hours pre-exercise. Small but real benefit."
+      vitamin_d: "Supplement if deficient (common in northern latitudes, indoors athletes)"
+      iron: "Supplement only if blood tests confirm deficiency. Excess is harmful."
+    limited_evidence:
+      beta_alanine: "Some benefit for 1–4 min maximal efforts. Causes paraesthesia."
+      sodium_bicarbonate: "May help in events 1–7 min. GI side effects common."
+    not_recommended:
+      - "Most other supplements lack sufficient evidence for endurance athletes"
+      - "Always check for prohibited substances if competing at regulated level"

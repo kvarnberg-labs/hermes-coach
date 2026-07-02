@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-config
+  namespace: hermes
+data:
+  HERMES_UID: "10000"
+  HERMES_GID: "10000"
+
+  # Model provider — opencode-go (same as homelab)
+  HERMES_INFERENCE_PROVIDER: "opencode-go"
+  HERMES_INFERENCE_MODEL: "deepseek-v4-pro"
+  HERMES_INFERENCE_BASE_URL: "https://opencode.ai/zen/go/v1"
+  OPENCODE_GO_BASE_URL: "https://opencode.ai/zen/go/v1"
+
+  # API server — enabled so kubelet health probes work
+  API_SERVER_ENABLED: "true"
+  API_SERVER_HOST: "0.0.0.0"
+  API_SERVER_PORT: "8642"
+
+  # Reduce noise in long-running gateway
+  HERMES_BACKGROUND_NOTIFICATIONS: "result"
+
+  # Discord — DM-only bot. Athletes message Hermes directly.
+  # No channel or role config needed; access is controlled via
+  # DISCORD_ALLOWED_USERS in the sealed secret (one ID per athlete).
+  DISCORD_REQUIRE_MENTION: "false"

@@ -1,0 +1,83 @@
+---
+# Injury Return-to-Training Guidelines
+# Protocols for common cycling and endurance sport injuries.
+# IMPORTANT: Always recommend medical evaluation for anything more than minor soreness.
+
+injury_return_to_training:
+
+  general_principles:
+    - "Never train through sharp, acute, or worsening pain."
+    - "Return to training volume before intensity."
+    - "Reduce load by 50% when returning after any injury-related rest > 5 days."
+    - "Increase load no faster than 10% per week during return."
+    - "Pain > 3/10 during exercise: stop and rest."
+    - "Pain > 5/10 at any time: seek medical evaluation."
+
+  knee_pain:
+    types:
+      patellofemoral:
+        description: "Anterior knee pain, often worse climbing stairs or seated climbing."
+        return_protocol:
+          - "Rest until pain-free at rest (typically 3–7 days)."
+          - "Begin with flat, easy spinning at high cadence (90+ rpm)."
+          - "Avoid seated climbing until pain-free for 2 weeks."
+          - "Check bike fit — saddle height is the most common cause."
+          - "Strengthen glutes and VMO off the bike."
+        red_flags: ["Swelling", "Locking", "Giving way"]
+        medical_referral: "If not improving within 2 weeks"
+
+      it_band:
+        description: "Lateral knee pain, often begins after 20–40 min of riding."
+        return_protocol:
+          - "Rest 5–10 days."
+          - "Foam roll IT band and glutes daily."
+          - "Check cleat position and saddle height."
+          - "Return with shorter rides, increase 10 min/session."
+        medical_referral: "If pain persists > 3 weeks"
+
+  back_pain:
+    description: "Lower back pain during or after riding."
+    return_protocol:
+      - "Reduce ride duration by 50%."
+      - "Check bike fit — saddle drop and reach are common causes."
+      - "Strengthen core and hip flexors off the bike."
+      - "Avoid long climbs seated until pain resolves."
+    red_flags:
+      - "Radiating pain into legs (possible nerve involvement)"
+      - "Numbness or tingling"
+    medical_referral: "Immediately for red flags, within 2 weeks for persistent pain"
+
+  achilles_tendinopathy:
+    description: "Achilles pain in cyclists who also run."
+    return_protocol:
+      - "Complete rest from running for 2 weeks minimum."
+      - "Cycling generally tolerated if pain-free on bike."
+      - "Begin eccentric heel drops when pain < 3/10."
+      - "Return to running: walk/run intervals before continuous running."
+    medical_referral: "If not improving within 3 weeks"
+
+  illness:
+    above_the_neck_rule: >
+      Runny nose, mild sore throat only (no fever, no body aches):
+      easy activity generally acceptable. Reduce intensity significantly.
+    below_the_neck_or_fever: >
+      Chest symptoms, fever, body aches, GI illness: complete rest.
+      Do not train until fever-free for 48 hours.
+    return_after_illness:
+      - "Day 1–2: easy walking or very light activity only."
+      - "Day 3–4: easy Z1 cycling if feeling well."
+      - "Day 5–7: return to normal easy training."
+      - "Week 2: gradual return to intensity."
+    post_viral_caution: >
+      After COVID-19, flu, or any significant viral illness: do not rush
+      return to intensity. Myocarditis risk is real. If experiencing
+      breathlessness, chest tightness, or abnormal HR response during
+      easy exercise, stop and seek medical evaluation.
+
+  general_overuse:
+    description: "Non-specific muscular soreness or fatigue without acute injury."
+    management:
+      - "Reduce load 30–50% for 3–5 days."
+      - "Check TSB — if < -20, prescribed rest, not just volume reduction."
+      - "Ensure 7–9 hours sleep and adequate protein (1.6–2.0 g/kg/day)."
+      - "If not resolved in 5–7 days, treat as potential overtraining syndrome."

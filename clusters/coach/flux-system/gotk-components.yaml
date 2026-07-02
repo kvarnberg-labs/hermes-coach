@@ -1,0 +1,2 @@
+# Placeholder — replaced by `flux bootstrap github` with actual Flux components.
+# Run: flux bootstrap github --owner=kvarnberg-labs --repository=hermes-coach --branch=main --path=clusters/coach --personal
