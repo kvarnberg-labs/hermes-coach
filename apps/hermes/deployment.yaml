@@ -81,7 +81,8 @@ spec:
               # Copy scan-signals.sh to the user scripts dir where hermes cron can find it.
               mkdir -p /opt/data/scripts
               cp /opt/hermes/scripts/scan-signals.sh /opt/data/scripts/scan-signals.sh
-              chmod +x /opt/data/scripts/scan-signals.sh
+              cp /opt/hermes/scripts/create-pr.sh /opt/data/scripts/create-pr.sh
+              chmod +x /opt/data/scripts/scan-signals.sh /opt/data/scripts/create-pr.sh
 
               # Expose GitHub token to cron/tool subprocesses via a file because
               # some cron terminal sandboxes strip env-var expansion.

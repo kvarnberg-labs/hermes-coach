@@ -77,12 +77,18 @@ See `CONTRACT.md` for the full rubric. Quick version:
 
 ## Creating the PR
 
-See `AGENTS.md` for the exact `curl` commands. Use env var `GITHUB_TOKEN`.
+Run the helper script (handles everything: token, branch, upload, PR):
 
-If `GITHUB_TOKEN` is not set:
-1. Log the proposed changes as a diff in the ops channel
-2. Note "GITHUB_TOKEN not configured — manual PR required"
-3. Mark the signal as `pending-manual` instead of `resolved`
+```sh
+sh /opt/data/scripts/create-pr.sh \
+  <file-path> \
+  <branch-slug> \
+  "improve: <one-line description>" \
+  "<PR body: what changed, why, which signal>"
+```
+
+The script exits 0 and prints the PR URL. Capture and log it.
+If it exits non-zero, fall back: post the diff to ops Discord and mark the signal `pending-manual`.
 
 PR title format: `improve: <one-line description>`
 PR body: what changed, why (evidence), which signal it addresses.
@@ -93,6 +99,6 @@ PR body: what changed, why (evidence), which signal it addresses.
 ## YYYY-MM-DD HH:MM UTC
 - Signal: <signal file or "backlog item X">
 - Action: <what was done>
-- PR: <URL or "N/A — GITHUB_TOKEN not set">
+- PR: <URL from create-pr.sh, or "N/A — script failed: <reason>">
 - Outcome: <submitted | no-action | blocked>
 ```

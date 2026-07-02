@@ -53,36 +53,29 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 
 ## Creating a GitHub PR (in the loop)
 
-Use `curl` with a fine-grained repo-scoped token for `kvarnberg-labs/hermes-coach`.
-
-**Important:** Cron terminal sandboxes may strip env-var expansion. Resolve the token like this first:
+Use the helper script — it handles token resolution, branch creation, file upload, and PR opening in one call:
 
 ```sh
-TOKEN="$(printenv GITHUB_TOKEN 2>/dev/null)"
-[ -n "$TOKEN" ] || TOKEN="$(cat /opt/data/.github_token 2>/dev/null)"
+sh /opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
 ```
 
-If both are empty, output the proposed diff to ops Discord instead and note that a human must apply it.
+Arguments:
+- `file-path` — path relative to repo root, e.g. `coach-brain/heat.yaml`
+- `branch-slug` — short identifier, e.g. `add-heat-knowledge`
+- `pr-title` — must start with `improve: `
+- `pr-body` — optional; defaults to the title
 
+The file must exist at `$HERMES_HOME/<file-path>` (i.e. `/opt/data/<file-path>`).
+The script reads the token from `GITHUB_TOKEN` env or `/opt/data/.github_token`.
+It exits 0 and prints the PR URL on success, exits 1 with a clear error on failure.
+
+Example:
 ```sh
-# 1. Create branch
-curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-coach/git/refs \
-  -H "Authorization: Bearer $TOKEN" \
-  -d "{\"ref\":\"refs/heads/improve/<slug>\",\"sha\":\"<base-sha>\"}"
-
-# 2. Get current file SHA (needed to update)
-curl -s https://api.github.com/repos/kvarnberg-labs/hermes-coach/contents/coach-brain/<file>.yaml \
-  -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['sha'])"
-
-# 3. Update file (base64-encode content first)
-curl -sX PUT https://api.github.com/repos/kvarnberg-labs/hermes-coach/contents/coach-brain/<file>.yaml \
-  -H "Authorization: Bearer $TOKEN" \
-  -d "{\"message\":\"improve: <title>\",\"content\":\"<base64>\",\"sha\":\"<file-sha>\",\"branch\":\"improve/<slug>\"}"
-
-# 4. Open PR
-curl -sX POST https://api.github.com/repos/kvarnberg-labs/hermes-coach/pulls \
-  -H "Authorization: Bearer $TOKEN" \
-  -d "{\"title\":\"improve: <title>\",\"body\":\"<body>\",\"head\":\"improve/<slug>\",\"base\":\"main\"}"
+sh /opt/data/scripts/create-pr.sh \
+  coach-brain/heat.yaml \
+  add-heat-knowledge \
+  "improve: heat acclimatization knowledge" \
+  "Adds heat.yaml. Evidence: Lorenzo et al. (2010)."
 ```
 
-Do not use git clone/push inside the loop. Use the GitHub REST API only.
+If the script fails (no token, API error), output the proposed diff to ops Discord and note that a human must apply it.
