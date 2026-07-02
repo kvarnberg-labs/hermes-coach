@@ -15,7 +15,7 @@ Improvements target:
 3. **Plan** — pick ONE high-value improvement; log intent to `worklog.md` (date + intent)
 4. **Execute** — edit one `coach-brain/*.yaml` file OR develop one new tool
 5. **Verify** — apply the rubric below; fail fast if it doesn't pass
-6. **Commit** — branch `improve/<slug>`, push, open PR via GitHub REST API (see AGENTS.md)
+6. **Commit** — run `/opt/data/scripts/create-pr.sh` directly to branch, upload the file, and open the PR (see AGENTS.md)
 7. **Deliver** — post PR link + one-line summary to the ops Discord channel
 8. **Stop** — one PR per run; append completion to `worklog.md`; mark signal as `resolved`
 
@@ -46,15 +46,21 @@ Improvements target:
 - Do NOT modify auth, security, deployment manifests, or test files
 - Do NOT expose new tools with `toolset="training"` — use `"self-improve"` or a topic-specific set
 - Do NOT make multiple PRs in one run
+- Do NOT wrap PR creation in `sh -c`, `python -c`, or heredocs; cron policy blocks wrapper execution
 
 ## Active backlog
 
-- [ ] Add altitude acclimatization knowledge (hypoxic adaptation, ~3-week timeline, AMS warning)
-- [ ] Add heat training adaptation (plasma volume, core temp tolerance, acclimatization protocol)
-- [ ] Add female athlete / menstrual cycle periodization guidance
-- [ ] Add cold weather training adaptations
-- [ ] Add response-parser unit tests for `get_wellness` and `get_recent_activities`
-- [ ] Fix SKILL.md TSB threshold cross-reference (already -20 in SKILL.md and coach-brain; verify consistency)
+- [x] Add altitude acclimatization knowledge
+- [x] Add heat training adaptation
+- [x] Add female athlete / menstrual cycle periodization guidance
+- [x] Add cold weather training adaptations
+- [x] Add strength training for cyclists
+- [x] Add tapering and race preparation knowledge
+- [x] Fix SKILL.md TSB threshold cross-reference
+- [ ] No standing backlog. Use `loops/signals/` or the conversation scan for the next actionable improvement.
+
+Blocked by loop boundary:
+- Response-parser unit tests for `get_wellness` and `get_recent_activities` require test-file edits, but this loop may only edit `coach-brain/` or create tools via `develop_tool`.
 
 ## Timeline
 
