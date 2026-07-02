@@ -9,7 +9,7 @@ Hermes Coach is an AI endurance cycling coach on Discord. It runs as a k8s Deplo
 (k3s on Hetzner) managed by Flux CD (GitOps). Athletes message the bot via Discord DMs,
 it reads their intervals.icu training data, and gives evidence-based coaching advice.
 
-Source: `github.com/kvarnberg-labs/hermes-lab`
+Source: `github.com/kvarnberg-labs/hermes-coach`
 
 ## Repo layout
 
