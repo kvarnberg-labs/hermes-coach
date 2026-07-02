@@ -24,7 +24,7 @@ if [ -d /opt/hermes/coach-skills ]; then
   done
 fi
 
-# Ensure generated tools directory exists
-mkdir -p "${HERMES_HOME}/plugins/generated"
+# Ensure user plugins directory exists (Hermes discovers plugins from here)
+mkdir -p "${HERMES_HOME}/plugins"
 chown -R hermes:hermes "${HERMES_HOME}/coach-brain" \
-  "${HERMES_HOME}/plugins/generated" 2>/dev/null || true
+  "${HERMES_HOME}/plugins" 2>/dev/null || true

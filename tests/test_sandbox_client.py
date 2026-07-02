@@ -67,7 +67,38 @@ class TestBuildJobManifest:
         assert container["securityContext"]["allowPrivilegeEscalation"] is False
 
 
-class TestDevelopTool:
+class TestRegisterGeneratedTool:
+    def test_writes_plugin_directory(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        # discover_plugins won't be importable outside hermes, patch it out
+        with patch("training.sandbox_client.discover_plugins", create=True):
+            result = sandbox_client._register_generated_tool(
+                "my_tool",
+                "Does something useful.",
+                "def register_tools(ctx): pass\n",
+            )
+        assert result == "ok"
+        plugin_dir = tmp_path / "plugins" / "my_tool"
+        assert (plugin_dir / "plugin.yaml").exists()
+        assert (plugin_dir / "tool.py").exists()
+        assert (plugin_dir / "__init__.py").exists()
+        assert "my_tool" in (plugin_dir / "plugin.yaml").read_text()
+
+    def test_rolls_back_on_error(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        # Pre-populate an existing plugin so rollback has something to restore
+        plugin_dir = tmp_path / "plugins" / "my_tool"
+        plugin_dir.mkdir(parents=True)
+        original = "name: my_tool\n"
+        (plugin_dir / "plugin.yaml").write_text(original)
+
+        # Force failure during write by patching Path.write_text
+        with patch.object(Path, "write_text", side_effect=OSError("disk full")):
+            result = sandbox_client._register_generated_tool("my_tool", "desc", "code")
+        assert result.startswith("Failed to write plugin")
+        # Original plugin.yaml should be restored
+        assert (plugin_dir / "plugin.yaml").read_text() == original
+
     def test_rejects_invalid_tool_name(self):
         result = json.loads(
             sandbox_client.develop_tool(

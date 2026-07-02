@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import importlib.util
 import json
 import logging
 import os
@@ -42,11 +41,40 @@ _JOB_TIMEOUT_SECS = 90  # wall-clock wait before we give up
 _JOB_ACTIVE_DEADLINE = 60  # k8s hard-kills the pod after this many seconds
 
 
-def _generated_dir() -> Path:
+def _plugins_dir() -> Path:
     hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
-    d = hermes_home / "plugins" / "generated"
+    d = hermes_home / "plugins"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def _generated_dir() -> Path:
+    # ponytail: kept for sync-coach-assets.sh compatibility
+    d = _plugins_dir() / "generated"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _plugin_dir(tool_name: str) -> Path:
+    """Return the plugin directory for a generated tool."""
+    return _plugins_dir() / tool_name
+
+
+_PLUGIN_YAML_TEMPLATE = """name: {name}
+version: "1.0"
+author: hermes-coach (generated)
+description: {description}
+"""
+
+_INIT_TEMPLATE = """# Generated plugin — do not edit header
+from __future__ import annotations
+from . import tool as _tool_module
+
+
+def register(ctx) -> None:
+    if hasattr(_tool_module, "register_tools"):
+        _tool_module.register_tools(ctx)
+"""
 
 
 def _job_name(tool_name: str) -> str:
@@ -188,31 +216,45 @@ def _fetch_logs(core_api, pod_name: str) -> str:
         return f"(could not fetch logs: {exc})"
 
 
-def _register_generated_tool(tool_name: str, code: str) -> str:
-    """Write the tool to the generated directory and hot-reload it."""
-    dest = _generated_dir() / f"{tool_name}.py"
-    backup = _generated_dir() / f"{tool_name}.py.bak"
+def _register_generated_tool(tool_name: str, description: str, code: str) -> str:
+    """Write a proper Hermes plugin directory and hot-reload it."""
+    plugin_dir = _plugin_dir(tool_name)
+    backup_dir = _plugins_dir() / f"{tool_name}.bak"
 
-    # Keep a backup for rollback
-    if dest.exists():
-        dest.rename(backup)
+    # Back up existing plugin for rollback
+    if plugin_dir.exists():
+        import shutil
 
-    dest.write_text(code, encoding="utf-8")
-    dest.chmod(0o644)
+        if backup_dir.exists():
+            shutil.rmtree(backup_dir)
+        shutil.copytree(plugin_dir, backup_dir)
 
-    # Attempt hot-load to catch import errors immediately
     try:
-        spec = importlib.util.spec_from_file_location(f"generated.{tool_name}", dest)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
+        plugin_dir.mkdir(parents=True, exist_ok=True)
+        (plugin_dir / "plugin.yaml").write_text(
+            _PLUGIN_YAML_TEMPLATE.format(name=tool_name, description=description),
+            encoding="utf-8",
+        )
+        (plugin_dir / "tool.py").write_text(code, encoding="utf-8")
+        (plugin_dir / "__init__.py").write_text(_INIT_TEMPLATE, encoding="utf-8")
+
+        # Hot-reload via Hermes plugin discovery
+        try:
+            from hermes_cli.plugins import discover_plugins
+
+            discover_plugins(force=True)
+        except Exception as exc:
+            logger.warning("discover_plugins failed (may need restart): %s", exc)
+
+        return "ok"
     except Exception as exc:
         # Roll back
-        dest.unlink(missing_ok=True)
-        if backup.exists():
-            backup.rename(dest)
-        return f"Import error after writing — rolled back: {exc}"
+        import shutil
 
-    return "ok"
+        shutil.rmtree(plugin_dir, ignore_errors=True)
+        if backup_dir.exists():
+            shutil.copytree(backup_dir, plugin_dir)
+        return f"Failed to write plugin — rolled back: {exc}"
 
 
 def develop_tool(
@@ -299,7 +341,7 @@ def develop_tool(
         )
 
     # Tests passed — register the tool
-    result = _register_generated_tool(tool_name, code)
+    result = _register_generated_tool(tool_name, description, code)
     if result != "ok":
         return json.dumps(
             {
@@ -318,7 +360,7 @@ def develop_tool(
                 f"Tool '{tool_name}' deployed successfully. "
                 "It is now available in this session and will persist across restarts."
             ),
-            "tool_path": str(_generated_dir() / f"{tool_name}.py"),
+            "tool_path": str(_plugin_dir(tool_name)),
         }
     )
 
