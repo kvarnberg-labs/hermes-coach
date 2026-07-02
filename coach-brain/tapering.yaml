@@ -1,0 +1,114 @@
+---
+# Tapering & Race Preparation
+# Evidence-based protocols for peaking before key competitions.
+# Sources: Mujika & Padilla (2003), Bosquet et al. (2007),
+#          Mujika (2010), Le Meur et al. (2012), Aubry et al. (2014).
+
+tapering:
+  overview:
+    description: >
+      Tapering is the progressive reduction in training load before a key event
+      to dissipate accumulated fatigue while maintaining fitness. A well-executed
+      taper yields a 2–3% performance improvement — decisive in competitive cycling.
+    physiological_basis:
+      - "Glycogen stores fully replenish"
+      - "Muscle micro-damage repaired"
+      - "Neuromuscular function sharpens (increased peak force)"
+      - "Blood volume and red cell mass increase"
+      - "Hormonal profile normalises (testosterone:cortisol ratio improves)"
+    key_principle: >
+      Reduce volume, maintain intensity, keep frequency near-normal.
+      Cutting intensity is the single most common and costly taper mistake.
+
+  evidence_base:
+    optimal_duration: "8–14 days for most athletes (Mujika meta-analysis, 2003)"
+    volume_reduction: "41–60% progressive reduction yields largest performance gains"
+    intensity: >
+      Keep 1–2 short high-intensity sessions per week. VO2max and threshold
+      adaptations begin to decay after 5–7 days without stimulus.
+    frequency: >
+      Reduce training frequency by no more than 20%. Drastic cuts (> 50%)
+      impair neuromuscular 'feel' on the bike.
+
+  taper_types:
+    linear:
+      description: "Load decreases steadily from start to event day. Simple, well-tolerated."
+      best_for: "First-time taperers, athletes who prefer routine"
+    exponential_fast_decay:
+      description: >
+        Load drops sharply in the first few days, then levels off.
+        Mimics how fatigue dissipates faster than fitness.
+      best_for: "Athletes carrying high fatigue (TSB < -15) into taper"
+    exponential_slow_decay:
+      description: "Load drops gradually — most reduction in final days."
+      best_for: "Athletes concerned about detraining or with very high CTL"
+    step:
+      description: "Abrupt drop to a lower consistent load."
+      best_for: "Short taper (< 7 days) or unplanned events"
+
+  tsb_targets:
+    race_day_optimal: "+5 to +15 for peak performance"
+    A_race: "Up to +25 if athlete tolerates freshness well"
+    warning_negative: >
+      TSB < 0 on race-day morning means taper was insufficient.
+      Extend taper by 2–3 days if TSB is still negative 5 days out.
+    too_fresh: >
+      TSB > +25 risks feeling 'flat'. Include short activation efforts
+      (e.g. 2 × 1 min @ race pace) in the final 3 days.
+
+  event_specific:
+    time_trial: "7–10 day taper. Race-pace efforts 5 and 3 days out."
+    road_race: "7–14 days. Short VO2max session 5 days out; easy group ride for 'feel'."
+    gran_fondo: "10–14 days. Long Z2 ride 7 days out (max 50% of event duration)."
+    stage_race: >
+      5–7 day taper before stage 1. Arrive fresher (TSB +10 to +20) —
+      fatigue accumulates across days. In-race recovery matters as much
+      as pre-race taper (see recovery-heuristics).
+
+  taper_nutrition:
+    carb_loading:
+      description: >
+        For events > 90 min: increase carbohydrate to 8–10 g/kg/day
+        in the final 48–72 hours. Reduced training volume + high CHO intake
+        supercompensates glycogen stores.
+      protocol: "3-day classic (8–10 g/kg with taper) or 1-day modified (10–12 g/kg)"
+    weight_note: >
+      Carb loading adds 1–2 kg water weight (glycogen binds water). This is
+      beneficial — do not restrict during taper. Gain is temporary.
+    hydration: "Increase fluid intake. Urine should be pale yellow on event morning."
+    avoid: >
+      Nothing new on race week — no new foods, supplements, or equipment.
+      Reduce high-fibre foods in final 48h to minimise GI issues.
+
+  psychological:
+    taper_madness:
+      description: >
+        Anxiety, irritability, and feeling of 'losing fitness' during taper.
+        Caused by reduced endorphins and increased free time. Normal and temporary.
+      management:
+        - "Explain that feeling 'flat' 3–5 days out is expected — it resolves"
+        - "Distraction: non-training activities, race logistics planning"
+        - "Short sessions maintain routine without adding load"
+        - "Prioritise 8h minimum sleep (may be disrupted during taper)"
+    mental_prep:
+      - "Visualise the course and key moments (climbs, technical sections)"
+      - "Have a pacing plan; write it down"
+      - "Check all equipment and nutrition 48h before"
+      - "Have a Plan B for weather, mechanical, or bad-leg scenarios"
+
+  common_mistakes:
+    - "Cutting intensity instead of volume (biggest error)"
+    - "Tapering too much: > 60% volume reduction hurts fitness"
+    - "Tapering too little: < 20% volume reduction leaves fatigue"
+    - "Changing routine — new food, equipment, or position on race week"
+    - "Panic training when feeling 'flat' mid-taper"
+    - "Not rehearsing the taper at a B-race before the A-race"
+    - "Over-analysing HRV/TSB daily — expect normal fluctuation"
+
+  post_event:
+    recovery:
+      A_race: "3–7 days easy riding; no intensity for 5 days minimum"
+      B_race: "1–3 days easy; resume normal training when TSB > -5"
+      reverse_taper: >
+        Gradually rebuild volume over 7–10 days. Do not jump straight
+        back to pre-taper load — injury risk is elevated after a full taper.
