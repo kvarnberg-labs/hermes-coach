@@ -78,6 +78,10 @@ spec:
 
               # Register self-improvement cron (idempotent; always runs, Discord delivery optional).
               # SELF_IMPROVE_CHANNEL is optional — the loop still runs and creates PRs without it.
+              # Copy scan-signals.sh to the user scripts dir where hermes cron can find it.
+              mkdir -p /opt/data/scripts
+              cp /opt/hermes/scripts/scan-signals.sh /opt/data/scripts/scan-signals.sh
+              chmod +x /opt/data/scripts/scan-signals.sh
               HOME=/opt/data /opt/hermes/.venv/bin/hermes cron delete self-improve \
                 2>/dev/null || true
               if [ -n "${SELF_IMPROVE_CHANNEL:-}" ]; then
@@ -85,14 +89,14 @@ spec:
                   --name self-improve \
                   --skill self-improvement \
                   --workdir /opt/data \
-                  --script /opt/hermes/scripts/scan-signals.sh \
+                  --script scan-signals.sh \
                   --deliver "discord:${SELF_IMPROVE_CHANNEL}"
               else
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes cron create '0 11 * * *' \
                   --name self-improve \
                   --skill self-improvement \
                   --workdir /opt/data \
-                  --script /opt/hermes/scripts/scan-signals.sh
+                  --script scan-signals.sh
               fi
 
               # Discord platform toolsets: members get training tools only
