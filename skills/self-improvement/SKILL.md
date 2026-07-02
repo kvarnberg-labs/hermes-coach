@@ -77,16 +77,18 @@ See `CONTRACT.md` for the full rubric. Quick version:
 
 ## Creating the PR
 
-Run the helper script (handles everything: token, branch, upload, PR):
+Run the helper script directly (handles everything: token, branch, upload, PR):
 
 ```sh
-sh /opt/data/scripts/create-pr.sh \
+/opt/data/scripts/create-pr.sh \
   <file-path> \
   <branch-slug> \
   "improve: <one-line description>" \
   "<PR body: what changed, why, which signal>"
 ```
 
+Do not wrap it in `sh -c`, `python -c`, or heredocs; cron policy blocks wrapper execution without a human approval path.
+Do not inspect `GITHUB_TOKEN`; the helper reads `GITHUB_TOKEN` or `/opt/data/.github_token`.
 The script exits 0 and prints the PR URL. Capture and log it.
 If it exits non-zero, fall back: post the diff to ops Discord and mark the signal `pending-manual`.
 

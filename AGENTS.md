@@ -9,7 +9,7 @@ Hermes Coach is an AI endurance cycling coach on Discord. It runs as a k8s Deplo
 (k3s on Hetzner) managed by Flux CD (GitOps). Athletes message the bot via Discord DMs,
 it reads their intervals.icu training data, and gives evidence-based coaching advice.
 
-Source: `github.com/kvarnberg-labs/hermes-lab`
+Source: `github.com/kvarnberg-labs/hermes-coach`
 
 ## Repo layout
 
@@ -56,7 +56,7 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 Use the helper script — it handles token resolution, branch creation, file upload, and PR opening in one call:
 
 ```sh
-sh /opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
+/opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
 ```
 
 Arguments:
@@ -71,7 +71,7 @@ It exits 0 and prints the PR URL on success, exits 1 with a clear error on failu
 
 Example:
 ```sh
-sh /opt/data/scripts/create-pr.sh \
+/opt/data/scripts/create-pr.sh \
   coach-brain/heat.yaml \
   add-heat-knowledge \
   "improve: heat acclimatization knowledge" \
