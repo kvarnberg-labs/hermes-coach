@@ -93,21 +93,21 @@ echo "existing file SHA: ${FILE_SHA:-<new file>}"
 # ---------------------------------------------------------------------------
 CONTENT_B64=$(python3 -c "
 import base64, sys
-print(base64.b64encode(open('${LOCAL_FILE}', 'rb').read()).decode())
-")
+print(base64.b64encode(open(sys.argv[1], 'rb').read()).decode())
+" "$LOCAL_FILE")
 
 PAYLOAD=$(python3 -c "
 import json, sys
 d = {
-    'message': '${PR_TITLE}',
-    'content': sys.argv[1],
-    'branch':  '${BRANCH}',
+    'message': sys.argv[1],
+    'content': sys.argv[2],
+    'branch':  sys.argv[3],
 }
-sha = sys.argv[2]
+sha = sys.argv[4]
 if sha:
     d['sha'] = sha
 print(json.dumps(d))
-" "$CONTENT_B64" "${FILE_SHA:-}")
+" "$PR_TITLE" "$CONTENT_B64" "$BRANCH" "${FILE_SHA:-}")
 
 HTTP=$(curl -s -o /tmp/upload-resp.json -w "%{http_code}" -X PUT \
     "$API/repos/$REPO/contents/${FILE_PATH}" \
