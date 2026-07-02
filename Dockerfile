@@ -27,7 +27,7 @@ COPY --chown=hermes:hermes sandbox/ /opt/hermes/sandbox/
 
 # Install training plugin Python dependencies into the existing venv.
 # httpx is already in hermes-agent; pyyaml and kubernetes are new.
-RUN /opt/hermes/.venv/bin/uv pip install \
+RUN uv pip install --python /opt/hermes/.venv/bin/python \
     "httpx>=0.28.1,<1" \
     "pyyaml>=6.0,<7" \
     "kubernetes>=29.0.0,<32"
