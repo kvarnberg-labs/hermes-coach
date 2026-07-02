@@ -359,23 +359,360 @@ class TestRenderChart:
 # ---------------------------------------------------------------------------
 
 
+def _make_creds(tmp_path, monkeypatch, user_id, athlete_id):
+    """Write minimal credential files and point HERMES_HOME at tmp_path."""
+    hermes_home = tmp_path / ".hermes"
+    hermes_home.mkdir(exist_ok=True)
+    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    user_dir = hermes_home / "users" / user_id
+    user_dir.mkdir(parents=True, exist_ok=True)
+    (user_dir / "intervals_key").write_text("key")
+    (user_dir / "intervals_athlete_id").write_text(athlete_id)
+
+
 class TestGetWellnessParser:
     """Verify get_wellness correctly maps API fields to the output schema."""
 
     @pytest.fixture(autouse=True)
     def _creds(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        user_dir = hermes_home / "users" / "u111"
-        user_dir.mkdir(parents=True)
-        (user_dir / "intervals_key").write_text("key")
-        (user_dir / "intervals_athlete_id").write_text("i1")
+        _make_creds(tmp_path, monkeypatch, "u111", "i1")
 
     def _call(self, raw_list):
-        """Patch _request to return raw_list and invoke get_wellness."""
         with patch.object(intervals_icu, "_request", return_value=raw_list):
             return json.loads(intervals_icu.get_wellness("u111", days=7))
+
+    def test_fields_mapped_correctly(self):
+        raw = [
+            {
+                "id": "2025-01-10",
+                "ctl": 52.3,
+                "atl": 60.1,
+                "rampRate": 1.2,
+                "hrv": 68.0,
+                "hrvSDNN": 45.0,
+                "restingHR": 48,
+                "sleepSecs": 27000,
+                "sleepQuality": 3,
+                "sleepScore": 82,
+                "readiness": 75,
+                "weight": 73.5,
+                "fatigue": 4,
+                "soreness": 3,
+                "motivation": 7,
+                "mood": 6,
+            }
+        ]
+        result = self._call(raw)
+        rec = result["records"][0]
+        assert rec["date"] == "2025-01-10"
+        assert rec["ctl"] == 52.3
+        assert rec["atl"] == 60.1
+        assert rec["tsb"] == round(52.3 - 60.1, 1)
+        assert rec["ramp_rate"] == 1.2
+        assert rec["hrv"] == 68.0
+        assert rec["hrv_sdnn"] == 45.0
+        assert rec["resting_hr"] == 48
+        assert rec["sleep_hours"] == round(27000 / 3600, 1)
+        assert rec["sleep_quality"] == 3
+        assert rec["sleep_score"] == 82
+        assert rec["readiness"] == 75
+        assert rec["weight_kg"] == 73.5
+        assert rec["fatigue"] == 4
+        assert rec["soreness"] == 3
+        assert rec["motivation"] == 7
+        assert rec["mood"] == 6
+
+    def test_today_convenience_field(self):
+        raw = [
+            {"id": "2025-01-09", "ctl": 50.0, "atl": 55.0},
+            {"id": "2025-01-10", "ctl": 51.0, "atl": 54.0},
+        ]
+        result = self._call(raw)
+        assert result["today"]["date"] == "2025-01-10"
+        assert result["today"]["tsb"] == round(51.0 - 54.0, 1)
+
+    def test_today_is_none_when_no_records(self):
+        result = self._call([])
+        assert result["today"] is None
+        assert result["records"] == []
+
+    def test_tsb_none_when_ctl_missing(self):
+        result = self._call([{"id": "2025-01-10", "atl": 55.0}])
+        assert result["records"][0]["tsb"] is None
+        assert result["records"][0]["ctl"] is None
+        assert result["records"][0]["atl"] == 55.0
+
+    def test_tsb_none_when_atl_missing(self):
+        result = self._call([{"id": "2025-01-10", "ctl": 50.0}])
+        assert result["records"][0]["tsb"] is None
+
+    def test_tsb_valid_when_ctl_or_atl_is_zero(self):
+        result = self._call([{"id": "2025-01-10", "ctl": 0.0, "atl": 0.0}])
+        assert result["records"][0]["tsb"] == 0.0
+
+    def test_sleep_hours_none_when_zero_secs(self):
+        result = self._call(
+            [{"id": "2025-01-10", "ctl": 50.0, "atl": 50.0, "sleepSecs": 0}]
+        )
+        assert result["records"][0]["sleep_hours"] is None
+
+    def test_days_capped_at_42(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_wellness("u111", days=999)
+            mock_req.assert_called_once()
+
+    def test_source_field_present(self):
+        result = self._call([{"id": "2025-01-10", "ctl": 50.0, "atl": 52.0}])
+        assert result["source"] == "intervals.icu"
+
+    def test_credentials_error_returns_json_error(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        result = json.loads(intervals_icu.get_wellness("no-such-user", days=7))
+        assert "error" in result
+
+
+class TestGetRecentActivitiesParser:
+    """Verify get_recent_activities correctly maps API fields."""
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        _make_creds(tmp_path, monkeypatch, "u222", "i2")
+
+    def _call(self, raw_list, days=14, sport=None):
+        with patch.object(intervals_icu, "_request", return_value=raw_list):
+            return json.loads(
+                intervals_icu.get_recent_activities("u222", days=days, sport=sport)
+            )
+
+    def test_fields_mapped_correctly(self):
+        raw = [
+            {
+                "id": "a001",
+                "name": "Morning Ride",
+                "start_date_local": "2025-01-10T07:30:00",
+                "type": "Ride",
+                "moving_time": 5400,
+                "distance": 45000,
+                "icu_training_load": 88,
+                "icu_ctl": 52.0,
+                "icu_atl": 60.0,
+                "icu_intensity": 0.82,
+                "icu_weighted_avg_watts": 220,
+                "icu_ftp": 270,
+                "trimp": 95,
+                "icu_rpe": 7,
+            }
+        ]
+        result = self._call(raw)
+        act = result["activities"][0]
+        assert act["id"] == "a001"
+        assert act["name"] == "Morning Ride"
+        assert act["date"] == "2025-01-10"
+        assert act["type"] == "Ride"
+        assert act["duration_min"] == round(5400 / 60, 1)
+        assert act["distance_km"] == round(45000 / 1000, 2)
+        assert act["training_load"] == 88
+        assert act["ctl_after"] == 52.0
+        assert act["atl_after"] == 60.0
+        assert act["intensity_factor"] == 0.82
+        assert act["normalized_power_w"] == 220
+        assert act["ftp_used_w"] == 270
+        assert act["trimp"] == 95
+        assert act["rpe"] == 7
+
+    def test_count_and_source(self):
+        result = self._call([{"id": "a1"}, {"id": "a2"}])
+        assert result["count"] == 2
+        assert result["source"] == "intervals.icu"
+
+    def test_empty_list_returns_zero_count(self):
+        result = self._call([])
+        assert result["count"] == 0
+        assert result["activities"] == []
+
+    def test_days_capped_at_90(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_recent_activities("u222", days=999)
+            mock_req.assert_called_once()
+
+    def test_rpe_fallback_to_session_rpe(self):
+        result = self._call([{"id": "a1", "session_rpe": 6}])
+        assert result["activities"][0]["rpe"] == 6
+
+    def test_rpe_fallback_to_feel(self):
+        result = self._call([{"id": "a2", "feel": 8}])
+        assert result["activities"][0]["rpe"] == 8
+
+    def test_rpe_none_when_all_missing(self):
+        result = self._call([{"id": "a3"}])
+        assert result["activities"][0]["rpe"] is None
+
+    def test_date_truncated_to_10_chars(self):
+        raw = [{"id": "a1", "start_date_local": "2025-06-15T08:00:00+02:00"}]
+        result = self._call(raw)
+        assert result["activities"][0]["date"] == "2025-06-15"
+
+    def test_null_distance_and_duration(self):
+        raw = [{"id": "a1", "moving_time": None, "distance": None}]
+        result = self._call(raw)
+        act = result["activities"][0]
+        assert act["duration_min"] == 0.0
+        assert act["distance_km"] == 0.0
+
+    def test_credentials_error_returns_json_error(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        result = json.loads(intervals_icu.get_recent_activities("no-such-user"))
+        assert "error" in result
+
+
+class TestGetAthleteProfileParser:
+    """Verify get_athlete_profile maps API fields correctly."""
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        _make_creds(tmp_path, monkeypatch, "u333", "i3")
+
+    def test_fields_mapped(self):
+        raw = {
+            "name": "Johan",
+            "timezone": "Europe/Stockholm",
+            "icu_weight": 72.0,
+            "icu_resting_hr": 46,
+            "sex": "M",
+            "icu_date_of_birth": "1985-04-12",
+        }
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_athlete_profile("u333"))
+        assert result["name"] == "Johan"
+        assert result["timezone"] == "Europe/Stockholm"
+        assert result["weight_kg"] == 72.0
+        assert result["resting_hr"] == 46
+        assert result["sex"] == "M"
+        assert result["date_of_birth"] == "1985-04-12"
+        assert result["source"] == "intervals.icu"
+
+    def test_missing_fields_are_none(self):
+        with patch.object(intervals_icu, "_request", return_value={}):
+            result = json.loads(intervals_icu.get_athlete_profile("u333"))
+        assert result["name"] is None
+        assert result["weight_kg"] is None
+
+
+class TestGetSportSettingsParser:
+    """Verify get_sport_settings maps FTP and zone fields."""
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        _make_creds(tmp_path, monkeypatch, "u444", "i4")
+
+    def test_ftp_and_zones_present(self):
+        raw = {
+            "ftp": 270,
+            "indoor_ftp": 265,
+            "lthr": 168,
+            "max_hr": 185,
+            "w_prime": 18000,
+            "power_zones": [{"name": "Z1", "min": 0, "max": 148}],
+            "hr_zones": [{"name": "Z1", "min": 0, "max": 130}],
+            "pace_zones": None,
+        }
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_sport_settings("u444", sport="Ride"))
+        assert result["ftp"] == 270
+        assert result["indoor_ftp"] == 265
+        assert result["lthr"] == 168
+        assert result["max_hr"] == 185
+        assert result["w_prime"] == 18000
+        assert isinstance(result["power_zones"], list)
+        assert result["pace_zones"] is None
+        assert result["sport"] == "Ride"
+
+
+class TestGetPlannedEventsParser:
+    """Verify get_planned_events maps event fields correctly."""
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        _make_creds(tmp_path, monkeypatch, "u555", "i5")
+
+    def test_event_fields_mapped(self):
+        raw = [
+            {
+                "id": "ev1",
+                "start_date_local": "2025-07-20T10:00:00",
+                "category": "RACE",
+                "type": "Ride",
+                "name": "Gran Fondo Alps",
+                "description": "160km mountain stage",
+                "icu_training_load": 210,
+                "icu_intensity": 0.78,
+                "icu_ctl": 68.0,
+                "icu_atl": 55.0,
+                "time_target": 21600,
+                "distance_target": 160000,
+            }
+        ]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_planned_events("u555", days_ahead=30))
+        ev = result["events"][0]
+        assert ev["id"] == "ev1"
+        assert ev["date"] == "2025-07-20"
+        assert ev["category"] == "RACE"
+        assert ev["name"] == "Gran Fondo Alps"
+        assert ev["planned_load"] == 210
+        assert ev["time_target_min"] == round(21600 / 60, 1)
+        assert ev["distance_target_km"] == round(160000 / 1000, 2)
+        assert result["count"] == 1
+
+    def test_empty_calendar_returns_zero_count(self):
+        with patch.object(intervals_icu, "_request", return_value=[]):
+            result = json.loads(intervals_icu.get_planned_events("u555"))
+        assert result["count"] == 0
+        assert result["events"] == []
+
+
+class TestGetPowerCurveParser:
+    """Verify get_power_curve extracts standard duration peaks."""
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        _make_creds(tmp_path, monkeypatch, "u666", "i6")
+
+    def test_standard_durations_extracted(self):
+        raw = [
+            {"secs": 5, "watts": 850.0},
+            {"secs": 60, "watts": 520.0},
+            {"secs": 300, "watts": 380.0},
+            {"secs": 1200, "watts": 290.0},
+            {"secs": 3600, "watts": 255.0},
+            {"secs": 10, "watts": 780.0},  # non-standard — ignored in peaks
+        ]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(
+                intervals_icu.get_power_curve("u666", sport="Ride", days=42)
+            )
+        peaks = result["peak_power"]
+        assert peaks["5s"] == 850.0
+        assert peaks["1min"] == 520.0
+        assert peaks["5min"] == 380.0
+        assert peaks["20min"] == 290.0
+        assert peaks["60min"] == 255.0
+        assert result["sport"] == "Ride"
+        assert result["full_curve_points"] == 6
+
+    def test_missing_durations_return_none(self):
+        raw = [{"secs": 5, "watts": 850.0}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_power_curve("u666"))
+        peaks = result["peak_power"]
+        assert peaks["5s"] == 850.0
+        assert peaks["1min"] is None
+        assert peaks["20min"] is None
+
+    def test_empty_curve_returns_all_none_peaks(self):
+        with patch.object(intervals_icu, "_request", return_value=[]):
+            result = json.loads(intervals_icu.get_power_curve("u666"))
+        assert all(v is None for v in result["peak_power"].values())
 
     def test_fields_mapped_correctly(self):
         raw = [

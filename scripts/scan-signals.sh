@@ -5,6 +5,7 @@
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
 SIGNALS_DIR="${HERMES_HOME}/loops/signals"
+DB="${HERMES_HOME}/state.db"
 
 # ---------------------------------------------------------------------------
 # 1. Open signal files
@@ -15,8 +16,7 @@ if [ -d "$SIGNALS_DIR" ]; then
 fi
 
 if [ -n "$open_files" ]; then
-    count=$(echo "$open_files" | wc -l | tr -d ' ')
-    echo "OPEN SIGNALS (${count}):"
+    echo "OPEN SIGNALS:"
     echo ""
     echo "$open_files" | while IFS= read -r f; do
         title=$(grep "^title:" "$f" 2>/dev/null | head -1 | sed 's/^title:[[:space:]]*//')
@@ -32,120 +32,68 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Conversation gap scan — mine the Hermes memory DB for recent frustration
-#    signals: tool errors, athlete confusion, unanswered questions.
-#
-#    The Hermes SQLite memory lives at $HERMES_HOME/hermes.db.
-#    Messages are in the `messages` table; role is 'user' or 'assistant'.
-#    We scan the last 7 days for patterns that indicate coaching gaps.
+# 2. Conversation gap scan — mine state.db for recent coaching friction.
+#    Helper: query_db <label> <sql>  — prints label + results if any rows found.
 # ---------------------------------------------------------------------------
-DB="${HERMES_HOME}/state.db"
+query_db() {
+    label="$1"; sql="$2"
+    rows=$(sqlite3 "$DB" "$sql" 2>/dev/null)
+    [ -z "$rows" ] && return
+    echo "  $label"
+    echo "$rows" | while IFS='|' read -r ts snippet; do
+        printf "    [%s] %s\n" "$ts" "$snippet"
+    done
+    echo ""
+}
 
 if [ ! -f "$DB" ]; then
-    echo "CONVERSATION SCAN: no memory DB found at $DB (no conversations yet, or DB path differs)."
+    echo "CONVERSATION SCAN: no DB at $DB (no conversations yet)."
     echo ""
 else
     echo "CONVERSATION SCAN (last 7 days):"
     echo ""
 
-    # Frustration / confusion patterns in athlete messages
-    FRUSTRATION=$(sqlite3 "$DB" \
-      "SELECT datetime(created_at,'localtime'), substr(content,1,200)
-       FROM messages
-       WHERE role='user'
-         AND created_at >= datetime('now','-7 days')
-         AND (
-           content LIKE '%don''t understand%'
-           OR content LIKE '%doesn''t work%'
-           OR content LIKE '%not working%'
-           OR content LIKE '%wrong%'
-           OR content LIKE '%confused%'
-           OR content LIKE '%why%'
-           OR content LIKE '%what does%'
-           OR content LIKE '%what is%'
-           OR content LIKE '%can''t%'
-           OR content LIKE '%cannot%'
-           OR content LIKE '%never%'
-           OR content LIKE '%always%'
-           OR content LIKE '%still%'
-           OR content LIKE '%again%'
-           OR content LIKE '%still not%'
-           OR content LIKE '%no idea%'
-           OR content LIKE '%help%'
-         )
-       ORDER BY created_at DESC
-       LIMIT 10;" 2>/dev/null)
+    query_db "Athlete frustration / confusion:" \
+        "SELECT datetime(timestamp,'unixepoch','localtime'), substr(content,1,200)
+         FROM messages
+         WHERE role='user'
+           AND timestamp >= strftime('%s','now','-7 days')
+           AND (content LIKE '%don''t understand%' OR content LIKE '%not working%'
+             OR content LIKE '%confused%' OR content LIKE '%can''t%'
+             OR content LIKE '%still not%' OR content LIKE '%again%'
+             OR content LIKE '%wrong%' OR content LIKE '%help%')
+         ORDER BY timestamp DESC LIMIT 10;"
 
-    if [ -n "$FRUSTRATION" ]; then
-        echo "  Athlete messages suggesting confusion or unmet needs:"
-        echo "$FRUSTRATION" | while IFS='|' read -r ts snippet; do
-            printf "    [%s] %s\n" "$ts" "$snippet"
-        done
-        echo ""
-    fi
+    query_db "Tool errors:" \
+        "SELECT datetime(timestamp,'unixepoch','localtime'), substr(content,1,300)
+         FROM messages
+         WHERE role='tool'
+           AND timestamp >= strftime('%s','now','-7 days')
+           AND (content LIKE '%\"error\"%' OR content LIKE '%No intervals.icu credentials%'
+             OR content LIKE '%Could not reach%' OR content LIKE '%401%'
+             OR content LIKE '%coach-brain not loaded%')
+         ORDER BY timestamp DESC LIMIT 10;"
 
-    # Tool errors returned to the agent (assistant messages containing error JSON)
-    TOOL_ERRORS=$(sqlite3 "$DB" \
-      "SELECT datetime(created_at,'localtime'), substr(content,1,300)
-       FROM messages
-       WHERE role='tool'
-         AND created_at >= datetime('now','-7 days')
-         AND (
-           content LIKE '%\"error\"%'
-           OR content LIKE '%No intervals.icu credentials%'
-           OR content LIKE '%Could not reach%'
-           OR content LIKE '%401%'
-           OR content LIKE '%No direct match found%'
-           OR content LIKE '%coach-brain not loaded%'
-         )
-       ORDER BY created_at DESC
-       LIMIT 10;" 2>/dev/null)
+    query_db "Knowledge gaps (coach-brain matched:false):" \
+        "SELECT datetime(timestamp,'unixepoch','localtime'), substr(content,1,300)
+         FROM messages
+         WHERE role='tool'
+           AND timestamp >= strftime('%s','now','-7 days')
+           AND content LIKE '%\"matched\": false%'
+         ORDER BY timestamp DESC LIMIT 10;"
 
-    if [ -n "$TOOL_ERRORS" ]; then
-        echo "  Tool errors observed in recent sessions:"
-        echo "$TOOL_ERRORS" | while IFS='|' read -r ts snippet; do
-            printf "    [%s] %s\n" "$ts" "$snippet"
-        done
-        echo ""
-    fi
-
-    # Topics athletes asked about that may not be in coach-brain
-    # (get_coaching_knowledge returned matched:false)
-    MISSING_TOPICS=$(sqlite3 "$DB" \
-      "SELECT datetime(created_at,'localtime'), substr(content,1,300)
-       FROM messages
-       WHERE role='tool'
-         AND created_at >= datetime('now','-7 days')
-         AND content LIKE '%\"matched\": false%'
-       ORDER BY created_at DESC
-       LIMIT 10;" 2>/dev/null)
-
-    if [ -n "$MISSING_TOPICS" ]; then
-        echo "  Knowledge gaps (get_coaching_knowledge returned no match):"
-        echo "$MISSING_TOPICS" | while IFS='|' read -r ts snippet; do
-            printf "    [%s] %s\n" "$ts" "$snippet"
-        done
-        echo ""
-    fi
-
-    if [ -z "$FRUSTRATION" ] && [ -z "$TOOL_ERRORS" ] && [ -z "$MISSING_TOPICS" ]; then
-        echo "  No frustration signals or tool errors in the last 7 days."
-        echo ""
-    fi
+    echo "  (no further friction signals in last 7 days)" 2>/dev/null || true
+    echo ""
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Recent worklog summary (last 3 entries) — avoid re-doing recent work
+# 3. Recent worklog (last 3 entries) — avoid re-doing recent work
 # ---------------------------------------------------------------------------
 WORKLOG="${HERMES_HOME}/loops/worklog.md"
-if [ -f "$WORKLOG" ]; then
-    recent=$(grep -c "^## 20" "$WORKLOG" 2>/dev/null || echo 0)
-    if [ "$recent" -gt 0 ]; then
-        echo "RECENT WORKLOG (last 3 entries — avoid duplicating these):"
-        # Print from the last 3 '## 20' headings to end of file
-        awk '/^## 20/{c++} c>=1{print}' "$WORKLOG" | tail -40
-        echo ""
-    fi
+if [ -f "$WORKLOG" ] && grep -q "^## 20" "$WORKLOG" 2>/dev/null; then
+    echo "RECENT WORKLOG (last 3 entries):"
+    awk '/^## 20/{c++} c>=1{print}' "$WORKLOG" | tail -40
+    echo ""
 fi
 
 echo "Review the CONTRACT.md backlog alongside these signals to pick the highest-value improvement."

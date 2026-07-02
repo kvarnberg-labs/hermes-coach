@@ -51,25 +51,13 @@ _FALLBACK_USER_ID = "discord_dm"
 
 
 def _require_user_id(kw: dict) -> str:
-    """Return the gateway-supplied Discord user ID, or fall back to 'discord_dm'.
+    """Return the Discord snowflake from the gateway, or 'discord_dm' as fallback.
 
-    In normal Discord DM sessions the gateway injects kw["user_id"] as a
-    snowflake.  When it is absent or empty (non-Discord test setups or dev
-    sessions) we fall back to the shared 'discord_dm' credential slot so the
-    tools remain functional.  The fallback exists so the self-improvement cron
-    and any direct API sessions are not broken by the identity guard.
+    Fallback is used when the gateway doesn't inject user_id (cron sessions,
+    non-Discord contexts). Real Discord sessions always get the snowflake path.
     """
     uid = str(kw.get("user_id", ""))
-    if _DISCORD_ID_RE.match(uid):
-        return uid
-    # ponytail: global fallback slot; per-user isolation still enforced via
-    # the snowflake path for real Discord sessions.
-    logger.debug(
-        "user_id not provided by gateway (got %r); using fallback slot %r",
-        uid,
-        _FALLBACK_USER_ID,
-    )
-    return _FALLBACK_USER_ID
+    return uid if _DISCORD_ID_RE.match(uid) else _FALLBACK_USER_ID
 
 
 _API_BASE = "https://intervals.icu/api/v1"
