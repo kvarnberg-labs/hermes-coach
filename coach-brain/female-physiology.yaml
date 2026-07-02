@@ -1,0 +1,48 @@
+---
+# Female Athlete Physiology & Menstrual Cycle Guidance
+# Evidence-based periodization around the menstrual cycle.
+# Sources: McNulty et al. (2020) Sports Med systematic review,
+#          Janse de Jonge et al. (2019) Front Physiol,
+#          Bruinvels et al. (2016) IJSPP,
+#          Sims (2016) ROAR.
+
+female_athlete_physiology:
+
+  overview:
+    description: >
+      Fluctuations in oestrogen and progesterone across the menstrual cycle
+      affect thermoregulation, substrate metabolism, plasma volume, and RPE.
+      Individual variability is high — tracking is essential; do not assume
+      all athletes follow the same pattern.
+    key_phases:
+      early_follicular_days_1_5: "Bleeding phase. Cramps/bloating for some; others unaffected."
+      late_follicular_days_6_14: "High oestrogen. Often best performance window — anabolic environment."
+      ovulatory_day_14: "Oestrogen peaks. Some athletes feel strongest here."
+      luteal_days_15_28: "High progesterone. Core temp ↑0.3–0.5°C, plasma volume ↓5–8%, RPE higher."
+  training_adjustments:
+    follicular:
+      intensity: "Favourable for high-intensity and strength work. Target Z4–Z5 sessions here."
+      volume: "Normal planned volume. Best period for hard training blocks."
+    luteal:
+      intensity: "Expect higher RPE for same power. Consider reducing high-intensity volume 10–15%."
+      volume: "Volume can be maintained; prioritise Z2. Shift threshold sessions if recovery is compromised."
+      heat_caution: >
+        Progesterone elevates core temperature starting in luteal phase.
+        Heat training guidance (heat.yaml) becomes more important —
+        athletes are at higher risk of overheating.
+      tsb_note: >
+        RPE-driven ATL may rise faster in luteal phase for the same workout.
+        This is expected and does not indicate overtraining if TSB normalises
+        within 48 hours.
+  practical_guidance:
+    tracking: "Track cycle day alongside RPE, HRV, and resting HR in training log."
+    iron: "Check ferritin regularly. Heavy menstrual bleeding increases iron deficiency risk."
+    key_sessions: >
+      Schedule VO2max tests, FTP tests, and race-pace efforts in late follicular
+      phase for the most representative baseline.
+    race_day: >
+      If race falls in luteal phase: don't panic. Acclimatise to heat early.
+      Start conservatively — perceived effort is a better pacing guide than HR.
+    individual_variation: >
+      Approximately 30% of athletes report no performance variation across
+      the cycle. Always lean on the athlete's own data over population averages.

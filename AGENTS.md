@@ -53,7 +53,9 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 
 ## Creating a GitHub PR (in the loop)
 
-Use `curl` with the `GITHUB_TOKEN` env var (fine-grained repo-scoped token):
+Use `curl` with the `GITHUB_TOKEN` env var (fine-grained repo-scoped token).
+
+**Important:** Always check the token with `printenv GITHUB_TOKEN` (not `echo $GITHUB_TOKEN` — the cron terminal sandbox may strip shell variable expansion). If `printenv GITHUB_TOKEN` returns empty, output the diff to ops Discord instead.
 
 ```sh
 # 1. Create branch

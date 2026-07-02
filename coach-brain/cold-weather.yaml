@@ -1,0 +1,86 @@
+---
+# Cold Weather Training
+# Evidence-based guidance for training in cold environments.
+# Sources: Castellani et al. (2006), ACSM Position Stand on Cold Weather Exercise (2021),
+#          Gatterer et al. (2021), Noakes (2000).
+
+cold_weather_training:
+
+  overview:
+    description: >
+      Cold exposure (< 5°C / 41°F) challenges thermoregulation, muscle function,
+      and respiratory comfort. Unlike heat, cold does not require physiological
+      acclimatisation — the primary adaptations are behavioural (layering,
+      pacing, route choice) rather than systemic.
+    key_challenges:
+      - "Shivering increases energy expenditure 3–5× resting — wastes glycogen"
+      - "Muscle contractile velocity drops below ~28°C muscle temperature"
+      - "Cold-induced bronchoconstriction in ~50% of athletes"
+      - "Peripheral vasoconstriction reduces blood flow to extremities"
+      - "Perceived effort rises for equivalent power output"
+
+  clothing_and_layering:
+    base_layer: "Wicking synthetic or merino wool. No cotton — retains moisture."
+    mid_layer: "Insulating fleece or lightweight down. Traps warm air."
+    outer_layer: "Windproof and water-resistant (softshell or gore-tex)."
+    extremities:
+      head: "30–40% of heat loss through uncovered head. Wear a skull cap or balaclava."
+      hands: "Lobster-claw gloves below −5°C. Mittens below −10°C."
+      feet: "Neoprene overshoes below 5°C. Wool socks. Size up shoes ½ size for thick socks."
+    wet_weather_note: >
+      Wet cold (< 10°C + rain) is more dangerous than dry cold. Water conducts
+      heat 25× faster than air. Prioritise waterproof outer layer.
+
+  training_adjustments:
+    above_5C: "Normal training. Standard winter kit. Watch wet conditions."
+    zero_to_5C: "Warm up 5–10 min longer. Z2–Z3 fine. High-intensity intervals still safe."
+    minus_5_to_0C: "Reduce intensity sprints by 5–10%. Avoid maximal efforts > 30 sec."
+    minus_10_to_minus_5C: "Limit to Z1–Z2 only. Indoor trainer recommended for intensity."
+    below_minus_10C: "Indoor training strongly recommended. Risk of airway damage."
+    indoor_recommendation: >
+      Sessions requiring precise power targets (threshold, VO2max) are best done indoors
+      below 0°C. Cold muscles produce less power at the same RPE — FTP effectively drops.
+
+  cold_air_and_breathing:
+    exercise_induced_bronchoconstriction:
+      description: >
+        Cold dry air triggers airway narrowing, especially during high ventilation
+        (hard efforts). Symptoms: wheezing, chest tightness, cough post-exercise.
+      prevention:
+        - "Wear a neck gaiter or buff over mouth — warms and humidifies inhaled air"
+        - "Nasal breathing as much as possible at lower intensities"
+        - "Pre-warm indoors for 10 min before heading out into cold"
+      action: >
+        If EIB symptoms are frequent, refer to a physician. Inhaled beta-agonists
+        may be warranted. Do not train through significant chest tightness.
+
+  hypothermia:
+    mild_hypothermia_core_35_32C:
+      symptoms: ["Shivering", "Cold extremities", "Slurred speech", "Clumsiness"]
+      action: "Stop exercise. Seek shelter. Add layers. Warm drink if conscious."
+    moderate_severe_below_32C:
+      symptoms: ["Shivering stops (ominous sign)", "Confusion", "Drowsiness", "Slow pulse"]
+      action: "MEDICAL EMERGENCY — call EMS. Insulate. Do NOT massage extremities."
+    prevention:
+      - "Carry an emergency foil blanket in winter rides"
+      - "Know the wind chill factor — 0°C with 30 km/h wind feels like −10°C"
+      - "Shorter loops near home in very cold conditions (easy bail-out)"
+
+  hydration_in_cold:
+    description: >
+      Cold suppresses thirst sensation and increases urine output (cold diuresis).
+      Athletes consistently under-hydrate in cold weather despite similar fluid needs.
+    guidance:
+      - "Drink on a schedule, not by thirst — set a timer every 15–20 min"
+      - "Insulated bottles prevent freezing. Add warm water or tea."
+      - "Sodium needs are unchanged from temperate conditions"
+
+  practical_guidance:
+    warm_up: "Start indoors if possible. 15 min progressive warm-up when outdoor-only."
+    nutrition: "Increased calorie burn in cold. Carry extra food on long rides."
+    bike_handling: >
+      Reduce speed in corners. Ice patches form in shaded areas first.
+      Wider tyres at lower pressure improve grip. Avoid wet leaves and painted lines.
+    zwift_alternative: >
+      Indoor smart trainer sessions (Zwift, TrainerRoad) are better than
+      poor-quality outdoor rides in dangerous cold. Training consistency > grit.
