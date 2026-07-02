@@ -1,0 +1,44 @@
+---
+# Heat Acclimatization
+# Evidence-based guidance for training and racing in the heat.
+# Sources: Lorenzo et al. (2010), Périard et al. (2015), Racinais et al. (2015).
+heat_acclimatization:
+  overview:
+    description: >
+      Heat acclimatization triggers plasma volume expansion (+10–15%), improved
+      sweating response, and lower core temperature. Full adaptations develop
+      over 10–14 days of repeated heat exposure.
+    key_adaptations:
+      - "Plasma volume expands 10–15% by day 7 (lower HR for same effort)"
+      - "Sweat rate increases, onset at lower core temperature"
+      - "Core temperature at given workload drops 0.5–1.0°C"
+      - "Sodium conservation improves (less electrolyte loss)"
+  acclimatization_protocol:
+    active:
+      duration: "10–14 consecutive days"
+      session: "60–90 min/day in heat, moderate intensity (Z2–Z3)"
+      power: "Reduce targets 10–15% initially; HR unreliable for pacing"
+    passive: "Post-exercise sauna or hot bath (40°C, 30 min). Less effective."
+    maintenance: "2–3 heat exposures/week after acclimatization"
+  training_adjustments:
+    days_1_4: "Reduce intensity 10–15%. No maximal efforts. Cut volume 15–20%."
+    days_5_10: "Gradual return. Threshold OK if adapting. Volume at 80–90%."
+    day_10_plus: "Full training at heat-adjusted targets. Benefit: 5–8% perf gain in cool."
+  hydration:
+    pre: "5–7 ml/kg 2–4h before. Pale urine = hydrated."
+    during: "400–800 ml/hour, based on individual sweat rate."
+    sodium: "500–1000 mg/L for sessions > 2 hours."
+    post: "Replace 150% of fluid lost (1.5L per 1 kg mass loss)."
+  heat_illness:
+    exhaustion:
+      symptoms: ["Heavy sweating", "Weakness", "Nausea", "Muscle cramps"]
+      action: "Stop exercise, shade, cool with water, hydrate."
+    heat_stroke:
+      symptoms: ["Dry hot skin", "Confusion", "Core temp > 40°C"]
+      action: "MEDICAL EMERGENCY — call EMS, ice bath immediately."
+    wbgt_limit: "Avoid intense training above 35°C WBGT."
+  practical_guidance:
+    timing: "Train early AM or evening. Avoid 12:00–16:00 peak heat."
+    clothing: "Light-coloured, loose, moisture-wicking. No cotton."
+    cooling: "Ice slushy pre-exercise, cold towel on neck, water dousing."
+    ftp: "FTP drops ~3–5% per 10°C above 25°C. Adjust targets, not effort."

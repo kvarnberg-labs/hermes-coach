@@ -132,6 +132,9 @@ spec:
                 name: hermes-model-secret
             - secretRef:
                 name: hermes-api-server-secret
+            - secretRef:
+                name: hermes-github-secret
+                optional: true # loop degrades gracefully (logs diff, no PR) if token absent
           env:
             - name: HERMES_HOME
               value: /opt/data
