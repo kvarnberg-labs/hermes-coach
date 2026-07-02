@@ -368,7 +368,7 @@ def develop_tool(
 def register_tools(ctx) -> None:
     ctx.register_tool(
         name="develop_tool",
-        toolset="training",
+        toolset="self-improve",  # intentionally NOT "training" — Discord users cannot call this
         schema={
             "name": "develop_tool",
             "description": (

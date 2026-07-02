@@ -107,7 +107,7 @@ def register_tools(ctx) -> None:
                 "Use this when you need evidence-based principles, workout definitions, "
                 "recovery heuristics, injury protocols, or race preparation guidelines. "
                 "Topics include: threshold intervals, vo2max, base building, recovery, "
-                "tapering, nutrition, injury, strength training, race preparation, "
+                "tapering, nutrition, injury, race preparation, "
                 "power zones, periodization."
             ),
             "parameters": {

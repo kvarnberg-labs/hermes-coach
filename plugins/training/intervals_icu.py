@@ -32,6 +32,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -41,6 +42,24 @@ from pathlib import Path
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
+
+# Discord snowflake IDs are 17–20 decimal digits.
+_DISCORD_ID_RE = re.compile(r"^\d{17,20}$")
+
+
+def _require_user_id(kw: dict) -> str:
+    """Return the gateway-supplied Discord user ID, or raise ValueError.
+
+    Identity must come from the Discord gateway context (kw["user_id"]),
+    never from model-supplied arguments. Validates snowflake format.
+    """
+    uid = str(kw.get("user_id", ""))
+    if not _DISCORD_ID_RE.match(uid):
+        raise ValueError(
+            "User identity check failed: expected a Discord snowflake from the "
+            f"gateway (got {uid!r}). This tool only works in a Discord conversation."
+        )
+    return uid
 
 _API_BASE = "https://intervals.icu/api/v1"
 
@@ -386,13 +405,15 @@ def get_wellness(
 
     records = []
     for w in (data if isinstance(data, list) else [data]):
-        ctl = w.get("ctl") or 0.0
-        atl = w.get("atl") or 0.0
-        tsb = round(ctl - atl, 1) if ctl and atl else None
+        ctl = w.get("ctl")
+        atl = w.get("atl")
+        # Use `is not None` so legitimate 0.0 CTL/ATL values produce TSB=0.0,
+        # not None. The old `if ctl and atl` dropped any entry where either was 0.
+        tsb = round((ctl or 0.0) - (atl or 0.0), 1) if ctl is not None or atl is not None else None
         records.append({
             "date": w.get("id"),  # wellness id is the ISO date string
-            "ctl": round(ctl, 1) if ctl else None,
-            "atl": round(atl, 1) if atl else None,
+            "ctl": round(ctl, 1) if ctl is not None else None,
+            "atl": round(atl, 1) if atl is not None else None,
             "tsb": tsb,
             "ramp_rate": w.get("rampRate"),
             "hrv": w.get("hrv"),
@@ -549,6 +570,10 @@ def register_tools(ctx) -> None:
     """Register all intervals.icu tools with the Hermes plugin context."""
 
     def _tool(name: str, description: str, properties: dict, required: list, fn):
+        # Strip discord_id from model-visible schema — identity comes exclusively
+        # from the gateway (kw["user_id"]), never from model-supplied arguments (M1).
+        model_props = {k: v for k, v in properties.items() if k != "discord_id"}
+        model_req = [r for r in required if r != "discord_id"]
         ctx.register_tool(
             name=name,
             toolset="training",
@@ -557,16 +582,18 @@ def register_tools(ctx) -> None:
                 "description": description,
                 "parameters": {
                     "type": "object",
-                    "properties": properties,
-                    "required": required,
+                    "properties": model_props,
+                    "required": model_req,
                 },
             },
             handler=lambda args, **kw: fn(
-                discord_id=kw.get("user_id") or args.get("discord_id", ""),
-                **{k: v for k, v in args.items() if k != "discord_id"},
+                discord_id=_require_user_id(kw),
+                **args,
             ),
         )
 
+    # discord_id is kept as a sentinel in properties dicts so the filtering above
+    # can strip it; it is never sent to the model.
     _DISCORD_ID_PROP = {
         "discord_id": {
             "type": "string",

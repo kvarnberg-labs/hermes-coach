@@ -24,6 +24,13 @@ if [ -d /opt/hermes/coach-skills ]; then
   done
 fi
 
+# Sync AGENTS.md for the self-improvement cron loop workdir (only if not present,
+# so manual edits on the PVC survive image updates)
+if [ -f /opt/hermes/AGENTS.md ] && [ ! -f "${HERMES_HOME}/AGENTS.md" ]; then
+  cp /opt/hermes/AGENTS.md "${HERMES_HOME}/AGENTS.md"
+  echo "Installed AGENTS.md"
+fi
+
 # Ensure user plugins directory exists (Hermes discovers plugins from here)
 mkdir -p "${HERMES_HOME}/plugins"
 chown -R hermes:hermes "${HERMES_HOME}/coach-brain" \

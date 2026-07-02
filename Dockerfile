@@ -25,6 +25,12 @@ COPY --chown=hermes:hermes skills/ /opt/hermes/coach-skills/
 # Copy sandbox runner script used by the Job containers
 COPY --chown=hermes:hermes sandbox/ /opt/hermes/sandbox/
 
+# Copy self-improvement loop scripts (scan-signals.sh, etc.)
+COPY --chmod=0755 scripts/ /opt/hermes/scripts/
+
+# Copy AGENTS.md for the cron loop workdir (synced to /opt/data at startup)
+COPY --chown=hermes:hermes AGENTS.md /opt/hermes/AGENTS.md
+
 # Install training plugin Python dependencies into the existing venv.
 # httpx is already in hermes-agent; pyyaml and kubernetes are new.
 RUN uv pip install --python /opt/hermes/.venv/bin/python \

@@ -17,6 +17,8 @@ import json
 import logging
 from typing import Any
 
+from .intervals_icu import _require_user_id
+
 logger = logging.getLogger(__name__)
 
 
@@ -86,6 +88,10 @@ def coach_onboard(
         ),
         "athlete_id": athlete_id,
         "name": name,
+        "security_note": (
+            "For your security: please delete the Discord message where you shared "
+            "your API key. You can edit or delete messages by right-clicking on them."
+        ),
     })
 
 
@@ -104,10 +110,6 @@ def register_tools(ctx) -> None:
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "discord_id": {
-                        "type": "string",
-                        "description": "Discord user ID of the athlete.",
-                    },
                     "athlete_id": {
                         "type": "string",
                         "description": (
@@ -122,11 +124,11 @@ def register_tools(ctx) -> None:
                         ),
                     },
                 },
-                "required": ["discord_id", "athlete_id", "api_key"],
+                "required": ["athlete_id", "api_key"],
             },
         },
         handler=lambda args, **kw: coach_onboard(
-            discord_id=kw.get("user_id") or args.get("discord_id", ""),
+            discord_id=_require_user_id(kw),
             athlete_id=args["athlete_id"],
             api_key=args["api_key"],
         ),

@@ -25,3 +25,8 @@ data:
   # No channel or role config needed; access is controlled via
   # DISCORD_ALLOWED_USERS in the sealed secret (one ID per athlete).
   DISCORD_REQUIRE_MENTION: "false"
+
+  # Self-improvement loop: set to a Discord channel ID (snowflake) to enable
+  # daily coaching improvements via the cron scheduler.
+  # Leave empty to disable the loop entirely.
+  SELF_IMPROVE_CHANNEL: ""

@@ -108,3 +108,62 @@ class TestStoreAndLoadCredentials:
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         with pytest.raises(ValueError, match="No intervals.icu credentials found"):
             intervals_icu._load_credentials("nonexistent-user")
+
+
+class TestRequireUserId:
+    def test_valid_snowflake_returns_id(self):
+        uid = intervals_icu._require_user_id({"user_id": "123456789012345678"})
+        assert uid == "123456789012345678"
+
+    def test_missing_raises(self):
+        with pytest.raises(ValueError, match="User identity check failed"):
+            intervals_icu._require_user_id({})
+
+    def test_empty_string_raises(self):
+        with pytest.raises(ValueError, match="User identity check failed"):
+            intervals_icu._require_user_id({"user_id": ""})
+
+    def test_non_numeric_raises(self):
+        with pytest.raises(ValueError, match="User identity check failed"):
+            intervals_icu._require_user_id({"user_id": "attacker_id"})
+
+    def test_short_id_raises(self):
+        # Too short to be a Discord snowflake (< 17 digits)
+        with pytest.raises(ValueError, match="User identity check failed"):
+            intervals_icu._require_user_id({"user_id": "1234"})
+
+
+class TestTSBCalculation:
+    def _parse_wellness(self, data_list):
+        """Helper: run get_wellness parse logic against synthetic data."""
+        # We replicate the parse loop from get_wellness to test it directly.
+        import json
+        records = []
+        for w in data_list:
+            ctl = w.get("ctl")
+            atl = w.get("atl")
+            tsb = round((ctl or 0.0) - (atl or 0.0), 1) if ctl is not None or atl is not None else None
+            records.append({
+                "ctl": round(ctl, 1) if ctl is not None else None,
+                "atl": round(atl, 1) if atl is not None else None,
+                "tsb": tsb,
+            })
+        return records
+
+    def test_tsb_normal(self):
+        rows = self._parse_wellness([{"ctl": 50.5, "atl": 60.3}])
+        assert rows[0]["tsb"] == -9.8
+
+    def test_tsb_zero_ctl_and_atl(self):
+        # Athlete with no training history — both 0.0 is valid, TSB should be 0.0
+        rows = self._parse_wellness([{"ctl": 0.0, "atl": 0.0}])
+        assert rows[0]["tsb"] == 0.0, "TSB must be 0.0 when CTL=ATL=0, not None"
+
+    def test_tsb_none_when_both_missing(self):
+        rows = self._parse_wellness([{}])
+        assert rows[0]["tsb"] is None
+
+    def test_ctl_zero_produces_non_null(self):
+        rows = self._parse_wellness([{"ctl": 0.0, "atl": 10.0}])
+        assert rows[0]["ctl"] == 0.0
+        assert rows[0]["tsb"] == -10.0

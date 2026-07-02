@@ -17,7 +17,7 @@ spec:
         app: hermes
       annotations:
         # Bump this string to force a rolling restart without changing config
-        hermes.kvarnberg.io/config-generation: "coach-v1"
+        hermes.kvarnberg.io/config-generation: "coach-v2"
     spec:
       serviceAccountName: hermes-autonomy
       imagePullSecrets:
@@ -66,6 +66,27 @@ spec:
 
               # Loop safety
               HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tool_loop_guardrails.hard_stop_enabled true
+
+              # Enable training plugin (opt-in default; must run before gateway starts).
+              # develop_tool is now in toolset "self-improve" so Discord users cannot call it.
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes plugins enable training
+
+              # Initialise self-improvement loop directories on the PVC (idempotent)
+              mkdir -p /opt/data/loops/signals
+              [ -f /opt/data/loops/worklog.md ] || \
+                printf '# Self-Improvement Worklog\n\n' > /opt/data/loops/worklog.md
+
+              # Register self-improvement cron (idempotent; skipped if SELF_IMPROVE_CHANNEL unset)
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes cron delete self-improve \
+                2>/dev/null || true
+              if [ -n "${SELF_IMPROVE_CHANNEL:-}" ]; then
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes cron create '0 4 * * *' \
+                  --name self-improve \
+                  --skill self-improvement \
+                  --workdir /opt/data \
+                  --script /opt/hermes/scripts/scan-signals.sh \
+                  --deliver "discord:${SELF_IMPROVE_CHANNEL}"
+              fi
 
               # Discord platform toolsets: members get training tools only
               HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tools.discord.enabled '["training","weather","memory","skills","clarify"]'
@@ -131,6 +152,15 @@ spec:
             limits:
               cpu: "2"
               memory: 4Gi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10000
+            runAsGroup: 10000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
 
       volumes:
         - name: data
