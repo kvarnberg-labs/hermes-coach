@@ -38,13 +38,20 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # k8s API server (for sandbox Job submission)
+    # k8s API server — ClusterIP (10.43.0.1) and node public IP, port 6443
+    # k3s exposes the API server on 6443, not 443.
     - to:
         - ipBlock:
             cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
-          port: 443
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 167.233.152.107/32
+      ports:
+        - protocol: TCP
+          port: 6443
     # All outbound HTTPS (model provider, Discord, intervals.icu, Open-Meteo, GHCR)
     - to:
         - ipBlock:

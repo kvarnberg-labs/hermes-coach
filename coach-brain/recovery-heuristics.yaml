@@ -3,7 +3,6 @@
 # Evidence-based guidelines for assessing and managing athlete recovery.
 
 recovery_heuristics:
-
   tsb_interpretation:
     description: TSB (Training Stress Balance) = CTL - ATL. Also called "form".
     ranges:
@@ -77,18 +76,17 @@ recovery_heuristics:
     volume_reduction: "30–40% reduction from peak week"
     intensity: "Reduce intensity AND volume during recovery weeks"
 
-
 # Fatigue Management
 fatigue_management:
-
   overtraining_syndrome_warning_signs:
-    - "Performance decline despite maintained or increased training"
-    - "Persistent HRV suppression > 2 weeks"
-    - "Elevated resting HR > 5 bpm above normal"
-    - "Mood disturbances: irritability, depression, lack of motivation"
-    - "Sleep disturbances despite fatigue"
-    - "Increased illness frequency"
-    - "Muscle soreness that does not resolve with rest"
+    signs:
+      - "Performance decline despite maintained or increased training"
+      - "Persistent HRV suppression > 2 weeks"
+      - "Elevated resting HR > 5 bpm above normal"
+      - "Mood disturbances: irritability, depression, lack of motivation"
+      - "Sleep disturbances despite fatigue"
+      - "Increased illness frequency"
+      - "Muscle soreness that does not resolve with rest"
     action: >
       If 3+ signs present: recommend 1–2 weeks complete rest, followed by
       gradual return. Consider referral to sports medicine physician if

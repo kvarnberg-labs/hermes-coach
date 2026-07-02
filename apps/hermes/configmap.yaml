@@ -26,6 +26,10 @@ data:
   # DISCORD_ALLOWED_USERS in the sealed secret (one ID per athlete).
   DISCORD_REQUIRE_MENTION: "false"
 
+  # Log level — WARNING surfaces tool errors and coach-brain misses without noise.
+  # Change to DEBUG temporarily when diagnosing a specific issue.
+  LOG_LEVEL: "WARNING"
+
   # Self-improvement loop: Discord channel where improvement summaries are announced.
   # Loop always runs at 04:00 UTC and creates PRs. This channel gets the summary.
   SELF_IMPROVE_CHANNEL: "1508814801869082758"

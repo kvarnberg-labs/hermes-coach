@@ -5,7 +5,6 @@
 # goals, and response to training.
 
 training_philosophies:
-
   polarized:
     summary: >
       ~80% of training volume at low intensity (below first lactate threshold),
@@ -35,7 +34,33 @@ training_philosophies:
       Most observed distribution in competitive age-group and masters athletes.
       Pragmatic and sustainable for those who cannot strictly enforce polarized zones.
 
-  threshold_focused:
+  norwegian_singles:
+    summary: >
+      One quality threshold session per day maximum, never two consecutive.
+      All other sessions are genuinely easy (Zone 1 / conversational).
+      Popularised by Marius Bakken and the Norwegian distance running program.
+    structure:
+      threshold_day: "1–2 × 4–10 min at lactate threshold pace/HR, 60–90 sec rest between reps"
+      easy_day: "Zone 1 only — conversational pace, HR well below VT1"
+      pattern: "Threshold → Easy → (Easy or Threshold) → repeat"
+      weekly_threshold_sessions: "2–3 maximum; beginners start with 2"
+    key_principles:
+      - "Easy days must be truly easy — no tempo, no grey zone"
+      - "Threshold reps are sub-maximal: 3/10 RPE, not a time trial"
+      - "Lactate testing preferred to set accurate threshold; HR or pace as proxy"
+      - "Build volume first, add threshold sessions only when base is established"
+    paces_from_running_data: >
+      If the athlete has recent threshold intervals in intervals.icu, use the
+      average pace of the rep intervals (not the full session) as threshold pace.
+      Easy pace = threshold pace + 60–90 sec/km minimum.
+    best_for:
+      - runners building aerobic base with structured quality
+      - athletes who want simplicity: one hard lever to pull
+      - masters runners who need more recovery between hard sessions
+    caution: >
+      Threshold intensity must be honest. Many athletes run easy days too hard
+      (grey zone) and threshold days too easy. Use lactate or power to calibrate.
+
     summary: >
       Significant volume at lactate threshold (FTP ±5%), typically 1–2 sessions/week
       at threshold alongside moderate base volume.
@@ -60,10 +85,8 @@ training_philosophies:
       - enhanced cardiac stroke volume
       - better capillary density
 
-
 # Periodization Models
 periodization:
-
   linear:
     summary: Gradual, progressive increase in load over time. Simple and effective for beginners.
     cycle: "4 weeks: 3 build + 1 recovery"
@@ -85,10 +108,8 @@ periodization:
       as the season progresses. Less common but used for time-crunched athletes
       or in short race-prep blocks.
 
-
 # Intensity Zones
 intensity_zones:
-
   coggan_power_7_zone:
     description: Coggan 7-zone power model (most common in cycling)
     zones:
