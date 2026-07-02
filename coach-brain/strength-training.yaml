@@ -1,0 +1,91 @@
+---
+# Strength Training for Cyclists
+# Evidence-based off-bike strength training to improve cycling economy,
+# injury resilience, bone density, and peak power output.
+# Sources: Rønnestad et al. (2010–2021), Sunde et al. (2010),
+#          Beattie et al. (2017), Vikmoen et al. (2015),
+#          ACSM Position Stand on Resistance Training (2009).
+
+strength_training:
+
+  overview:
+    description: >
+      Concurrent strength and endurance training improves cycling economy
+      (3–5%), time-to-exhaustion at FTP (+15–20%), and peak sprint power
+      without adding body mass when programmed correctly. The primary
+      adaptation is neuromuscular — improved motor unit recruitment and
+      rate of force development — not hypertrophy.
+    benefits:
+      - "Cycling economy: 3–5% less O2/power at submaximal intensities"
+      - "Peak power: 5–10% improvement in 5–30 sec sprint power"
+      - "Injury prevention: stronger connective tissue and bone density"
+      - "Bone health: offsets cycling's non-weight-bearing bone loss risk"
+
+  seasonal_phasing:
+    off_season: "2–3 strength sessions/week. Primary training focus."
+    base_build: "1–2 sessions/week. Schedule away from key bike sessions."
+    race_season: "1 session/week maintenance. Enough to retain gains."
+    taper: "Stop strength work 10–14 days before A-race."
+
+  exercise_selection:
+    compound_primary:
+      - "Barbell back squat or goblet squat"
+      - "Conventional or trap-bar deadlift"
+      - "Bulgarian split squat (unilateral, bike-specific)"
+      - "Hip thrust or glute bridge"
+    accessory:
+      - "Single-leg Romanian deadlift"
+      - "Box step-ups with load"
+      - "Calf raises"
+    core:
+      - "Plank and side plank variations"
+      - "Dead bug"
+      - "Pallof press (anti-rotation, important for cycling posture)"
+    caution: "Avoid machine leg extensions — shear force on knees at high load."
+
+  periodization:
+    anatomical_adaptation_weeks_1_3:
+      reps: "12–15"
+      sets: 2
+      load: "50–60% 1RM"
+      rest: "60–90 sec"
+      focus: "Movement quality, tendon adaptation, confidence under bar."
+    maximal_strength_weeks_4_12:
+      reps: "4–6"
+      sets: "3–4"
+      load: "80–90% 1RM"
+      rest: "3 min"
+      focus: "Neural adaptations. This phase drives cycling economy gains."
+    power_conversion_weeks_13_16:
+      reps: "3–5 explosive, 30–40% 1RM"
+      sets: 3
+      rest: "2–3 min"
+      focus: "Move the load fast. Intent matters more than load."
+
+  concurrent_training_rules:
+    schedule_priority:
+      guidance: >
+        Hard bike session and hard gym session on the same day: separate by
+        ≥ 6 hours. Bike first if cycling quality is the priority. Gym first
+        in off-season when strength is the priority.
+    avoid: >
+      Heavy leg day the day before a threshold or VO2max session.
+      Residual fatigue from squats/deadlifts impairs power output at FTP
+      for ~48 hours.
+    easy_day_rule: >
+      Strength session after an easy Z1–Z2 ride (or a rest day) is ideal
+      — minimal interference with bike adaptations.
+
+  masters_athletes_40_plus:
+    frequency: "2 sessions/week year-round (do not drop below 1)"
+    reps: "8–12 (moderate load) — maximal loads (90%+) have higher injury risk"
+    emphasis: "Power output (move submaximal loads fast) over 1RM chasing"
+    bonus: "Bone density preservation is arguably more important than any wattage gain"
+
+  practical_guidance:
+    warm_up: "5 min cycling or bodyweight circuit + 2–3 ramp-up sets"
+    progression: "Add load when all reps in all sets are clean. +2.5–5 kg."
+    soreness: >
+      DOMS from new strength stimulus is normal for first 2 weeks.
+      Do not skip bike sessions because of DOMS — easy spinning helps.
+    tracking: "Log sets × reps × load. Progressive overload is non-negotiable."
