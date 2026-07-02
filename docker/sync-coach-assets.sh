@@ -34,11 +34,9 @@ fi
 # Worklog and signals are runtime-written; only seed them if absent.
 if [ -f /opt/hermes/loops/self-improve/CONTRACT.md ]; then
   mkdir -p "${HERMES_HOME}/loops/self-improve" "${HERMES_HOME}/loops/signals"
-  if [ ! -f "${HERMES_HOME}/loops/self-improve/CONTRACT.md" ]; then
-    cp /opt/hermes/loops/self-improve/CONTRACT.md \
-       "${HERMES_HOME}/loops/self-improve/CONTRACT.md"
-    echo "Installed loops/self-improve/CONTRACT.md"
-  fi
+  cp /opt/hermes/loops/self-improve/CONTRACT.md \
+     "${HERMES_HOME}/loops/self-improve/CONTRACT.md"
+  echo "Synced loops/self-improve/CONTRACT.md"
   if [ ! -f "${HERMES_HOME}/loops/worklog.md" ]; then
     printf '# Self-Improvement Worklog\n\n' > "${HERMES_HOME}/loops/worklog.md"
   fi
