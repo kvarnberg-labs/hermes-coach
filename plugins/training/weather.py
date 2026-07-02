@@ -139,8 +139,28 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
 
     if feels is not None and feels > 35:
         notes.append("Heat risk: apparent temperature above 35°C — avoid high intensity outdoors.")
+    elif feels is not None and feels >= 30:
+        notes.append(
+            f"Hot conditions ({feels:.0f}°C feels-like). Train early or late in the day, "
+            "reduce intensity 10–15%, and hydrate with electrolytes."
+        )
     elif feels is not None and feels < -10:
         notes.append("Cold risk: apparent temperature below -10°C — dress in layers, reduce intensity.")
+    elif feels is not None and feels <= 0:
+        notes.append(
+            f"Cold conditions ({feels:.0f}°C feels-like). Layer up, protect extremities "
+            "(gloves, shoe covers), and warm up indoors first."
+        )
+
+    # Humidity amplifies heat stress at moderate temperatures
+    humidity = current.get("relative_humidity_2m")
+    if temp is not None and humidity is not None and temp >= 25 and humidity > 70 and not any(
+        "Heat risk" in n for n in notes
+    ):
+        notes.append(
+            f"Humid conditions ({humidity:.0f}% RH at {temp:.0f}°C) — "
+            "sweat evaporation is reduced, raising effective heat stress. Increase fluid intake."
+        )
 
     if wind > 50:
         notes.append(f"Strong wind ({wind:.0f} km/h) — expect significantly higher effort on exposed routes.")
