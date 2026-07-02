@@ -57,7 +57,7 @@ spec:
                        profile_describer approval mcp skills_hub web_extract vision; do
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.base_url "$HERMES_INFERENCE_BASE_URL"
-                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model deepseek-v4-flash
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model deepseek-v4-pro
               done
 
               # Memory limits — enough for several user profiles
@@ -76,16 +76,23 @@ spec:
               [ -f /opt/data/loops/worklog.md ] || \
                 printf '# Self-Improvement Worklog\n\n' > /opt/data/loops/worklog.md
 
-              # Register self-improvement cron (idempotent; skipped if SELF_IMPROVE_CHANNEL unset)
+              # Register self-improvement cron (idempotent; always runs, Discord delivery optional).
+              # SELF_IMPROVE_CHANNEL is optional — the loop still runs and creates PRs without it.
               HOME=/opt/data /opt/hermes/.venv/bin/hermes cron delete self-improve \
                 2>/dev/null || true
               if [ -n "${SELF_IMPROVE_CHANNEL:-}" ]; then
-                HOME=/opt/data /opt/hermes/.venv/bin/hermes cron create '0 4 * * *' \
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes cron create '0 11 * * *' \
                   --name self-improve \
                   --skill self-improvement \
                   --workdir /opt/data \
                   --script /opt/hermes/scripts/scan-signals.sh \
                   --deliver "discord:${SELF_IMPROVE_CHANNEL}"
+              else
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes cron create '0 11 * * *' \
+                  --name self-improve \
+                  --skill self-improvement \
+                  --workdir /opt/data \
+                  --script /opt/hermes/scripts/scan-signals.sh
               fi
 
               # Discord platform toolsets: members get training tools only

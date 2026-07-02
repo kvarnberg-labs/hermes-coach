@@ -6,6 +6,7 @@ Registers all coaching tools via the Hermes plugin ctx interface:
   - coaching        : retrieve coach-brain knowledge (1 tool)
   - onboarding      : /start slash command handler (1 tool)
   - sandbox_client  : autonomous tool development via k8s Jobs (1 tool)
+  - render_chart    : generate dark-mode PNG charts for Discord (3 tools)
 """
 
 from __future__ import annotations
@@ -18,9 +19,11 @@ def register(ctx):
     from .coaching import register_tools as register_coaching
     from .onboarding import register_tools as register_onboarding
     from .sandbox_client import register_tools as register_sandbox
+    from .render_chart import register_tools as register_charts
 
     register_intervals(ctx)
     register_weather(ctx)
     register_coaching(ctx)
     register_onboarding(ctx)
     register_sandbox(ctx)
+    register_charts(ctx)

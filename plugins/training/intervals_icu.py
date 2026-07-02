@@ -43,8 +43,8 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# Discord snowflake IDs are 17–20 decimal digits.
-_DISCORD_ID_RE = re.compile(r"^\d{17,20}$")
+# Discord snowflake IDs are 17–20 decimal digits, never all-zeros.
+_DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
 
 
 def _require_user_id(kw: dict) -> str:
@@ -407,9 +407,10 @@ def get_wellness(
     for w in (data if isinstance(data, list) else [data]):
         ctl = w.get("ctl")
         atl = w.get("atl")
-        # Use `is not None` so legitimate 0.0 CTL/ATL values produce TSB=0.0,
-        # not None. The old `if ctl and atl` dropped any entry where either was 0.
-        tsb = round((ctl or 0.0) - (atl or 0.0), 1) if ctl is not None or atl is not None else None
+        # Require both to be present: TSB is meaningless if one side is unknown.
+        # Using `and` (not `or`) avoids treating a missing ATL as zero and returning
+        # a spurious positive TSB. The old `if ctl and atl` additionally broke on 0.0.
+        tsb = round(ctl - atl, 1) if ctl is not None and atl is not None else None
         records.append({
             "date": w.get("id"),  # wellness id is the ISO date string
             "ctl": round(ctl, 1) if ctl is not None else None,

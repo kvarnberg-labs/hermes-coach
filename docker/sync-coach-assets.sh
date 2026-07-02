@@ -31,6 +31,20 @@ if [ -f /opt/hermes/AGENTS.md ] && [ ! -f "${HERMES_HOME}/AGENTS.md" ]; then
   echo "Installed AGENTS.md"
 fi
 
+# Sync self-improvement loop files — CONTRACT.md is read by the cron agent every run.
+# Worklog and signals are runtime-written; only seed them if absent.
+if [ -f /opt/hermes/loops/self-improve/CONTRACT.md ]; then
+  mkdir -p "${HERMES_HOME}/loops/self-improve" "${HERMES_HOME}/loops/signals"
+  if [ ! -f "${HERMES_HOME}/loops/self-improve/CONTRACT.md" ]; then
+    cp /opt/hermes/loops/self-improve/CONTRACT.md \
+       "${HERMES_HOME}/loops/self-improve/CONTRACT.md"
+    echo "Installed loops/self-improve/CONTRACT.md"
+  fi
+  if [ ! -f "${HERMES_HOME}/loops/worklog.md" ]; then
+    printf '# Self-Improvement Worklog\n\n' > "${HERMES_HOME}/loops/worklog.md"
+  fi
+fi
+
 # Ensure user plugins directory exists (Hermes discovers plugins from here)
 mkdir -p "${HERMES_HOME}/plugins"
 chown -R hermes:hermes "${HERMES_HOME}/coach-brain" \

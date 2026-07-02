@@ -30,13 +30,15 @@ COPY --chmod=0755 scripts/ /opt/hermes/scripts/
 
 # Copy AGENTS.md for the cron loop workdir (synced to /opt/data at startup)
 COPY --chown=hermes:hermes AGENTS.md /opt/hermes/AGENTS.md
+COPY --chown=hermes:hermes loops/ /opt/hermes/loops/
 
 # Install training plugin Python dependencies into the existing venv.
 # httpx is already in hermes-agent; pyyaml and kubernetes are new.
 RUN uv pip install --python /opt/hermes/.venv/bin/python \
     "httpx>=0.28.1,<1" \
     "pyyaml>=6.0,<7" \
-    "kubernetes>=29.0.0,<32"
+    "kubernetes>=29.0.0,<32" \
+    "matplotlib>=3.8,<4"
 
 # stage2-hook (already in base image) runs at container start and syncs
 # /opt/hermes/coach-brain → /opt/data/coach-brain and

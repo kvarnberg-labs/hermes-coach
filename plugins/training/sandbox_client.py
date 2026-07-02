@@ -128,6 +128,7 @@ def _build_job_manifest(job_name: str, code_b64: str, test_b64: str) -> dict:
                         "runAsNonRoot": True,
                         "runAsUser": 1000,
                         "runAsGroup": 1000,
+                        "seccompProfile": {"type": "RuntimeDefault"},
                     },
                     "imagePullSecrets": [{"name": "ghcr-registry-secret"}],
                     "containers": [
