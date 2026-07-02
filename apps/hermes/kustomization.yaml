@@ -10,5 +10,6 @@ resources:
   - service.yaml
   - hermes-discord-sealed-secret.yaml
   - hermes-model-sealed-secret.yaml
+  - hermes-api-server-sealed-secret.yaml
   - coaching-prompt-configmap.yaml
   - configmap.yaml

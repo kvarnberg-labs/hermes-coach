@@ -98,6 +98,8 @@ spec:
                 name: hermes-discord-secret
             - secretRef:
                 name: hermes-model-secret
+            - secretRef:
+                name: hermes-api-server-secret
           env:
             - name: HERMES_HOME
               value: /opt/data
