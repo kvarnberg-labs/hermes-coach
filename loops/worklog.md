@@ -42,3 +42,22 @@
 - Outcome: File created locally; needs manual PR
 - Verification: ✓ 86 lines (over 50-line target, consistent with altitude.yaml at 96), ✓ no TSB/zone contradictions, ✓ evidence-based, ✓ safe physiological ranges
 
+## 2026-07-02 16:10 UTC
+- Signal: backlog item 5 (Fix SKILL.md TSB threshold cross-reference)
+- Action: Verified TSB -20 threshold consistency across all files:
+  - SKILL.md: "TSB < -20 is a recipe for injury" ✓
+  - recovery-heuristics: very_negative "< -20" ✓
+  - workout-library: recovery spin "TSB < -20" ✓
+  - injury-return: "if < -20, prescribed rest" ✓
+  - altitude: "Watch TSB closely" (no contradiction) ✓
+  - female-physiology: luteal TSB note (no contradiction) ✓
+  ALL -20 references are consistent.
+- Also fixed: range boundary overlaps in recovery-heuristics.yaml:
+  - "negative: -10 to -20" and "neutral: -10 to +5" both claimed -10
+  - "neutral: -10 to +5" and "positive: +5 to +25" both claimed +5
+  - Fixed: neutral → "> -10 to +5", positive → "> +5 to +25"
+  - Now: non-overlapping progression: <-20 | -20..-10 | >-10..+5 | >+5..+25 | >+25
+- PR: N/A — GITHUB_TOKEN not configured; manual PR required
+- Outcome: 2-line edit to recovery-heuristics.yaml; verified consistency across all 6 files
+- Verification: ✓ no contradictions introduced, ✓ clean non-overlapping ranges, ✓ backward-compatible
+

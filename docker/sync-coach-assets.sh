@@ -24,11 +24,10 @@ if [ -d /opt/hermes/coach-skills ]; then
   done
 fi
 
-# Sync AGENTS.md for the self-improvement cron loop workdir (only if not present,
-# so manual edits on the PVC survive image updates)
-if [ -f /opt/hermes/AGENTS.md ] && [ ! -f "${HERMES_HOME}/AGENTS.md" ]; then
+# Sync AGENTS.md for the self-improvement cron loop workdir.
+# Always overwrite so changes committed to the image are picked up.
+if [ -f /opt/hermes/AGENTS.md ]; then
   cp /opt/hermes/AGENTS.md "${HERMES_HOME}/AGENTS.md"
-  echo "Installed AGENTS.md"
 fi
 
 # Sync self-improvement loop files — CONTRACT.md is read by the cron agent every run.
