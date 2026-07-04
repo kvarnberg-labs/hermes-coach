@@ -26,28 +26,50 @@ def _brain_dir() -> Path:
     return hermes_home / "coach-brain"
 
 
+import time as _time
+
+_brain_cache: dict[str, Any] | None = None
+_brain_cache_mtime: float = 0.0
+_BRAIN_CACHE_TTL: float = 60.0  # seconds
+
+
 def _load_all() -> dict[str, Any]:
-    """Load and merge all YAML files from the coach-brain directory."""
+    """Load and merge all YAML files from the coach-brain directory.
+
+    Results are cached for _BRAIN_CACHE_TTL seconds to avoid repeated
+    disk I/O during multi-turn coaching sessions.
+    """
+    global _brain_cache, _brain_cache_mtime
+    now = _time.monotonic()
+    if _brain_cache is not None and (now - _brain_cache_mtime) < _BRAIN_CACHE_TTL:
+        return _brain_cache
+
     try:
         import yaml
     except ImportError:
         logger.warning("pyyaml not installed; coach-brain unavailable")
+        _brain_cache = {}
+        _brain_cache_mtime = now
         return {}
 
     brain: dict[str, Any] = {}
     d = _brain_dir()
     if not d.exists():
         logger.warning("coach-brain directory not found at %s", d)
+        _brain_cache = {}
+        _brain_cache_mtime = now
         return {}
 
     for f in sorted(d.glob("*.yaml")):
         try:
-            content = yaml.safe_load(f.read_text(encoding="utf-8"))
-            if isinstance(content, dict):
-                brain.update(content)
+            file_content = yaml.safe_load(f.read_text(encoding="utf-8"))
+            if isinstance(file_content, dict):
+                brain.update(file_content)
         except Exception as exc:
             logger.warning("Failed to load coach-brain file %s: %s", f.name, exc)
 
+    _brain_cache = brain
+    _brain_cache_mtime = now
     return brain
 
 
@@ -71,13 +93,29 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
     topic_lower = topic.lower()
     keywords = set(topic_lower.replace("-", " ").split())
 
+    # Sections that are always returned in full regardless of topic match —
+    # they are too large to usefully inject via keyword search and would
+    # dominate the context window. The agent should request them explicitly.
+    _OMNIBUS_SECTIONS = {"nutrition"}
+
     matched: dict[str, Any] = {}
     for key, value in brain.items():
+        # Skip omnibus sections unless the topic explicitly names them
+        if key in _OMNIBUS_SECTIONS:
+            if not any(kw in key for kw in keywords):
+                continue
+
         key_lower = key.lower().replace("_", " ").replace("-", " ")
-        # Match if any keyword appears in the key or the serialised content
-        content_str = (key_lower + " " + json.dumps(value)).lower()
-        if any(kw in content_str for kw in keywords):
+        # Match if any keyword appears in the key
+        if any(kw in key_lower for kw in keywords):
             matched[key] = value
+        else:
+            # Fuzzier fallback: keyword in serialised content (but only for
+            # non-omnibus sections to avoid pulling nutrition into every query)
+            if key not in _OMNIBUS_SECTIONS:
+                content_str = json.dumps(value).lower()
+                if any(kw in content_str for kw in keywords):
+                    matched[key] = value
 
     if not matched:
         # Fall back: return top-level keys so the agent knows what's available
@@ -106,9 +144,9 @@ def register_tools(ctx) -> None:
                 "Retrieve structured coaching knowledge for a specific topic. "
                 "Use this when you need evidence-based principles, workout definitions, "
                 "recovery heuristics, injury protocols, or race preparation guidelines. "
-                "Topics include: threshold intervals, vo2max, base building, recovery, "
-                "tapering, nutrition, injury, race preparation, "
-                "power zones, periodization."
+                "Topics include: altitude, cold weather, female physiology, heat, injury, "
+                "nutrition, power zones, recovery, sleep, strength training, "
+                "tapering, training philosophies, vo2max, workout library."
             ),
             "parameters": {
                 "type": "object",
