@@ -320,12 +320,14 @@ def get_recent_activities(
     params: dict = {
         "oldest": _n_days_ago_iso(days),
         "newest": _today_iso(),
-        # Request only the fields we need to keep the payload small
+        # Request all fields needed for both cycling and running coaching.
         "fields": (
             "id,name,start_date_local,type,moving_time,distance,"
             "icu_training_load,icu_ctl,icu_atl,icu_intensity,"
             "icu_weighted_avg_watts,icu_ftp,trimp,hr_load,power_load,"
-            "icu_rpe,feel,session_rpe"
+            "icu_rpe,feel,session_rpe,"
+            "pace,avg_pace,avg_heartrate,max_heartrate,max_speed,"
+            "total_elevation_gain,avg_cadence"
         ),
     }
     if sport:
@@ -360,7 +362,15 @@ def get_recent_activities(
                 "normalized_power_w": act.get("icu_weighted_avg_watts"),
                 "ftp_used_w": act.get("icu_ftp"),
                 "trimp": act.get("trimp"),
+                "hr_load": act.get("hr_load"),
+                "power_load": act.get("power_load"),
                 "rpe": act.get("icu_rpe") or act.get("session_rpe") or act.get("feel"),
+                "pace_mps": act.get("pace") or act.get("avg_pace"),
+                "avg_hr": act.get("avg_heartrate"),
+                "max_hr": act.get("max_heartrate"),
+                "max_speed_mps": act.get("max_speed"),
+                "elevation_gain_m": act.get("total_elevation_gain"),
+                "avg_cadence": act.get("avg_cadence"),
             }
         )
 
@@ -369,6 +379,87 @@ def get_recent_activities(
         "days": days,
         "count": len(activities),
         "activities": activities,
+    }
+    _cache_set(discord_id, ck, result)
+    return json.dumps(result)
+
+
+def get_activity_detail(
+    discord_id: str,
+    activity_id: str,
+    **_: Any,
+) -> str:
+    """Fetch full detail for a single activity including laps, splits, and HR data.
+
+    Use this after get_recent_activities when you need to analyze a specific
+    workout in depth — interval splits, HR zone distribution, pace zones,
+    and lap-by-lap data that the summary endpoint omits.
+
+    Args:
+        activity_id: The intervals.icu activity ID (e.g. "i161875412").
+                     Obtain this from get_recent_activities output.
+    """
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    params = {
+        "fields": (
+            "id,name,start_date_local,type,moving_time,distance,"
+            "icu_training_load,icu_intensity,"
+            "avg_heartrate,max_heartrate,"
+            "pace,avg_pace,max_speed,"
+            "total_elevation_gain,avg_cadence,"
+            "laps,pace_zones,pace_zone_times,"
+            "heartrate_zones,heartrate_zone_times,"
+            "power_zones,power_zone_times,"
+            "icu_weighted_avg_watts,icu_ftp"
+        ),
+    }
+
+    ck = _cache_key(f"/athlete/{athlete_id}/activities/{activity_id}", params)
+    cached = _cache_get(discord_id, ck, _TTL_ACTIVITIES)
+    if cached is not None:
+        return json.dumps(cached)
+
+    try:
+        data = _request(
+            athlete_id, api_key,
+            f"/athlete/{athlete_id}/activities/{activity_id}",
+            params,
+        )
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+
+    # The detail endpoint returns a single object, not a list
+    act = data if isinstance(data, dict) else (data[0] if isinstance(data, list) and data else {})
+
+    result = {
+        "source": "intervals.icu",
+        "activity_id": activity_id,
+        "name": act.get("name"),
+        "date": (act.get("start_date_local") or "")[:10],
+        "type": act.get("type"),
+        "duration_min": round((act.get("moving_time") or 0) / 60, 1),
+        "distance_km": round((act.get("distance") or 0) / 1000, 2),
+        "training_load": act.get("icu_training_load"),
+        "intensity_factor": act.get("icu_intensity"),
+        "avg_hr": act.get("avg_heartrate"),
+        "max_hr": act.get("max_heartrate"),
+        "pace_mps": act.get("pace") or act.get("avg_pace"),
+        "max_speed_mps": act.get("max_speed"),
+        "elevation_gain_m": act.get("total_elevation_gain"),
+        "avg_cadence": act.get("avg_cadence"),
+        "normalized_power_w": act.get("icu_weighted_avg_watts"),
+        "ftp_w": act.get("icu_ftp"),
+        "pace_zones": act.get("pace_zones"),
+        "pace_zone_times": act.get("pace_zone_times"),
+        "hr_zones": act.get("heartrate_zones"),
+        "hr_zone_times": act.get("heartrate_zone_times"),
+        "power_zones": act.get("power_zones"),
+        "power_zone_times": act.get("power_zone_times"),
+        "laps": act.get("laps"),
     }
     _cache_set(discord_id, ck, result)
     return json.dumps(result)
@@ -435,6 +526,15 @@ def get_wellness(
                 "soreness": w.get("soreness"),
                 "motivation": w.get("motivation"),
                 "mood": w.get("mood"),
+                "sport_info": [
+                    {
+                        "sport": si.get("type"),
+                        "eftp": si.get("eftp"),
+                        "w_prime": si.get("wPrime"),
+                        "p_max": si.get("pMax"),
+                    }
+                    for si in (w.get("sportInfo") or [])
+                ],
             }
         )
 
@@ -723,4 +823,27 @@ def register_tools(ctx) -> None:
         },
         required=["discord_id"],
         fn=get_power_curve,
+    )
+
+    _tool(
+        name="get_activity_detail",
+        description=(
+            "Fetch full detail for a single activity from intervals.icu: "
+            "laps, pace zones, HR zones, splits. "
+            "Use this after get_recent_activities when you need to analyze "
+            "a specific workout in depth (e.g. interval splits or zone distribution). "
+            "The activity_id comes from the 'id' field in get_recent_activities output."
+        ),
+        properties={
+            **_DISCORD_ID_PROP,
+            "activity_id": {
+                "type": "string",
+                "description": (
+                    "The intervals.icu activity ID (e.g. 'i161875412'). "
+                    "Obtain this from get_recent_activities output."
+                ),
+            },
+        },
+        required=["discord_id", "activity_id"],
+        fn=get_activity_detail,
     )
