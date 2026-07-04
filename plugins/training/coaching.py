@@ -30,6 +30,7 @@ import time as _time
 
 _brain_cache: dict[str, Any] | None = None
 _brain_cache_mtime: float = 0.0
+_brain_cache_dir: str | None = None
 _BRAIN_CACHE_TTL: float = 60.0  # seconds
 
 
@@ -37,11 +38,18 @@ def _load_all() -> dict[str, Any]:
     """Load and merge all YAML files from the coach-brain directory.
 
     Results are cached for _BRAIN_CACHE_TTL seconds to avoid repeated
-    disk I/O during multi-turn coaching sessions.
+    disk I/O during multi-turn coaching sessions.  The cache is keyed
+    by the brain directory path so that directory changes (e.g. in
+    tests) invalidate stale entries.
     """
-    global _brain_cache, _brain_cache_mtime
+    global _brain_cache, _brain_cache_mtime, _brain_cache_dir
     now = _time.monotonic()
-    if _brain_cache is not None and (now - _brain_cache_mtime) < _BRAIN_CACHE_TTL:
+    current_dir = str(_brain_dir())
+    if (
+        _brain_cache is not None
+        and _brain_cache_dir == current_dir
+        and (now - _brain_cache_mtime) < _BRAIN_CACHE_TTL
+    ):
         return _brain_cache
 
     try:
@@ -50,6 +58,7 @@ def _load_all() -> dict[str, Any]:
         logger.warning("pyyaml not installed; coach-brain unavailable")
         _brain_cache = {}
         _brain_cache_mtime = now
+        _brain_cache_dir = current_dir
         return {}
 
     brain: dict[str, Any] = {}
@@ -58,6 +67,7 @@ def _load_all() -> dict[str, Any]:
         logger.warning("coach-brain directory not found at %s", d)
         _brain_cache = {}
         _brain_cache_mtime = now
+        _brain_cache_dir = current_dir
         return {}
 
     for f in sorted(d.glob("*.yaml")):
@@ -70,6 +80,7 @@ def _load_all() -> dict[str, Any]:
 
     _brain_cache = brain
     _brain_cache_mtime = now
+    _brain_cache_dir = current_dir
     return brain
 
 
