@@ -37,7 +37,7 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -75,9 +75,12 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Bump deployment annotation to trigger Flux rollout
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           SHORT_SHA=$(git rev-parse --short HEAD)
           sed -i "s|hermes.kvarnberg.io/config-generation:.*|hermes.kvarnberg.io/config-generation: \"main-${SHORT_SHA}\"|" \
             apps/hermes/deployment.yaml
