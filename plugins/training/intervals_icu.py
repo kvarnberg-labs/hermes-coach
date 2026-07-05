@@ -408,13 +408,20 @@ def get_activity_detail(
         "fields": (
             "id,name,start_date_local,type,moving_time,distance,"
             "icu_training_load,icu_intensity,"
-            "avg_heartrate,max_heartrate,"
+            "avg_heartrate,max_heartrate,lthr,"
             "pace,avg_pace,max_speed,"
             "total_elevation_gain,avg_cadence,"
-            "laps,pace_zones,pace_zone_times,"
-            "heartrate_zones,heartrate_zone_times,"
-            "power_zones,power_zone_times,"
-            "icu_weighted_avg_watts,icu_ftp"
+            "icu_lap_count,laps,interval_summary,"
+            "icu_hr_zones,icu_hr_zone_times,"
+            "icu_power_zones,icu_zone_times,"
+            "icu_weighted_avg_watts,icu_average_watts,icu_ftp,"
+            "icu_rpe,feel,session_rpe,"
+            "calories,carbs_used,coasting_time,"
+            "decoupling,icu_variability_index,icu_efficiency_factor,"
+            "icu_power_hr,icu_power_hr_z2_mins,"
+            "icu_sweet_spot_min,icu_sweet_spot_max,"
+            "icu_joules_above_ftp,"
+            "icu_warmup_time,icu_cooldown_time,icu_cadence_z2"
         ),
     }
 
@@ -447,18 +454,34 @@ def get_activity_detail(
         "intensity_factor": act.get("icu_intensity"),
         "avg_hr": act.get("avg_heartrate"),
         "max_hr": act.get("max_heartrate"),
+        "lthr": act.get("lthr"),
         "pace_mps": act.get("pace") or act.get("avg_pace"),
         "max_speed_mps": act.get("max_speed"),
         "elevation_gain_m": act.get("total_elevation_gain"),
         "avg_cadence": act.get("avg_cadence"),
         "normalized_power_w": act.get("icu_weighted_avg_watts"),
+        "avg_power_w": act.get("icu_average_watts"),
         "ftp_w": act.get("icu_ftp"),
-        "pace_zones": act.get("pace_zones"),
-        "pace_zone_times": act.get("pace_zone_times"),
-        "hr_zones": act.get("heartrate_zones"),
-        "hr_zone_times": act.get("heartrate_zone_times"),
-        "power_zones": act.get("power_zones"),
-        "power_zone_times": act.get("power_zone_times"),
+        "rpe": act.get("icu_rpe") or act.get("feel") or act.get("session_rpe"),
+        "calories": act.get("calories"),
+        "carbs_used_g": act.get("carbs_used"),
+        "coasting_time_s": act.get("coasting_time"),
+        "decoupling_pct": act.get("decoupling"),
+        "variability_index": act.get("icu_variability_index"),
+        "efficiency_factor": act.get("icu_efficiency_factor"),
+        "power_hr_ratio": act.get("icu_power_hr"),
+        "power_hr_z2_mins": act.get("icu_power_hr_z2_mins"),
+        "sweet_spot_min_pct": act.get("icu_sweet_spot_min"),
+        "sweet_spot_max_pct": act.get("icu_sweet_spot_max"),
+        "joules_above_ftp": act.get("icu_joules_above_ftp"),
+        "warmup_time_s": act.get("icu_warmup_time"),
+        "cooldown_time_s": act.get("icu_cooldown_time"),
+        "cadence_z2_rpm": act.get("icu_cadence_z2"),
+        "hr_zones": act.get("icu_hr_zones"),
+        "hr_zone_times": act.get("icu_hr_zone_times"),
+        "power_zones": act.get("icu_power_zones"),
+        "power_zone_times": act.get("icu_zone_times"),
+        "interval_summary": act.get("interval_summary"),
         "laps": act.get("laps"),
     }
     _cache_set(discord_id, ck, result)
