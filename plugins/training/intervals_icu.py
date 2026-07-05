@@ -751,7 +751,8 @@ def register_tools(ctx) -> None:
     _tool(
         name="get_sport_settings",
         description=(
-            "Fetch FTP, power zones, LTHR, and W' for the athlete's chosen sport. "
+            "Fetch FTP, indoor FTP, power zones, HR zones, pace zones, LTHR, "
+            "max HR, and W' for the athlete's chosen sport. "
             "Use sport='Ride' for cycling (default), 'Run' for running."
         ),
         properties={
@@ -770,7 +771,10 @@ def register_tools(ctx) -> None:
         name="get_recent_activities",
         description=(
             "Fetch completed workouts from intervals.icu. "
-            "Returns training load, intensity, normalized power, and RPE per activity. "
+            "Returns per activity: date, type, duration, distance, training load, "
+            "CTL/ATL after, intensity factor, normalized power, FTP used, trimp, "
+            "hr_load, power_load, RPE, pace, avg/max HR, max speed, "
+            "elevation gain, and cadence. "
             "Use this to assess recent training stress before making a recommendation."
         ),
         properties={
@@ -793,8 +797,10 @@ def register_tools(ctx) -> None:
         name="get_wellness",
         description=(
             "Fetch wellness data from intervals.icu: CTL (fitness), ATL (fatigue), "
-            "TSB (form = CTL - ATL), HRV, sleep hours, resting HR, and subjective scores. "
-            "Always call this when evaluating readiness or recovery."
+            "TSB (form = CTL - ATL), ramp rate, HRV, HRV SDNN, sleep hours, "
+            "sleep quality, sleep score, resting HR, readiness, weight, "
+            "fatigue, soreness, motivation, mood, and per-sport info "
+            "(eFTP, W', Pmax). Always call this when evaluating readiness or recovery."
         ),
         properties={
             **_DISCORD_ID_PROP,
@@ -812,7 +818,10 @@ def register_tools(ctx) -> None:
         name="get_planned_events",
         description=(
             "Fetch the athlete's upcoming planned workouts and races from the intervals.icu calendar. "
-            "Use this when checking for A-races, recovery weeks, or planned intensity sessions."
+            "Returns per event: date, category, type, name, description, planned training load, "
+            "planned intensity, projected CTL/ATL, time target, and distance target. "
+            "Use this when checking for A-races, recovery weeks, or planned intensity sessions. "
+            "Provides TSB trajectory projections for taper planning."
         ),
         properties={
             **_DISCORD_ID_PROP,
@@ -854,9 +863,14 @@ def register_tools(ctx) -> None:
         name="get_activity_detail",
         description=(
             "Fetch full detail for a single activity from intervals.icu: "
-            "laps, pace zones, HR zones, splits. "
+            "laps, interval summary, pace/HR/power zones with zone times, "
+            "normalized and average power, FTP used, LTHR, decoupling, "
+            "variability, efficiency factor, power-HR ratio, sweet spot range, "
+            "joules above FTP, warmup/cooldown time, cadence Z2, calories, "
+            "carbs used, coasting time, RPE. "
             "Use this after get_recent_activities when you need to analyze "
-            "a specific workout in depth (e.g. interval splits or zone distribution). "
+            "a specific workout in depth (e.g. interval splits, zone distribution, "
+            "aerobic decoupling, fueling, pacing). "
             "The activity_id comes from the 'id' field in get_recent_activities output."
         ),
         properties={
