@@ -6,10 +6,12 @@ old incorrect names (heartrate_zones, heartrate_zone_times, etc.).
 """
 
 import json
+import os
 import sys
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, "/opt/hermes/plugins")
+# Use path relative to this test file so it works in CI, not just on the live pod
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "plugins"))
 from training.intervals_icu import get_activity_detail
 
 
