@@ -77,7 +77,24 @@ _TTL_POWER_CURVE = 30 * 60
 
 
 def _user_dir(discord_id: str) -> Path:
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    """Return the credential directory for a Discord user.
+
+    Hermes core now passes Discord snowflakes to tool dispatch via
+    kw["user_id"] (see Hermes core PR for model_tools/run_agent).  The
+    Path.home() fallback is intentionally removed: when multiple users
+    share the old fallback path they end up overwriting each other's
+    credentials.  With real snowflakes every user gets their own
+    isolated directory.
+
+    Raises RuntimeError if HERMES_HOME is not set.
+    """
+    hermes_home_raw = os.environ.get("HERMES_HOME")
+    if not hermes_home_raw:
+        raise RuntimeError(
+            "HERMES_HOME is not set — cannot resolve credential directory. "
+            "The gateway must export HERMES_HOME before loading plugins."
+        )
+    hermes_home = Path(hermes_home_raw)
     d = hermes_home / "users" / str(discord_id)
     d.mkdir(parents=True, exist_ok=True)
     return d
