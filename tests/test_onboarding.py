@@ -32,7 +32,7 @@ class TestCoachOnboard:
                     coach_onboard("user123", "https://intervals.icu/athlete/i99999", "mykey")
                 )
                 assert result["success"]
-                mock_store.assert_called_once_with("user123", "i99999", "mykey")
+                mock_store.assert_called_once_with("user123", "i99999", "mykey", "")
 
     def test_normalizes_athlete_id_without_i_prefix(self):
         mock_profile = {"name": "Test Athlete", "sportSettings": []}
@@ -42,7 +42,7 @@ class TestCoachOnboard:
                     coach_onboard("user123", "99999", "mykey")
                 )
                 assert result["success"]
-                mock_store.assert_called_once_with("user123", "i99999", "mykey")
+                mock_store.assert_called_once_with("user123", "i99999", "mykey", "")
 
     def test_returns_error_on_401(self):
         with patch("training.intervals_icu._request", side_effect=ValueError("401 Unauthorized")):
