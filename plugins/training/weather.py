@@ -43,8 +43,13 @@ def get_weather(
 ) -> str:
     """Fetch current weather and 48-hour forecast for a lat/lon location.
 
-    Returns temperature (°C), apparent temperature, precipitation,
-    wind speed, wind direction, UV index, and weather description.
+    Returns current conditions: temperature (°C), apparent temperature
+    (feels-like), humidity, precipitation, wind speed, wind direction,
+    UV index, day/night flag, and weather description.
+    Returns a 48-hour forecast with 3-hour buckets including temperature,
+    feels-like, precipitation probability, wind speed, and conditions.
+    Also returns coaching notes highlighting conditions that affect training
+    decisions (heat/cold risk, humidity, wind, UV, rain, thunderstorms).
 
     Args:
         latitude:      Decimal latitude (e.g. 60.17 for Helsinki).
@@ -83,7 +88,7 @@ def get_weather(
     hourly = data.get("hourly", {})
     timezone = data.get("timezone", "UTC")
 
-    # Build a 24-hour summary (next 24 hours, 3-hour buckets)
+    # Build a 48-hour summary (next 48 hours, 3-hour buckets)
     times = hourly.get("time", [])
     temp_h = hourly.get("temperature_2m", [])
     feel_h = hourly.get("apparent_temperature", [])
@@ -93,7 +98,7 @@ def get_weather(
     code_h = hourly.get("weathercode", [])
 
     forecast_hours = []
-    for i in range(0, min(24, len(times)), 3):
+    for i in range(0, min(48, len(times)), 3):
         forecast_hours.append({
             "time": times[i] if i < len(times) else None,
             "temp_c": temp_h[i] if i < len(temp_h) else None,
@@ -122,7 +127,7 @@ def get_weather(
             "is_day": bool(current.get("is_day")),
             "conditions": _WMO_CODES.get(wmo, "Unknown"),
         },
-        "forecast_24h": forecast_hours,
+        "forecast_48h": forecast_hours,
         "coaching_notes": _coaching_notes(current, forecast_hours),
     }
     return json.dumps(result)
@@ -192,9 +197,14 @@ def register_tools(ctx) -> None:
             "name": "get_weather",
             "description": (
                 "Fetch current weather conditions and 48-hour forecast for a location. "
-                "Use this before recommending outdoor training to check temperature, "
-                "wind, precipitation, and UV index. Returns coaching notes about "
-                "conditions that affect training decisions."
+                "Returns current temperature, apparent temperature (feels-like), humidity, "
+                "wind speed, wind direction, precipitation, UV index, day/night flag, "
+                "and weather conditions. Returns a 48-hour forecast (3-hour buckets) with "
+                "temperature, feels-like, precipitation probability, wind, and conditions. "
+                "Includes coaching notes about heat/cold risk, humidity stress, strong wind, "
+                "high UV, rain, and thunderstorms. "
+                "Use this before recommending outdoor training to check conditions "
+                "that affect training decisions."
             ),
             "parameters": {
                 "type": "object",
