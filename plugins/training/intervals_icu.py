@@ -77,7 +77,22 @@ _TTL_POWER_CURVE = 30 * 60
 
 
 def _user_dir(discord_id: str) -> Path:
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    """Return the credential directory for a Discord user.
+
+    Requires HERMES_HOME to be set in the environment — there is no
+    Path.home() fallback because it resolves to a different directory
+    than the primary data volume, leading to split-brain credential
+    state where each path holds a different athlete's data.
+
+    Raises RuntimeError if HERMES_HOME is not set.
+    """
+    hermes_home_raw = os.environ.get("HERMES_HOME")
+    if not hermes_home_raw:
+        raise RuntimeError(
+            "HERMES_HOME is not set — cannot resolve credential directory. "
+            "The gateway must export HERMES_HOME before loading plugins."
+        )
+    hermes_home = Path(hermes_home_raw)
     d = hermes_home / "users" / str(discord_id)
     d.mkdir(parents=True, exist_ok=True)
     return d
