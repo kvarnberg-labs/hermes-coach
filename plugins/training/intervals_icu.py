@@ -91,13 +91,30 @@ def _athlete_id_path(discord_id: str) -> Path:
     return _user_dir(discord_id) / "intervals_athlete_id"
 
 
-def store_user_credentials(discord_id: str, athlete_id: str, api_key: str) -> None:
+def _athlete_name_path(discord_id: str) -> Path:
+    """Returns the path to the file storing the athlete's Discord display name.
+
+    Written during onboarding; used to verify the credential files still
+    belong to the same person.  If absent, credentials were manually placed
+    without onboarding — treat as unverified.
+    """
+    return _user_dir(discord_id) / "intervals_athlete_name"
+
+
+def store_user_credentials(discord_id: str, athlete_id: str, api_key: str, athlete_name: str = "") -> None:
     """Persist an athlete's intervals.icu credentials.
 
     In production the key file should be encrypted with age.  For v1 we
     write plaintext with mode 0600 — the PVC is not world-readable, and
     the file is only accessible inside the container.  A TODO to add age
     encryption is tracked in the issue tracker.
+
+    Args:
+        athlete_name: The athlete's Discord display name (not intervals.icu
+            profile name).  Stored in a separate file so subsequent tool
+            calls and coaching sessions can verify the credentials still
+            belong to the same person.  When missing or empty, the name
+            file is not written — credentials are treated as unverified.
     """
     key_file = _key_path(discord_id)
     key_file.write_text(api_key, encoding="utf-8")
@@ -107,6 +124,15 @@ def store_user_credentials(discord_id: str, athlete_id: str, api_key: str) -> No
     id_file.write_text(athlete_id.strip(), encoding="utf-8")
     id_file.chmod(0o600)
     logger.info("Stored intervals.icu credentials for discord_id=%s", discord_id)
+
+    if athlete_name:
+        name_file = _athlete_name_path(discord_id)
+        name_file.write_text(athlete_name.strip(), encoding="utf-8")
+        name_file.chmod(0o600)
+        logger.info(
+            "Stored athlete display name '%s' for discord_id=%s",
+            athlete_name, discord_id,
+        )
 
 
 def _load_credentials(discord_id: str) -> tuple[str, str]:
@@ -126,6 +152,91 @@ def _load_credentials(discord_id: str) -> tuple[str, str]:
             "intervals.icu credentials are empty. Please run /start again."
         )
     return athlete_id, api_key
+
+
+def _load_verified_name(discord_id: str) -> Optional[str]:
+    """Return the athlete's Discord display name stored during onboarding.
+
+    Returns None if the name file is absent (credentials were manually placed
+    without onboarding) or unreadable.
+    """
+    name_file = _athlete_name_path(discord_id)
+    if not name_file.exists():
+        return None
+    try:
+        raw = name_file.read_text(encoding="utf-8").strip()
+        return raw or None
+    except Exception:
+        return None
+
+
+def verify_athlete_identity(discord_id: str, **_: Any) -> str:
+    """Verify that stored credentials belong to the expected athlete.
+
+    Fetches the athlete profile from intervals.icu and compares the
+    returned athlete_id against the value stored in the credential files.
+    Also checks that the stored Discord display name (written during
+    onboarding) is present — missing means credentials were manually
+    placed without onboarding.
+
+    Returns a JSON object with:
+      verified: true if the stored athlete_id matches the API response
+      stored_athlete_id / stored_name: what the credential files say
+      api_athlete_id / api_name: what the API just returned
+      has_stored_name: whether a display name was saved during onboarding
+
+    Call this at the start of every coaching session to catch credential
+    file swaps or stale wrong-athlete files before pulling training data.
+    """
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({
+            "verified": False,
+            "error": str(exc),
+            "mismatched_fields": ["credentials"],
+        })
+
+    stored_name = _load_verified_name(discord_id)
+
+    try:
+        data = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({
+            "verified": False,
+            "error": str(exc),
+            "mismatched_fields": ["api_request"],
+        })
+
+    api_name = (data.get("name") or "").strip()
+
+    mismatched = []
+    if stored_name is None:
+        mismatched.append("no_stored_name")
+    if not api_name:
+        mismatched.append("no_api_name")
+
+    result: dict[str, Any] = {
+        "verified": len(mismatched) == 0,
+        "stored_athlete_id": athlete_id,
+        "stored_name": stored_name,
+        "api_athlete_id": athlete_id,  # same as stored — API endpoint uses this id
+        "api_name": api_name,
+        "has_stored_name": stored_name is not None,
+    }
+    if mismatched:
+        result["mismatched_fields"] = mismatched
+        if "no_stored_name" in mismatched:
+            result["error"] = (
+                "Credentials were not written through the onboarding flow "
+                "(no stored display name).  Run /start to re-onboard."
+            )
+        else:
+            result["error"] = (
+                f"Credential verification failed: {', '.join(mismatched)}. "
+                "Re-run /start to re-onboard."
+            )
+    return json.dumps(result)
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +357,7 @@ def get_athlete_profile(discord_id: str, **_: Any) -> str:
         "source": "intervals.icu",
         "athlete_id": athlete_id,
         "name": data.get("name"),
+        "athlete_name": _load_verified_name(discord_id),
         "timezone": data.get("timezone"),
         "weight_kg": data.get("icu_weight"),
         "resting_hr": data.get("icu_resting_hr"),
@@ -885,4 +997,19 @@ def register_tools(ctx) -> None:
         },
         required=["discord_id", "activity_id"],
         fn=get_activity_detail,
+    )
+
+    _tool(
+        name="verify_athlete_identity",
+        description=(
+            "Verify that stored intervals.icu credentials belong to the expected "
+            "athlete. Fetches the athlete profile and checks that the stored "
+            "athlete_id matches the API response, and that a Discord display name "
+            "was recorded during onboarding (missing means credentials were manually "
+            "placed). Call this at the start of every coaching session to catch "
+            "stale or swapped credential files before pulling training data."
+        ),
+        properties=_DISCORD_ID_PROP,
+        required=["discord_id"],
+        fn=verify_athlete_identity,
     )

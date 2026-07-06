@@ -26,6 +26,7 @@ def coach_onboard(
     discord_id: str,
     athlete_id: str,
     api_key: str,
+    athlete_name: str = "",
     **_: Any,
 ) -> str:
     """Store and validate an athlete's intervals.icu credentials.
@@ -34,9 +35,12 @@ def coach_onboard(
     Returns a success summary or an error message.
 
     Args:
-        discord_id:  Discord user ID (injected by Hermes gateway).
-        athlete_id:  intervals.icu athlete ID, e.g. "i12345".
-        api_key:     intervals.icu API key from Settings → Developer.
+        discord_id:    Discord user ID (injected by Hermes gateway).
+        athlete_id:    intervals.icu athlete ID, e.g. "i12345".
+        api_key:       intervals.icu API key from Settings → Developer.
+        athlete_name:  The athlete's Discord display name.  Stored alongside
+                       credentials so the verify_athlete_identity tool can
+                       detect wrong-athlete credential files later.
     """
     from .intervals_icu import _request, store_user_credentials
 
@@ -66,8 +70,8 @@ def coach_onboard(
     except RuntimeError as exc:
         return json.dumps({"success": False, "error": str(exc)})
 
-    # Credentials valid — store them
-    store_user_credentials(discord_id, athlete_id, api_key)
+    # Credentials valid — store them along with the display name
+    store_user_credentials(discord_id, athlete_id, api_key, athlete_name)
 
     name = data.get("name") or "Athlete"
     ftp_hint = ""
@@ -123,6 +127,14 @@ def register_tools(ctx) -> None:
                             "intervals.icu API key from Settings → Developer → API Key."
                         ),
                     },
+                    "athlete_name": {
+                        "type": "string",
+                        "description": (
+                            "The athlete's Discord display name. "
+                            "Stored for identity verification so subsequent "
+                            "sessions can detect wrong-athlete credential files."
+                        ),
+                    },
                 },
                 "required": ["athlete_id", "api_key"],
             },
@@ -131,5 +143,6 @@ def register_tools(ctx) -> None:
             discord_id=_require_user_id(kw),
             athlete_id=args["athlete_id"],
             api_key=args["api_key"],
+            athlete_name=args.get("athlete_name", ""),
         ),
     )
