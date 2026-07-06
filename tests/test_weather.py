@@ -159,4 +159,4 @@ class TestGetWeather:
         assert result["location"] == "Helsinki"
         assert result["current"]["temp_c"] == 22
         assert result["current"]["conditions"] == "Partly cloudy"
-        assert len(result["forecast_24h"]) == 8  # 24 hours / 3-hour buckets
+        assert len(result["forecast_48h"]) == 16  # 48 hours / 3-hour buckets
