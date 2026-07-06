@@ -17,7 +17,7 @@ spec:
         app: hermes
       annotations:
         # Bump this string to force a rolling restart without changing config
-        hermes.kvarnberg.io/config-generation: "main-627537d"
+        hermes.kvarnberg.io/config-generation: "main-f7b190a"
     spec:
       serviceAccountName: hermes-autonomy
       imagePullSecrets:
