@@ -625,14 +625,19 @@ def get_activity_streams(
 ) -> str:
     """Fetch raw second-by-second stream data for a single activity.
 
-    Returns per-second arrays for every available stream type (power,
-    heart rate, cadence, speed, elevation, temperature, etc.) so
-    coaching logic can do its own 20-minute peak extraction, lactate-trace
-    pacing analysis, and interval detection instead of relying on
-    Garmin's auto-detection or session-average pace.
+    Returns per-second arrays for power (watts), heart rate (bpm),
+    cadence (rpm), speed (m/s), elevation (m), temperature (°C),
+    and any other available channels.
 
-    Use this after get_activity_detail when you need the raw data behind
-    the summary stats — FTP validation, interval timing, or pacing analysis.
+    Computes peak power at standard durations (5s, 1min, 5min, 20min, 60min)
+    from the raw watts stream so you can validate eFTP without loading
+    10K+ data points into context.  Returns per-stream sample points
+    (first 5, last 5) and data-point counts — the full arrays are
+    computed server-side and only summary metrics are returned.
+
+    Use this after get_activity_detail when you need the raw-data story
+    behind the summary stats: FTP validation, interval timing, or pacing
+    analysis.
 
     Args:
         activity_id: The intervals.icu activity ID (e.g. 'i161875412').
@@ -657,23 +662,85 @@ def get_activity_streams(
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
 
-    streams = []
+    # Extract stream data
+    stream_map: dict[str, list] = {}
+    stream_types: list[str] = []
     for s in data if isinstance(data, list) else []:
-        streams.append({
-            "type": s.get("type"),
-            "name": s.get("name"),
-            "data": s.get("data"),
-            "value_type": s.get("valueType"),
+        stype = s.get("type", "")
+        sdata = s.get("data") or []
+        stream_types.append(stype)
+        stream_map[stype] = sdata
+
+    # Build compact per-stream summary: type, count, samples
+    streams_summary = []
+    for stype in stream_types:
+        sdata = stream_map.get(stype, [])
+        streams_summary.append({
+            "type": stype,
+            "count": len(sdata),
+            "first": sdata[:5] if len(sdata) >= 5 else sdata,
+            "last": sdata[-5:] if len(sdata) >= 5 else sdata,
         })
+
+    # Compute peak power metrics from watts + time streams
+    peaks = _compute_power_peaks(stream_map)
 
     result = {
         "source": "intervals.icu",
         "activity_id": activity_id,
-        "stream_count": len(streams),
-        "streams": streams,
+        "stream_count": len(stream_types),
+        "stream_types": stream_types,
+        "streams_summary": streams_summary,
+        "peak_power": peaks,
     }
     _cache_set(discord_id, ck, result)
     return json.dumps(result)
+
+
+def _compute_power_peaks(stream_map: dict) -> dict:
+    """Compute peak power at standard durations from raw stream data.
+
+    Uses a sliding-window max over the watts stream aligned with
+    the time stream to find best average power at 5s, 1min, 5min,
+    20min, and 60min.
+    """
+    watts = stream_map.get("watts", [])
+    time_secs = stream_map.get("time", [])
+
+    if not watts or not time_secs or len(watts) != len(time_secs):
+        return {}
+
+    # Work out the typical sample interval (usually 1s for cycling)
+    intervals = [time_secs[i] - time_secs[i - 1] for i in range(1, min(100, len(time_secs)))]
+    sample_interval = max(1, round(sum(intervals) / max(1, len(intervals))))
+
+    durations = {"5s": 5, "1min": 60, "5min": 300, "20min": 1200, "60min": 3600}
+
+    peaks = {}
+    for label, target_dur in durations.items():
+        window_points = target_dur // sample_interval
+        if window_points < 2 or window_points > len(watts):
+            peaks[label] = None
+            continue
+
+        best_avg = 0.0
+        # Sliding window: average power over each window of window_points
+        window_sum = sum(watts[:window_points])
+        best_avg = window_sum / window_points
+
+        for i in range(window_points, len(watts)):
+            window_sum += watts[i] - watts[i - window_points]
+            avg = window_sum / window_points
+            if avg > best_avg:
+                best_avg = avg
+
+        peaks[label] = round(best_avg, 1) if best_avg > 0 else None
+
+    # eFTP estimate: 95% of best 20-min power
+    if peaks.get("20min"):
+        peaks["eftp_estimate"] = round(peaks["20min"] * 0.95, 1)
+
+    return peaks
 
 
 def get_wellness(
