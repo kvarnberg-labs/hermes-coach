@@ -518,11 +518,12 @@ def get_activity_detail(
     activity_id: str,
     **_: Any,
 ) -> str:
-    """Fetch full detail for a single activity including laps, splits, and HR data.
+    """Fetch full detail for a single activity including laps, interval summary,
+    and HR/power zone data.
 
     Use this after get_recent_activities when you need to analyze a specific
-    workout in depth — interval splits, HR zone distribution, pace zones,
-    and lap-by-lap data that the summary endpoint omits.
+    workout in depth — interval splits, zone distribution, pacing, and
+    lap-by-lap data that the summary endpoint omits.
 
     Args:
         activity_id: The intervals.icu activity ID (e.g. "i161875412").
@@ -992,11 +993,14 @@ def register_tools(ctx) -> None:
         name="get_activity_detail",
         description=(
             "Fetch full detail for a single activity from intervals.icu: "
-            "laps, interval summary, pace/HR/power zones with zone times, "
-            "normalized and average power, FTP used, LTHR, decoupling, "
-            "variability, efficiency factor, power-HR ratio, sweet spot range, "
-            "joules above FTP, warmup/cooldown time, cadence Z2, calories, "
-            "carbs used, coasting time, RPE. "
+            "name, date, type, duration, distance, training load, intensity "
+            "factor, average and max HR, LTHR, pace, max speed, elevation gain, "
+            "cadence, normalized and average power, FTP used, RPE, calories, "
+            "carbs used, coasting time, decoupling, variability index, "
+            "efficiency factor, power-HR ratio, power-HR Z2 minutes, sweet spot "
+            "range (min/max), joules above FTP, warmup and cooldown time, "
+            "cadence Z2, HR zones with zone times, power zones with zone times, "
+            "interval summary, and laps. "
             "Use this after get_recent_activities when you need to analyze "
             "a specific workout in depth (e.g. interval splits, zone distribution, "
             "aerobic decoupling, fueling, pacing). "
