@@ -9,7 +9,7 @@ data:
 
   # Model provider — opencode-go (same as homelab)
   HERMES_INFERENCE_PROVIDER: "opencode-go"
-  HERMES_INFERENCE_MODEL: "glm-5.2"
+  HERMES_INFERENCE_MODEL: "deepseek-v4-pro"
   HERMES_INFERENCE_BASE_URL: "https://opencode.ai/zen/go/v1"
   OPENCODE_GO_BASE_URL: "https://opencode.ai/zen/go/v1"
 
