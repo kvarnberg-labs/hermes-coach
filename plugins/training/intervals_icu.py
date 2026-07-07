@@ -618,6 +618,64 @@ def get_activity_detail(
     return json.dumps(result)
 
 
+def get_activity_streams(
+    discord_id: str,
+    activity_id: str,
+    **_: Any,
+) -> str:
+    """Fetch raw second-by-second stream data for a single activity.
+
+    Returns per-second arrays for every available stream type (power,
+    heart rate, cadence, speed, elevation, temperature, etc.) so
+    coaching logic can do its own 20-minute peak extraction, lactate-trace
+    pacing analysis, and interval detection instead of relying on
+    Garmin's auto-detection or session-average pace.
+
+    Use this after get_activity_detail when you need the raw data behind
+    the summary stats — FTP validation, interval timing, or pacing analysis.
+
+    Args:
+        activity_id: The intervals.icu activity ID (e.g. 'i161875412').
+                     Obtain this from get_recent_activities output.
+    """
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    ck = _cache_key(f"/activity/{activity_id}/streams", {})
+    cached = _cache_get(discord_id, ck, _TTL_ACTIVITIES)
+    if cached is not None:
+        return json.dumps(cached)
+
+    try:
+        data = _request(
+            athlete_id, api_key,
+            f"/activity/{activity_id}/streams",
+            timeout=30,
+        )
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+
+    streams = []
+    for s in data if isinstance(data, list) else []:
+        streams.append({
+            "type": s.get("type"),
+            "name": s.get("name"),
+            "data": s.get("data"),
+            "value_type": s.get("valueType"),
+        })
+
+    result = {
+        "source": "intervals.icu",
+        "activity_id": activity_id,
+        "stream_count": len(streams),
+        "streams": streams,
+    }
+    _cache_set(discord_id, ck, result)
+    return json.dumps(result)
+
+
 def get_wellness(
     discord_id: str,
     days: int = 7,
@@ -820,6 +878,78 @@ def get_power_curve(
         "days": days,
         "peak_power": peaks,
         "full_curve_points": len(curve_map),
+    }
+    _cache_set(discord_id, ck, result)
+    return json.dumps(result)
+
+
+def get_fitness_chart(
+    discord_id: str,
+    days: int = 365,
+    **_: Any,
+) -> str:
+    """Fetch the full CTL/ATL/TSB fitness history from intervals.icu.
+
+    Like get_wellness but designed for long-range trend analysis (up to
+    365 days vs wellness's 42-day cap).  Returns daily CTL (fitness),
+    ATL (fatigue), TSB (form), ramp rate, and per-sport eFTP so you can
+    see season-long progression, identify peak fitness periods, and
+    track eFTP trends over time.
+
+    Use this when you need to answer "how has my fitness evolved"
+    questions — CTL trajectory, eFTP history, training load over months.
+
+    Args:
+        days: How many days to look back (default 365, max 365).
+    """
+    days = min(int(days), 365)
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    params = {
+        "oldest": _n_days_ago_iso(days),
+        "newest": _today_iso(),
+    }
+
+    ck = _cache_key(f"/athlete/{athlete_id}/wellness-fitness-{days}", params)
+    cached = _cache_get(discord_id, ck, _TTL_POWER_CURVE)
+    if cached is not None:
+        return json.dumps(cached)
+
+    try:
+        data = _request(athlete_id, api_key, f"/athlete/{athlete_id}/wellness", params)
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+
+    records = []
+    for w in data if isinstance(data, list) else [data]:
+        ctl = w.get("ctl")
+        atl = w.get("atl")
+        tsb = round(ctl - atl, 1) if ctl is not None and atl is not None else None
+        records.append(
+            {
+                "date": w.get("id"),
+                "ctl": round(ctl, 1) if ctl is not None else None,
+                "atl": round(atl, 1) if atl is not None else None,
+                "tsb": tsb,
+                "ramp_rate": w.get("rampRate"),
+                "sport_info": [
+                    {
+                        "sport": si.get("type"),
+                        "eftp": si.get("eftp"),
+                    }
+                    for si in (w.get("sportInfo") or [])
+                ],
+            }
+        )
+
+    result = {
+        "source": "intervals.icu",
+        "days": days,
+        "record_count": len(records),
+        "records": records,
     }
     _cache_set(discord_id, ck, result)
     return json.dumps(result)
@@ -1033,4 +1163,57 @@ def register_tools(ctx) -> None:
         properties=_DISCORD_ID_PROP,
         required=["discord_id"],
         fn=verify_athlete_identity,
+    )
+
+    _tool(
+        name="get_activity_streams",
+        description=(
+            "Fetch raw second-by-second stream data for a single activity "
+            "from intervals.icu. "
+            "Returns per-second arrays for power (watts), heart rate (bpm), "
+            "cadence (rpm), speed (m/s), elevation (m), temperature (°C), "
+            "and any other available channels. "
+            "Use this when you need the raw data to compute 20-minute max power, "
+            "validate FTP, analyze pacing, or detect intervals from the actual "
+            "power trace rather than Garmin's auto-detection. "
+            "The activity_id comes from the 'id' field in get_recent_activities output. "
+            "CAUTION: returns large arrays (10K+ data points per stream). "
+            "Use only when you genuinely need raw data for computation."
+        ),
+        properties={
+            **_DISCORD_ID_PROP,
+            "activity_id": {
+                "type": "string",
+                "description": (
+                    "The intervals.icu activity ID (e.g. 'i161875412'). "
+                    "Obtain this from get_recent_activities output."
+                ),
+            },
+        },
+        required=["discord_id", "activity_id"],
+        fn=get_activity_streams,
+    )
+
+    _tool(
+        name="get_fitness_chart",
+        description=(
+            "Fetch the full CTL/ATL/TSB fitness history from intervals.icu "
+            "(up to 365 days). "
+            "Returns daily CTL (fitness), ATL (fatigue), TSB (form), ramp rate, "
+            "and per-sport eFTP for season-long trend analysis. "
+            "Like get_wellness but for long-range questions: CTL trajectory, "
+            "eFTP progression, peak fitness periods, training load over months. "
+            "Use this when you need to answer 'how has my fitness evolved' "
+            "rather than 'how recovered am I today'."
+        ),
+        properties={
+            **_DISCORD_ID_PROP,
+            "days": {
+                "type": "integer",
+                "description": "How many days back (default 365, max 365).",
+                "default": 365,
+            },
+        },
+        required=["discord_id"],
+        fn=get_fitness_chart,
     )
