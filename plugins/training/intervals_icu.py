@@ -611,6 +611,7 @@ def get_activity_detail(
         "hr_zone_times": act.get("icu_hr_zone_times"),
         "power_zones": act.get("icu_power_zones"),
         "power_zone_times": act.get("icu_zone_times"),
+        "lap_count": act.get("icu_lap_count"),
         "interval_summary": act.get("interval_summary"),
         "laps": act.get("laps"),
     }
@@ -1197,7 +1198,7 @@ def register_tools(ctx) -> None:
             "efficiency factor, power-HR ratio, power-HR Z2 minutes, sweet spot "
             "range (min/max), joules above FTP, warmup and cooldown time, "
             "cadence Z2, HR zones with zone times, power zones with zone times, "
-            "interval summary, and laps. "
+            "lap count, interval summary, and laps. "
             "Use this after get_recent_activities when you need to analyze "
             "a specific workout in depth (e.g. interval splits, zone distribution, "
             "aerobic decoupling, fueling, pacing). "
