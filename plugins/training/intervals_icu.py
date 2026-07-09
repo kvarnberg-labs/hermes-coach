@@ -1007,6 +1007,8 @@ def get_fitness_chart(
                     {
                         "sport": si.get("type"),
                         "eftp": si.get("eftp"),
+                        "w_prime": si.get("wPrime"),
+                        "p_max": si.get("pMax"),
                     }
                     for si in (w.get("sportInfo") or [])
                 ],
@@ -1268,7 +1270,7 @@ def register_tools(ctx) -> None:
             "Fetch the full CTL/ATL/TSB fitness history from intervals.icu "
             "(up to 365 days). "
             "Returns daily CTL (fitness), ATL (fatigue), TSB (form), ramp rate, "
-            "and per-sport eFTP for season-long trend analysis. "
+            "and per-sport eFTP, W', Pmax for season-long trend analysis. "
             "Like get_wellness but for long-range questions: CTL trajectory, "
             "eFTP progression, peak fitness periods, training load over months. "
             "Use this when you need to answer 'how has my fitness evolved' "
