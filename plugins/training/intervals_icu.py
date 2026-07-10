@@ -626,15 +626,12 @@ def get_activity_streams(
 ) -> str:
     """Fetch raw second-by-second stream data for a single activity.
 
-    Returns per-second arrays for power (watts), heart rate (bpm),
-    cadence (rpm), speed (m/s), elevation (m), temperature (°C),
-    and any other available channels.
-
-    Computes peak power at standard durations (5s, 1min, 5min, 20min, 60min)
-    from the raw watts stream so you can validate eFTP without loading
-    10K+ data points into context.  Returns per-stream sample points
-    (first 5, last 5) and data-point counts — the full arrays are
-    computed server-side and only summary metrics are returned.
+    Returns per-stream data summaries (first and last 5 data points per
+    stream type) and computed peak power at standard durations (5s, 1min,
+    5min, 20min, 60min) plus an eFTP estimate (95% of best 20-min power).
+    The full per-second arrays (power, heart rate, cadence, speed,
+    elevation, temperature) are processed server-side — only summary
+    metrics and sample points are returned, not the raw 10K+ data arrays.
 
     Use this after get_activity_detail when you need the raw-data story
     behind the summary stats: FTP validation, interval timing, or pacing
@@ -1240,15 +1237,17 @@ def register_tools(ctx) -> None:
         description=(
             "Fetch raw second-by-second stream data for a single activity "
             "from intervals.icu. "
-            "Returns per-second arrays for power (watts), heart rate (bpm), "
-            "cadence (rpm), speed (m/s), elevation (m), temperature (°C), "
-            "and any other available channels. "
-            "Use this when you need the raw data to compute 20-minute max power, "
-            "validate FTP, analyze pacing, or detect intervals from the actual "
-            "power trace rather than Garmin's auto-detection. "
+            "Returns per-stream data summaries (sample counts, first/last 5 data points) "
+            "for power (watts), heart rate (bpm), cadence (rpm), speed (m/s), "
+            "elevation (m), temperature (°C), and any other available channels. "
+            "Also returns computed peak power at standard durations "
+            "(5s, 1min, 5min, 20min, 60min) plus an eFTP estimate. "
+            "Use this when you need to validate FTP against raw data, "
+            "analyze pacing, or detect intervals from the actual power trace "
+            "rather than Garmin's auto-detection. "
             "The activity_id comes from the 'id' field in get_recent_activities output. "
-            "CAUTION: returns large arrays (10K+ data points per stream). "
-            "Use only when you genuinely need raw data for computation."
+            "CAUTION: processes large arrays (10K+ data points per stream) server-side. "
+            "Use only when you genuinely need raw-data-derived metrics for computation."
         ),
         properties={
             **_DISCORD_ID_PROP,
