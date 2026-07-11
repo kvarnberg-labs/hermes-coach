@@ -386,7 +386,7 @@ def get_athlete_profile(discord_id: str, **_: Any) -> str:
 
 
 def get_sport_settings(discord_id: str, sport: str = "Ride", **_: Any) -> str:
-    """Fetch FTP, power zones, and LTHR for a given sport.
+    """Fetch FTP, indoor FTP, power zones, HR zones, pace zones, LTHR, max HR, and W' for a given sport.
 
     Args:
         sport: intervals.icu sport type e.g. "Ride", "Run", "Swim".
@@ -437,8 +437,10 @@ def get_recent_activities(
         days:  How many days back to look (default 14, max 90).
         sport: Filter by sport type e.g. "Ride", "Run". None means all sports.
 
-    Returns key fields per activity: date, type, duration, distance,
-    training load (ATL/CTL impulse), normalized power, intensity factor, RPE.
+    Returns per-activity fields: id, name, date, type, duration, distance,
+    training load, CTL/ATL after, intensity factor, normalized power,
+    FTP used, trimp, hr_load, power_load, RPE, pace, avg/max HR,
+    max speed, elevation gain, and cadence.
     """
     days = min(int(days), 90)
     try:
@@ -748,8 +750,10 @@ def get_wellness(
 ) -> str:
     """Fetch wellness records over the past N days.
 
-    Includes CTL (fitness), ATL (fatigue), TSB (form), HRV, sleep,
-    resting HR, weight, and subjective feel scores.
+    Includes CTL (fitness), ATL (fatigue), TSB (form), ramp rate,
+    HRV, HRV SDNN, sleep hours, sleep quality, sleep score, resting HR,
+    readiness, weight, fatigue, soreness, motivation, mood,
+    and per-sport info (eFTP, W', Pmax).
 
     Args:
         days: How many days back (default 7, max 42).
