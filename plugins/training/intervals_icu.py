@@ -836,7 +836,7 @@ def get_planned_events(
 ) -> str:
     """Fetch upcoming planned workouts and races from the intervals.icu calendar.
 
-    Returns per event: date, category, type, name, description,
+    Returns per event: id, date, category, type, name, description,
     planned training load, planned intensity, projected CTL/ATL,
     time target, and distance target.  Provides TSB trajectory
     projections for taper planning.
@@ -1155,7 +1155,7 @@ def register_tools(ctx) -> None:
         name="get_planned_events",
         description=(
             "Fetch the athlete's upcoming planned workouts and races from the intervals.icu calendar. "
-            "Returns per event: date, category, type, name, description, planned training load, "
+            "Returns per event: id, date, category, type, name, description, planned training load, "
             "planned intensity, projected CTL/ATL, time target, and distance target. "
             "Use this when checking for A-races, recovery weeks, or planned intensity sessions. "
             "Provides TSB trajectory projections for taper planning."
