@@ -834,7 +834,12 @@ def get_planned_events(
     days_ahead: int = 14,
     **_: Any,
 ) -> str:
-    """Fetch upcoming planned workouts and races from the athlete's calendar.
+    """Fetch upcoming planned workouts and races from the intervals.icu calendar.
+
+    Returns per event: date, category, type, name, description,
+    planned training load, planned intensity, projected CTL/ATL,
+    time target, and distance target.  Provides TSB trajectory
+    projections for taper planning.
 
     Args:
         days_ahead: How many days forward to look (default 14, max 90).
@@ -961,9 +966,9 @@ def get_fitness_chart(
 
     Like get_wellness but designed for long-range trend analysis (up to
     365 days vs wellness's 42-day cap).  Returns daily CTL (fitness),
-    ATL (fatigue), TSB (form), ramp rate, and per-sport eFTP so you can
-    see season-long progression, identify peak fitness periods, and
-    track eFTP trends over time.
+    ATL (fatigue), TSB (form), ramp rate, and per-sport eFTP, W', Pmax
+    so you can see season-long progression, identify peak fitness periods,
+    and track eFTP trends over time.
 
     Use this when you need to answer "how has my fitness evolved"
     questions — CTL trajectory, eFTP history, training load over months.
@@ -1102,11 +1107,12 @@ def register_tools(ctx) -> None:
         name="get_recent_activities",
         description=(
             "Fetch completed workouts from intervals.icu. "
-            "Returns per activity: date, type, duration, distance, training load, "
+            "Returns per activity: id, name, date, type, duration, distance, training load, "
             "CTL/ATL after, intensity factor, normalized power, FTP used, trimp, "
             "hr_load, power_load, RPE, pace, avg/max HR, max speed, "
             "elevation gain, and cadence. "
-            "Use this to assess recent training stress before making a recommendation."
+            "Use this to assess recent training stress before making a recommendation. "
+            "The 'id' field can be passed to get_activity_detail for deeper workout analysis."
         ),
         properties={
             **_DISCORD_ID_PROP,
