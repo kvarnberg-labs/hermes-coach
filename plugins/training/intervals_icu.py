@@ -353,7 +353,8 @@ def _n_days_ago_iso(n: int) -> str:
 def get_athlete_profile(discord_id: str, **_: Any) -> str:
     """Fetch the athlete's basic profile from intervals.icu.
 
-    Returns name, weight, timezone, resting HR, sex, and date of birth.
+    Returns name, weight, timezone, resting HR, sex, date of birth,
+    and Discord display name.
     """
     try:
         athlete_id, api_key = _load_credentials(discord_id)
@@ -1075,7 +1076,8 @@ def register_tools(ctx) -> None:
         name="get_athlete_profile",
         description=(
             "Fetch the athlete's basic profile from intervals.icu: "
-            "name, weight, timezone, resting HR, sex, and date of birth. "
+            "name, weight, timezone, resting HR, sex, date of birth, "
+            "and Discord display name. "
             "Use this to determine athlete sex (for female-physiology coaching) "
             "and age (for age-appropriate training recommendations)."
         ),
