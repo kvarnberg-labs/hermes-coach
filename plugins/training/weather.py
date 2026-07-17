@@ -134,7 +134,11 @@ def get_weather(
 
 
 def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
-    """Generate brief training-relevant weather observations."""
+    """Generate brief training-relevant weather observations.
+
+    Checks both current conditions and the 48-hour forecast so the agent
+    is warned about upcoming heat/cold even when current weather is mild.
+    """
     notes = []
     temp = current.get("temperature_2m")
     feels = current.get("apparent_temperature")
@@ -142,6 +146,7 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
     uv = current.get("uv_index", 0) or 0
     wmo = current.get("weathercode", 0) or 0
 
+    # --- Current condition heat/cold bands ---
     if feels is not None and feels > 35:
         notes.append("Heat risk: apparent temperature above 35°C — avoid high intensity outdoors.")
     elif feels is not None and feels >= 30:
@@ -155,6 +160,26 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
         notes.append(
             f"Cold conditions ({feels:.0f}°C feels-like). Layer up, protect extremities "
             "(gloves, shoe covers), and warm up indoors first."
+        )
+
+    # --- Forecast heat/cold (warn about upcoming extremes even if current is mild) ---
+    forecast_feels = [h.get("feels_like_c") for h in forecast if h.get("feels_like_c") is not None]
+    max_forecast_feels = max(forecast_feels) if forecast_feels else None
+    min_forecast_feels = min(forecast_feels) if forecast_feels else None
+
+    if max_forecast_feels is not None and max_forecast_feels >= 28 and not any(
+        "Heat risk" in n or "Hot conditions" in n for n in notes
+    ):
+        notes.append(
+            f"Forecast heat ({max_forecast_feels:.0f}°C feels-like in next 48h) — "
+            "plan intensity work for cooler parts of the day."
+        )
+    if min_forecast_feels is not None and min_forecast_feels <= 0 and not any(
+        "Cold risk" in n or "Cold conditions" in n for n in notes
+    ):
+        notes.append(
+            f"Forecast cold ({min_forecast_feels:.0f}°C feels-like in next 48h) — "
+            "prepare layering and extremity protection for cold-weather rides."
         )
 
     # Humidity amplifies heat stress at moderate temperatures
@@ -172,6 +197,17 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
     elif wind > 30:
         notes.append(f"Moderate wind ({wind:.0f} km/h) — plan route with wind direction in mind.")
 
+    # Forecast wind (warn about upcoming strong winds)
+    forecast_winds = [h.get("wind_kmh") for h in forecast if h.get("wind_kmh") is not None]
+    max_forecast_wind = max(forecast_winds) if forecast_winds else None
+    if max_forecast_wind is not None and max_forecast_wind > 50 and not any(
+        "Strong wind" in n for n in notes
+    ):
+        notes.append(
+            f"Forecast strong wind ({max_forecast_wind:.0f} km/h in next 48h) — "
+            "check wind direction before outdoor rides."
+        )
+
     if uv > 8:
         notes.append(f"Very high UV index ({uv:.0f}) — apply sunscreen for rides over 30 minutes.")
 
@@ -182,6 +218,14 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
     ]
     if rain_hours:
         notes.append("Rain likely in the next 6 hours — consider indoor training or waterproof kit.")
+
+    # Check rain in the next 24–48h forecast
+    later_rain_hours = [
+        h for h in forecast[2:16]
+        if (h.get("precip_prob_pct") or 0) > 70 or (h.get("precip_mm") or 0) > 2
+    ]
+    if later_rain_hours and not any("Rain likely" in n for n in notes):
+        notes.append("Rain likely later today or tomorrow — plan indoor alternatives.")
 
     if wmo in {95, 96, 99}:
         notes.append("Thunderstorm active — do not train outdoors.")
@@ -202,7 +246,8 @@ def register_tools(ctx) -> None:
                 "and weather conditions. Returns a 48-hour forecast (3-hour buckets) with "
                 "temperature, feels-like, precipitation probability, wind, and conditions. "
                 "Includes coaching notes about heat/cold risk, humidity stress, strong wind, "
-                "high UV, rain, and thunderstorms. "
+                "high UV, rain, and thunderstorms — covering both current conditions and "
+                "upcoming forecast extremes (next 48h). "
                 "Use this before recommending outdoor training to check conditions "
                 "that affect training decisions."
             ),
