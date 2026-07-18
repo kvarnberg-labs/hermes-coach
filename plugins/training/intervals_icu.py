@@ -387,7 +387,7 @@ def get_athlete_profile(discord_id: str, **_: Any) -> str:
 
 
 def get_sport_settings(discord_id: str, sport: str = "Ride", **_: Any) -> str:
-    """Fetch FTP, indoor FTP, power zones, HR zones, pace zones, LTHR, max HR, and W' for a given sport.
+    """Fetch FTP, indoor FTP, power zones, HR zones, pace zones, LTHR, max HR, W', and FTP W/kg for a given sport.
 
     Args:
         sport: intervals.icu sport type e.g. "Ride", "Run", "Swim".
@@ -410,11 +410,24 @@ def get_sport_settings(discord_id: str, sport: str = "Ride", **_: Any) -> str:
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
 
+    # Compute W/kg: sport-settings API doesn't return weight, so fetch profile
+    ftp = data.get("ftp")
+    ftp_w_kg = None
+    if ftp:
+        try:
+            profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+            weight_kg = profile.get("icu_weight")
+            if weight_kg:
+                ftp_w_kg = round(ftp / weight_kg, 2)
+        except (ValueError, RuntimeError):
+            pass  # weight unavailable — leave ftp_w_kg as None
+
     result = {
         "source": "intervals.icu",
         "sport": sport,
-        "ftp": data.get("ftp"),
+        "ftp": ftp,
         "indoor_ftp": data.get("indoor_ftp"),
+        "ftp_w_kg": ftp_w_kg,
         "lthr": data.get("lthr"),
         "max_hr": data.get("max_hr"),
         "w_prime": data.get("w_prime"),
@@ -1090,7 +1103,7 @@ def register_tools(ctx) -> None:
         name="get_sport_settings",
         description=(
             "Fetch FTP, indoor FTP, power zones, HR zones, pace zones, LTHR, "
-            "max HR, and W' for the athlete's chosen sport. "
+            "max HR, W', and FTP W/kg for the athlete's chosen sport. "
             "Use sport='Ride' for cycling (default), 'Run' for running."
         ),
         properties={
