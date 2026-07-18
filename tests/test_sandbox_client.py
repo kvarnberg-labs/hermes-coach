@@ -49,6 +49,17 @@ class TestBuildJobManifest:
         assert "Y29kZQ==" in args
         assert "dGVzdA==" in args
         assert "pytest" in args
+        assert "/tmp/generated_tool/tool.py" in args
+        assert "/tmp/generated_tool/__init__.py" in args
+        assert "PYTHONPATH=/tmp:/opt/hermes/plugins" in args
+
+    def test_manifest_supports_shared_training_imports(self):
+        manifest = sandbox_client._build_job_manifest(
+            "test-job", "Y29kZQ==", "dGVzdA=="
+        )
+        args = manifest["spec"]["template"]["spec"]["containers"][0]["args"][0]
+        assert "from .tool import *" in args
+        assert "/opt/hermes/plugins" in args
 
     def test_manifest_includes_ghcr_pull_secret(self):
         manifest = sandbox_client._build_job_manifest(

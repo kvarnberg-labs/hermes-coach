@@ -106,7 +106,15 @@ def _k8s_client():
 
 
 def _build_job_manifest(job_name: str, code_b64: str, test_b64: str) -> dict:
-    """Build the k8s Job spec that runs pytest on the provided code."""
+    """Build the k8s Job spec that runs pytest on the provided code.
+
+    The sandbox runs the generated tool as a proper Python package under
+    ``/tmp/generated_tool`` and also mounts the baked-in training plugin under
+    ``/opt/hermes/plugins`` onto ``PYTHONPATH``. That keeps tests close to the
+    runtime shape Hermes uses and allows generated tools to reuse shared helpers
+    like ``training.intervals_icu._request`` instead of forcing everything into
+    one self-contained file.
+    """
     return {
         "apiVersion": "batch/v1",
         "kind": "Job",
@@ -138,10 +146,14 @@ def _build_job_manifest(job_name: str, code_b64: str, test_b64: str) -> dict:
                             "imagePullPolicy": "IfNotPresent",
                             "command": ["/bin/sh", "-c"],
                             "args": [
-                                # Decode the base64-encoded files, write them to /tmp,
-                                # then run pytest with strict exit codes.
-                                f"echo '{code_b64}' | base64 -d > /tmp/tool.py && "
+                                # Decode the base64-encoded files, write them as a package,
+                                # then run pytest with the generated package plus the baked-in
+                                # training plugin on PYTHONPATH.
+                                f"mkdir -p /tmp/generated_tool && "
+                                f"printf '%s\n' 'from .tool import *' > /tmp/generated_tool/__init__.py && "
+                                f"echo '{code_b64}' | base64 -d > /tmp/generated_tool/tool.py && "
                                 f"echo '{test_b64}' | base64 -d > /tmp/test_tool.py && "
+                                "PYTHONPATH=/tmp:/opt/hermes/plugins "
                                 "python -m pytest /tmp/test_tool.py -v --tb=short "
                                 "--import-mode=importlib 2>&1"
                             ],
@@ -394,15 +406,20 @@ def register_tools(ctx) -> None:
                         "type": "string",
                         "description": (
                             "Complete Python source of the tool. "
-                            "Must be importable from /tmp/tool.py in the test file."
+                            "Sandbox tests import it as generated_tool.tool on PYTHONPATH. "
+                            "Shared helpers from /opt/hermes/plugins (for example "
+                            "training.intervals_icu) are also importable."
                         ),
                     },
                     "test_code": {
                         "type": "string",
                         "description": (
                             "Complete pytest test file. Import the tool with: "
-                            "import sys; sys.path.insert(0, '/tmp'); from tool import <fn>. "
-                            "Must include at least one test_* function."
+                            "import sys; sys.path.insert(0, '/tmp'); "
+                            "from generated_tool.tool import <fn>. "
+                            "Shared helpers can be imported from training.* because "
+                            "/opt/hermes/plugins is on PYTHONPATH. Must include at least "
+                            "one test_* function."
                         ),
                     },
                 },

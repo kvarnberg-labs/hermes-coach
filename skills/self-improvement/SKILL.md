@@ -51,10 +51,12 @@ Use `develop_tool` to author and sandbox-test a new tool. Follow the tool templa
 
 ```python
 # tool.py — must define a function named <tool_name>() and register it
+# Sandbox tests import it as: from generated_tool.tool import <tool_name>
 def <tool_name>(**kwargs):
     """One-sentence description."""
     # ... implementation ...
     return json.dumps({"result": ...})
+
 
 def register_tools(ctx):
     ctx.register_tool(
@@ -74,6 +76,7 @@ def register_tools(ctx):
 See `CONTRACT.md` for the full rubric. Quick version:
 - Knowledge: evidence-based, < 50 lines, no TSB/zone contradictions
 - Tool: sandbox pytest passes, no `os`/`subprocess`/`eval`, returns valid JSON
+- Shared helpers may be imported from `training.*`; direct network calls are still not allowed
 
 ## Creating the PR
 

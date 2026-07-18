@@ -76,10 +76,11 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Allow kubelet health probes from any source in the cluster
+    # Allow health checks and other in-cluster callers only. The Service is
+    # ClusterIP, so opening this to 0.0.0.0/0 buys nothing except a wider blast
+    # radius if traffic is ever routed into the namespace unexpectedly.
     - from:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - namespaceSelector: {}
       ports:
         - protocol: TCP
           port: 8642
