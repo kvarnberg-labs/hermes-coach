@@ -100,6 +100,18 @@ def coach_onboard(
 
 
 def register_tools(ctx) -> None:
+    def _coach_onboard_handler(args, **kw):
+        try:
+            uid = _require_user_id(kw)
+        except ValueError as exc:
+            return json.dumps({"error": str(exc)})
+        return coach_onboard(
+            discord_id=uid,
+            athlete_id=args["athlete_id"],
+            api_key=args["api_key"],
+            athlete_name=args.get("athlete_name", ""),
+        )
+
     ctx.register_tool(
         name="coach_onboard",
         toolset="training",
@@ -139,10 +151,5 @@ def register_tools(ctx) -> None:
                 "required": ["athlete_id", "api_key"],
             },
         },
-        handler=lambda args, **kw: coach_onboard(
-            discord_id=_require_user_id(kw),
-            athlete_id=args["athlete_id"],
-            api_key=args["api_key"],
-            athlete_name=args.get("athlete_name", ""),
-        ),
+        handler=_coach_onboard_handler,
     )
