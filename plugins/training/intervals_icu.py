@@ -47,17 +47,22 @@ logger = logging.getLogger(__name__)
 _DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
 
 
-_FALLBACK_USER_ID = "discord_dm"
-
-
 def _require_user_id(kw: dict) -> str:
-    """Return the Discord snowflake from the gateway, or 'discord_dm' as fallback.
+    """Return the Discord snowflake from the gateway, or raise ValueError.
 
-    Fallback is used when the gateway doesn't inject user_id (cron sessions,
-    non-Discord contexts). Real Discord sessions always get the snowflake path.
+    Raises ValueError when the gateway has not injected a valid Discord
+    snowflake into kw["user_id"].  This prevents the silent fallback to a
+    shared credential directory that would mix data between users.
     """
     uid = str(kw.get("user_id", ""))
-    return uid if _DISCORD_ID_RE.match(uid) else _FALLBACK_USER_ID
+    if _DISCORD_ID_RE.match(uid):
+        return uid
+
+    raise ValueError(
+        "User identity not available — the Discord gateway did not provide "
+        "a valid user ID.  Your training data cannot be loaded without "
+        "a known identity.  Please reconnect or try again."
+    )
 
 
 _API_BASE = "https://intervals.icu/api/v1"
@@ -1058,6 +1063,14 @@ def register_tools(ctx) -> None:
         # from the gateway (kw["user_id"]), never from model-supplied arguments (M1).
         model_props = {k: v for k, v in properties.items() if k != "discord_id"}
         model_req = [r for r in required if r != "discord_id"]
+
+        def _handler(args, **kw):
+            try:
+                uid = _require_user_id(kw)
+            except ValueError as exc:
+                return json.dumps({"error": str(exc)})
+            return fn(discord_id=uid, **args)
+
         ctx.register_tool(
             name=name,
             toolset="training",
@@ -1070,10 +1083,7 @@ def register_tools(ctx) -> None:
                     "required": model_req,
                 },
             },
-            handler=lambda args, **kw: fn(
-                discord_id=_require_user_id(kw),
-                **args,
-            ),
+            handler=_handler,
         )
 
     # discord_id is kept as a sentinel in properties dicts so the filtering above
