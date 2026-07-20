@@ -124,25 +124,25 @@ class TestRequireUserId:
         uid = intervals_icu._require_user_id({"user_id": "123456789012345678"})
         assert uid == "123456789012345678"
 
-    def test_missing_falls_back_to_discord_dm(self):
-        uid = intervals_icu._require_user_id({})
-        assert uid == intervals_icu._FALLBACK_USER_ID
+    def test_missing_raises_value_error(self):
+        with pytest.raises(ValueError, match="User identity not available"):
+            intervals_icu._require_user_id({})
 
-    def test_empty_string_falls_back(self):
-        uid = intervals_icu._require_user_id({"user_id": ""})
-        assert uid == intervals_icu._FALLBACK_USER_ID
+    def test_empty_string_raises_value_error(self):
+        with pytest.raises(ValueError, match="User identity not available"):
+            intervals_icu._require_user_id({"user_id": ""})
 
-    def test_non_numeric_falls_back(self):
-        uid = intervals_icu._require_user_id({"user_id": "attacker_id"})
-        assert uid == intervals_icu._FALLBACK_USER_ID
+    def test_non_numeric_raises_value_error(self):
+        with pytest.raises(ValueError, match="User identity not available"):
+            intervals_icu._require_user_id({"user_id": "attacker_id"})
 
-    def test_short_id_falls_back(self):
-        uid = intervals_icu._require_user_id({"user_id": "1234"})
-        assert uid == intervals_icu._FALLBACK_USER_ID
+    def test_short_id_raises_value_error(self):
+        with pytest.raises(ValueError, match="User identity not available"):
+            intervals_icu._require_user_id({"user_id": "1234"})
 
-    def test_all_zero_snowflake_falls_back(self):
-        uid = intervals_icu._require_user_id({"user_id": "00000000000000000"})
-        assert uid == intervals_icu._FALLBACK_USER_ID
+    def test_all_zero_snowflake_raises_value_error(self):
+        with pytest.raises(ValueError, match="User identity not available"):
+            intervals_icu._require_user_id({"user_id": "00000000000000000"})
 
 
 class TestTSBCalculation:
