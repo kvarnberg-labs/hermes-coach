@@ -230,6 +230,14 @@ def _coaching_notes(current: dict, forecast: list[dict]) -> list[str]:
     if wmo in {95, 96, 99}:
         notes.append("Thunderstorm active — do not train outdoors.")
 
+    # Forecast thunderstorm (warn about upcoming storms even if current sky is clear)
+    forecast_thunderstorm = any(
+        "Thunderstorm" in (cond or "")
+        for cond in (h.get("conditions") for h in forecast)
+    )
+    if forecast_thunderstorm and not any("Thunderstorm" in n for n in notes):
+        notes.append("Thunderstorm forecast in next 48h — check radar before outdoor rides.")
+
     return notes
 
 
