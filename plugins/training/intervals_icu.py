@@ -1,13 +1,17 @@
 """intervals.icu API integration for Hermes Coach.
 
-Provides 6 tools for fetching athlete training data:
+Provides 10 tools for fetching athlete training data:
 
-  get_athlete_profile   — basic profile, weight, timezone
-  get_sport_settings    — FTP, zones, LTHR, W' for a given sport
-  get_recent_activities — last N days of completed workouts
-  get_wellness          — CTL, ATL, TSB, HRV, sleep, weight over a date range
-  get_planned_events    — upcoming calendar workouts and races
-  get_power_curve       — peak power curve for a sport over a date range
+  get_athlete_profile    — basic profile, weight, timezone, sex, DOB
+  get_sport_settings     — FTP, zones, LTHR, W', FTP W/kg for a sport
+  get_recent_activities  — last N days of completed workouts
+  get_wellness           — CTL, ATL, TSB, HRV, sleep, readiness
+  get_planned_events     — upcoming calendar workouts and races
+  get_power_curve        — peak power curve for a sport over a date range
+  get_activity_detail    — full detail for a single activity
+  verify_athlete_identity — validate stored credentials match expected athlete
+  get_activity_streams   — per-stream data summaries and peak power
+  get_fitness_chart      — full CTL/ATL/TSB history (up to 365 days)
 
 Authentication:
   intervals.icu uses HTTP Basic Auth.
