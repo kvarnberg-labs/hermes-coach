@@ -7,6 +7,8 @@ Registers all coaching tools via the Hermes plugin ctx interface:
   - onboarding      : /start slash command handler (1 tool)
   - sandbox_client  : autonomous tool development via k8s Jobs (1 tool)
   - render_chart    : generate dark-mode PNG charts for Discord (3 tools)
+  - create_planned_event : create/delete planned events on intervals.icu calendar (2 tools)
+  - get_athlete_stats    : aggregate training statistics over a date range (1 tool)
 """
 
 from __future__ import annotations
@@ -20,6 +22,8 @@ def register(ctx):
     from .onboarding import register_tools as register_onboarding
     from .sandbox_client import register_tools as register_sandbox
     from .render_chart import register_tools as register_charts
+    from .create_planned_event import register_tools as register_calendar
+    from .get_athlete_stats import register_tools as register_stats
 
     register_intervals(ctx)
     register_weather(ctx)
@@ -27,3 +31,5 @@ def register(ctx):
     register_onboarding(ctx)
     register_sandbox(ctx)
     register_charts(ctx)
+    register_calendar(ctx)
+    register_stats(ctx)
