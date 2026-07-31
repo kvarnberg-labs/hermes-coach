@@ -22,8 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 def _brain_dir() -> Path:
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
-    return hermes_home / "coach-brain"
+    hermes_home_raw = os.environ.get("HERMES_HOME")
+    if not hermes_home_raw:
+        raise RuntimeError(
+            "HERMES_HOME is not set — cannot resolve coach-brain directory."
+        )
+    return Path(hermes_home_raw) / "coach-brain"
 
 
 import time as _time
