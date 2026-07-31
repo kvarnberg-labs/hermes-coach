@@ -28,10 +28,10 @@ class TestBrainDir:
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         assert _brain_dir() == tmp_path / "coach-brain"
 
-    def test_falls_back_to_home_dot_hermes(self, monkeypatch: pytest.MonkeyPatch):
+    def test_raises_runtime_error_when_hermes_home_unset(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.delenv("HERMES_HOME", raising=False)
-        monkeypatch.setattr("pathlib.Path.home", lambda: Path("/fake/home"))
-        assert _brain_dir() == Path("/fake/home/.hermes/coach-brain")
+        with pytest.raises(RuntimeError, match="HERMES_HOME is not set"):
+            _brain_dir()
 
 
 class TestLoadAll:
@@ -122,3 +122,4 @@ class TestGetCoachingKnowledge:
         )
         result = json.loads(get_coaching_knowledge("block-training"))
         assert result["matched"] is True
+
