@@ -1,0 +1,55 @@
+---
+# VO2max — Maximal Oxygen Uptake
+# Evidence-based guidance: what VO2max is, how to train it, and masters adaptations.
+# Sources: Bassett & Howley (2000), Billat et al. (1996), Helgerud et al. (2007),
+# Midgley et al. (2006), Seiler et al. (2013).
+
+vo2max:
+
+  definition:
+    summary: >
+      VO2max is the maximum rate of oxygen consumption during intense exercise,
+      reflecting integrated respiratory, cardiovascular, and muscular capacity.
+      Expressed in ml/kg/min. Key predictor of endurance performance alongside
+      economy and lactate threshold.
+    masters_decline: >
+      VO2max declines ~10% per decade after 25 when untrained, but only ~5%
+      per decade with consistent training. Masters athletes can significantly
+      attenuate age-related decline with regular high-intensity work.
+
+  measurement:
+    lab: "Incremental ramp test to exhaustion with gas exchange — gold standard."
+    field_cycling: "Ramp test MAP correlates with VO2max. Not a direct measure but tracks changes well."
+    field_running: "Cooper 12-min test or 3 km TT — strong correlation (r ≈ 0.90) with lab VO2max."
+
+  trainability:
+    improvement: "Training can improve VO2max by 15–25% (untrained) or 5–10% (well-trained)."
+    time_course: "Measurable in 4–6 weeks; most gains within 12–16 weeks."
+    detraining: "Significant decline within 2–4 weeks inactivity; 50% recoverable in 4–8 weeks resumed training."
+
+  training_prescription:
+    intensity:
+      power: "106–120% of FTP (Coggan Z5). 2–5 min intervals."
+      heart_rate: "≥94% LTHR or ≥90% HRmax. Near-maximal effort."
+    protocols:
+      classic_4x4:
+        description: "4 × 4 min @ VO2max, 3–4 min active recovery. 1–2 sessions/week for 4–8 weeks."
+        evidence: "Helgerud et al. (2007) — 7.2% VO2max improvement in 8 weeks."
+      short_intervals: "8–12 × 60 sec max effort, 60–90 sec recovery. Variety option."
+      billat_30_30: "30 sec @ VO2max / 30 sec @ 50% VO2max, 15–20 repeats. Maximises time at VO2max."
+    progression:
+      - "Week 1–2: 3 × 3 min or 4 × 2 min. Build tolerance."
+      - "Week 3–4: 4 × 4 min or 5 × 3 min. Increase volume."
+      - "Week 5–6: 5 × 4 min or 4 × 5 min. Maximise time-at-intensity."
+      - "Week 7–8: Reduce 20–30%. Allow supercompensation before testing/racing."
+    placement: >
+      Early in week when fresh. ≥48h before next hard session.
+      NOT the day after heavy strength or long rides.
+
+  masters_guidance:
+    overview: >
+      Masters (50+) benefit from VO2max training but need longer recovery
+      and more gradual progression. 1 session/week is sufficient.
+    dose: >
+      Start 3 × 2 min before progressing to 4 × 4 min over 6–8 weeks.
+      ≥72h between VO2max sessions. Avoid when TSB < −15.
