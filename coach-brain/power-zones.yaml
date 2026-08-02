@@ -1,0 +1,74 @@
+# Power & Heart Rate Training Zones
+#
+# Structured zone definitions for evidence-based workout prescription.
+# Sources: Coggan & Allen (2019), Seiler et al. (2013), Esteve-Lanao et al. (2007).
+
+overview:
+  description: >
+    Power zones anchor every workout prescription to a measurable physiological
+    boundary. FTP (Functional Threshold Power) is the reference point — all
+    zones are expressed as %FTP.  Heart rate zones complement power zones for
+    athletes without a power meter and add an internal-load check on every ride.
+  key_concept: >
+    Zones are not goals — they are ceilings.  A Z2 ride should stay BELOW 75%
+    FTP, not average 75%.  Drifting into the next zone changes the session's
+    training stimulus and recovery cost.
+
+coggan_power_7_zone:
+  description: Coggan 7-zone power model — the standard in cycling.
+  zones:
+    Z1_active_recovery:
+      range: "< 55% FTP"
+      purpose: Promote blood flow without training stress. Post-race or recovery day only.
+    Z2_endurance:
+      range: "56–75% FTP"
+      purpose: Primary aerobic base builder. Mitochondrial biogenesis, fat oxidation, cardiac output. Low fatigue, high volume.
+    Z3_tempo:
+      range: "76–90% FTP"
+      purpose: The "grey zone." Moderate stimulus, moderate fatigue. Use sparingly — most athletes accumulate too much time here.
+    Z4_threshold:
+      range: "91–105% FTP"
+      purpose: Raise FTP. Improves lactate clearance and sustainable power. Core of structured training.
+    Z5_vo2max:
+      range: "106–120% FTP"
+      purpose: Maximal aerobic power. 3–5 min intervals. High fatigue cost, 48–72h recovery.
+    Z6_anaerobic:
+      range: "121–150% FTP"
+      purpose: Top-end power, W', race-winning surges. 30–60 sec max efforts.
+    Z7_neuromuscular:
+      range: "> 150% FTP"
+      purpose: Sprint power, maximal force. 5–15 sec. Neurological, not metabolic.
+
+heart_rate_zones:
+  description: >
+    HR zones are the primary tool for athletes without a power meter, and a
+    valuable cross-check for everyone.  HR lags power by 2–3 minutes — prescribe
+    short intervals (< 5 min) by RPE, not HR.  Derive zones from LTHR (Lactate
+    Threshold Heart Rate), not max HR.
+  zones:
+    Z1_recovery: "< 80% LTHR — conversational, very easy"
+    Z2_endurance: "80–89% LTHR — can speak in full sentences"
+    Z3_tempo: "89–94% LTHR — short sentences, grey zone"
+    Z4_threshold: "94–100% LTHR — single words only"
+    Z5_vo2max: "100–108% LTHR — cannot speak"
+
+zone_distribution:
+  polarized:
+    description: "~80% Z1–Z2, ~20% Z4–Z5. Minimal Z3."
+    best_for: "8+ h/week, experienced athletes, race-focused."
+    evidence: Seiler et al. (2013) — elite endurance athletes.
+  pyramidal:
+    description: "Most Z1–Z2, less Z3, least Z4–Z5. Includes moderate work."
+    best_for: "Age-group and masters athletes, 5–8 h/week."
+  threshold_focused:
+    description: "1–2 threshold sessions/week plus moderate base."
+    best_for: "Time-crunched athletes, strong base already built."
+
+coaching_notes:
+  - "Most athletes ride Z2 too hard (Z3) and Z4 too easy (high Z3). Both are junk miles."
+  - "An IF of 0.75 on a 2h Z2 ride means the athlete spent the session at the TOP of Z2 — correct."
+  - "An IF of 0.85 on the same ride means they averaged Z3 — wrong stimulus, double the fatigue."
+  - "Zone distribution charts from intervals.icu reflect the FULL ride (warm-up, cooldown, rests)."
+  - "TSB < −20: limit to Z1–Z2 only. TSB < −25: active recovery or rest."
+  - "Masters (60+): Z2 ceiling drops to ~70% FTP. Z4 once/week max."
+  - "Refer to coach-brain/training-philosophies.yaml for the full intensity_zones reference."
