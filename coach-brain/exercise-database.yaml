@@ -136,6 +136,8 @@ exercise_database:
     set_rep_guidelines:
       hypertrophy: 3–4 sets × 8–12 reps
       accessory: 3 sets × 10–15 reps (after main deadlift work)
+    progressions: []
+    regressions: []
   barbell_bench_press:
     name: Barbell Bench Press
     category: Horizontal Push
@@ -210,6 +212,7 @@ exercise_database:
     - Full push-up → Diamond push-up → Archer push-up → One-arm push-up
     set_rep_guidelines:
       general: 3–5 sets, rep range based on ability. Progress when you can do 3×15 clean reps.
+    regressions: []
   barbell_row:
     name: Barbell Row (Bent-Over Row)
     category: Horizontal Pull
@@ -243,6 +246,8 @@ exercise_database:
     set_rep_guidelines:
       strength: 3–5 sets × 4–6 reps (Pendlay style)
       hypertrophy: 3–4 sets × 8–12 reps
+    progressions: []
+    regressions: []
   dumbbell_row:
     name: Dumbbell Row (One-Arm)
     category: Horizontal Pull
@@ -265,6 +270,8 @@ exercise_database:
     set_rep_guidelines:
       strength: 3–4 sets × 6–8 reps (heavy)
       hypertrophy: 3–4 sets × 10–15 reps
+    progressions: []
+    regressions: []
   overhead_press:
     name: Overhead Press (Standing Barbell)
     category: Vertical Push
@@ -302,6 +309,7 @@ exercise_database:
     set_rep_guidelines:
       strength: 3–5 sets × 3–5 reps @ 85–93% 1RM
       hypertrophy: 3–4 sets × 8–12 reps
+    progressions: []
   pull_up:
     name: Pull-Up
     category: Vertical Pull
@@ -367,6 +375,8 @@ exercise_database:
     set_rep_guidelines:
       hypertrophy: 3–4 sets × 10–15 reps
       accessory: 3 sets × 12–15 reps (after pull-ups)
+    progressions: []
+    regressions: []
   bulgarian_split_squat:
     name: Bulgarian Split Squat
     category: Unilateral Lower
@@ -395,6 +405,8 @@ exercise_database:
     set_rep_guidelines:
       strength: 3–4 sets × 6–8 reps per leg
       hypertrophy: 3–4 sets × 10–15 reps per leg
+    progressions: []
+    regressions: []
   walking_lunge:
     name: Walking Lunge
     category: Unilateral Lower
@@ -416,6 +428,8 @@ exercise_database:
       - Drive through front foot to step through into next rep.
     set_rep_guidelines:
       general: 3–4 sets × 10–16 total steps
+    progressions: []
+    regressions: []
   plank:
     name: Plank
     category: Core
@@ -438,6 +452,7 @@ exercise_database:
     - Knees-down plank → Full plank → Weighted plank → Single-arm/single-leg plank
     set_rep_guidelines:
       general: 3 sets × 30–60 sec hold (or to near-failure for strength)
+    regressions: []
   pallof_press:
     name: Pallof Press
     category: Core
@@ -456,6 +471,8 @@ exercise_database:
       - Return controlled to chest. Keep hips and shoulders square.
     set_rep_guidelines:
       general: 3 sets × 8–12 reps each side
+    progressions: []
+    regressions: []
   dead_bug:
     name: Dead Bug
     category: Core
@@ -474,6 +491,8 @@ exercise_database:
       - Return to start. Keep lower back flat throughout.
     set_rep_guidelines:
       general: 3 sets × 8–12 reps per side
+    progressions: []
+    regressions: []
   hip_thrust:
     name: Barbell Hip Thrust
     category: Accessory
@@ -500,6 +519,8 @@ exercise_database:
     set_rep_guidelines:
       strength: 3–4 sets × 5–8 reps (heavy)
       hypertrophy: 3–4 sets × 10–15 reps
+    progressions: []
+    regressions: []
   face_pull:
     name: Face Pull
     category: Accessory
@@ -519,6 +540,8 @@ exercise_database:
       - Squeeze shoulder blades. Controlled return.
     set_rep_guidelines:
       general: 3–4 sets × 12–20 reps (light, for shoulder health)
+    progressions: []
+    regressions: []
   lateral_raise:
     name: Dumbbell Lateral Raise
     category: Accessory
@@ -537,6 +560,8 @@ exercise_database:
       - Pause at top. Controlled eccentric.
     set_rep_guidelines:
       general: 3–4 sets × 12–20 reps
+    progressions: []
+    regressions: []
   bicep_curl:
     name: Dumbbell Bicep Curl
     category: Accessory
@@ -554,6 +579,8 @@ exercise_database:
       - Curl dumbbells to shoulders. Squeeze at top. Controlled eccentric.
     set_rep_guidelines:
       general: 3–4 sets × 10–15 reps
+    progressions: []
+    regressions: []
   tricep_pushdown:
     name: Tricep Pushdown
     category: Accessory
@@ -568,6 +595,8 @@ exercise_database:
       - Squeeze triceps at bottom. Controlled return to ~90° elbow.
     set_rep_guidelines:
       general: 3–4 sets × 12–20 reps
+    progressions: []
+    regressions: []
   farmer_walk:
     name: Farmer's Walk
     category: Carry
@@ -586,6 +615,8 @@ exercise_database:
       - Walk with short, quick steps. Breathe.
     set_rep_guidelines:
       general: 3–4 sets × 30–60 sec or 20–50 meters
+    progressions: []
+    regressions: []
   goblet_squat:
     name: Goblet Squat
     category: Squat
@@ -616,6 +647,7 @@ exercise_database:
       strength: 3-4 sets x 6-10 reps (heavy dumbbell)
       hypertrophy: 3-4 sets x 10-15 reps
       technique: 3 sets x 8-12 reps (moderate load)
+    regressions: []
   bodyweight_squat:
     name: Bodyweight Squat
     category: Squat
@@ -637,6 +669,7 @@ exercise_database:
     - Assisted squat → Full BW squat → Jump squat → Pistol squat progression
     set_rep_guidelines:
       general: 3-4 sets x 15-25 reps or to near-failure
+    regressions: []
   glute_bridge:
     name: Glute Bridge
     category: Hinge
@@ -658,6 +691,7 @@ exercise_database:
     - Two-leg bridge → Single-leg bridge → Hip thrust → Weighted hip thrust
     set_rep_guidelines:
       general: 3-4 sets x 15-20 reps (add single-leg for progression)
+    regressions: []
   inverted_row:
     name: Inverted Row
     category: Horizontal Pull
@@ -688,3 +722,43 @@ exercise_database:
     set_rep_guidelines:
       strength: 3-4 sets x 6-10 reps
       hypertrophy: 3-4 sets x 10-15 reps
+  pike_push_up:
+    name: Pike Push-Up
+    category: Vertical Push
+    primary_muscles:
+    - Anterior Deltoid
+    - Medial Deltoid
+    - Triceps Brachii
+    secondary_muscles:
+    - Upper Trapezius
+    - Serratus Anterior
+    - Core
+    equipment:
+    - Bodyweight
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - 'Start in a downward dog position: hands shoulder-width, hips high, feet hip-width'
+      - Head tucked between arms. Body forms an inverted V.
+      execution:
+      - Bend elbows, lower head toward floor between hands
+      - Keep hips high -- do not let them drop
+      - Press back up to starting position. Control the descent.
+      breathing: Inhale on descent, exhale on press
+    common_errors:
+    - 'Hips dropping: keep hips high, cue hips to ceiling'
+    - 'Elbows flaring: keep elbows at ~45 deg, not 90'
+    - 'Not enough ROM: lower until head nearly touches floor'
+    progressions:
+    - Wall pike push-up (feet on floor, hands elevated)
+    - Full pike push-up
+    - Feet-elevated pike push-up
+    - Wall handstand push-up
+    - Freestanding handstand push-up
+    regressions:
+    - Incline push-up
+    - Kneeling pike push-up (shorter lever)
+    set_rep_guidelines:
+      strength: 3-4 sets x 5-8 reps (feet elevated)
+      hypertrophy: 3-4 sets x 8-15 reps
+      technique: 3 sets x 5-10 reps
