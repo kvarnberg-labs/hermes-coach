@@ -1,0 +1,337 @@
+---
+# Strength Programming — Templates and Program Design
+# Evidence-based program templates for different goals and experience levels.
+# Sources: NSCA Essentials, Rippetoe Starting Strength, Wendler 5/3/1,
+#          Nuckols 28 Free Programs, Helms Muscle & Strength Pyramids,
+#          Candito, Barbell Medicine.
+
+strength_programming:
+
+  program_design_framework:
+    steps:
+      - "1. Define goal: general strength, hypertrophy, power, sport-specific, or health"
+      - "2. Assess training level: novice, intermediate, or advanced"
+      - "3. Determine available equipment: full gym, limited (dumbbells only), bodyweight"
+      - "4. Establish frequency: days per week (typically 2–6)"
+      - "5. Select split based on frequency and goal"
+      - "6. Choose exercises covering all movement patterns"
+      - "7. Set volume (sets × reps), intensity (% 1RM or RPE), and progression schedule"
+      - "8. Plan deloads and fatigue management"
+
+  # ── GOAL-SPECIFIC PARAMETERS ───────────────────────────────────────────────
+  goal_parameters:
+    general_strength:
+      rep_range: "3–6 (primary lifts)"
+      intensity_range: "80–93% 1RM"
+      sets_per_exercise: "3–5"
+      rest: "2–5 min between work sets"
+      progression: "Weekly or bi-weekly load increases"
+    hypertrophy:
+      rep_range: "6–12 (accessory: 12–20)"
+      intensity_range: "65–80% 1RM"
+      sets_per_exercise: "3–5"
+      rest: "60–90 sec for isolation, 2–3 min for compounds"
+      progression: "Volume-based: add sets/reps before load"
+    power:
+      rep_range: "1–5 (ballistic: 3–8)"
+      intensity_range: "30–60% for speed, 75–85% for strength-speed"
+      sets_per_exercise: "3–6"
+      rest: "3–5 min (quality over fatigue)"
+      progression: "Bar speed tracking. Do not grind."
+    endurance:
+      rep_range: "12–20+"
+      intensity_range: "40–60% 1RM"
+      sets_per_exercise: "2–4"
+      rest: "30–60 sec"
+      progression: "Density-based: more work in less time"
+    health_longevity:
+      rep_range: "8–15"
+      intensity_range: "50–75% 1RM (RPE 6–8, avoid failure)"
+      sets_per_exercise: "2–3"
+      rest: "60–120 sec"
+      emphasis: "Movement quality, balance, bone density. Less is more."
+    fat_loss_preserve_muscle:
+      rep_range: "6–12 (primary) / 12–20 (accessory)"
+      intensity_range: "70–85% 1RM (RPE 7–9)"
+      sets_per_exercise: "3–4"
+      rest: "60–90 sec"
+      progression: "Maintain load. Progress reps before weight. Plateau is acceptable in a deficit."
+      emphasis: "Volume drives muscle retention in a deficit. Keep intensity moderate-high. Do not grind near-max loads."
+
+  # ── SPLIT TEMPLATES ────────────────────────────────────────────────────────
+  full_body_3x:
+    name: "Full Body 3×/Week"
+    best_for: "Novices, general strength, time efficiency"
+    description: >
+      Every session trains all major movement patterns. Linear progression on
+      main lifts. The most efficient split for beginners and those training
+      3 days per week.
+    template:
+      day_1:
+        main: ["Squat (or leg press)", "Bench Press"]
+        supplement: ["Barbell Row", "Romanian Deadlift"]
+        accessory: ["Plank", "Face Pull (optional)"]
+      day_2:
+        main: ["Deadlift (or trap bar)", "Overhead Press"]
+        supplement: ["Pull-Up (or lat pulldown)", "Walking Lunge"]
+        accessory: ["Lateral Raise (optional)"]
+      day_3:
+        main: ["Squat (lighter/variation)", "Bench Press (or dumbbell press)"]
+        supplement: ["Dumbbell Row", "Bulgarian Split Squat"]
+        accessory: ["Dead Bug", "Bicep Curl (optional)"]
+    progression: "Add 2.5 kg to main lifts each session when reps completed."
+
+  upper_lower_4x:
+    name: "Upper/Lower 4×/Week"
+    best_for: "Intermediates, balanced strength and hypertrophy"
+    description: >
+      Alternating upper and lower body days. Each muscle trained 2×/week
+      (optimal for hypertrophy). More volume per session than full body.
+    template:
+      upper_a:
+        main: ["Bench Press (heavy)", "Barbell Row (heavy)"]
+        supplement: ["Overhead Press (volume)", "Pull-Up (or pulldown)"]
+        accessory: ["Lateral Raise", "Tricep Pushdown", "Face Pull"]
+      lower_a:
+        main: ["Squat (heavy)", "Romanian Deadlift"]
+        supplement: ["Walking Lunge", "Calf Raise"]
+        accessory: ["Plank", "Hanging Knee Raise"]
+      upper_b:
+        main: ["Overhead Press (heavy)", "Pull-Up (weighted if possible)"]
+        supplement: ["Dumbbell Bench Press (volume)", "Dumbbell Row"]
+        accessory: ["Bicep Curl", "Face Pull"]
+      lower_b:
+        main: ["Deadlift (heavy)", "Bulgarian Split Squat"]
+        supplement: ["Hip Thrust", "Calf Raise"]
+        accessory: ["Pallof Press"]
+    progression: "Weekly load increases on main lifts. +1 rep or +2.5 kg."
+
+  push_pull_legs_6x:
+    name: "Push/Pull/Legs (PPL) 6×/Week"
+    best_for: "Intermediates/advanced, hypertrophy focus"
+    description: >
+      Each day dedicated to a movement category. Two full rotations per week.
+      Higher volume per muscle group per session. Requires 6 days.
+    template:
+      push_1:
+        main: ["Bench Press (heavy, 4×4-6)"]
+        supplement: ["Overhead Press (volume, 3×8-12)", "Incline Dumbbell Press (3×10-12)"]
+        accessory: ["Lateral Raise (4×12-15)", "Tricep Pushdown (3×12-15)"]
+      pull_1:
+        main: ["Deadlift (heavy, 3×3-5) or Barbell Row (4×6-8)"]
+        supplement: ["Pull-Up (4 sets)", "Dumbbell Row (3×10-12)"]
+        accessory: ["Face Pull (4×15-20)", "Bicep Curl (3×12-15)"]
+      legs_1:
+        main: ["Squat (heavy, 4×4-6)"]
+        supplement: ["Romanian Deadlift (3×8-10)", "Walking Lunge (3×12 steps)"]
+        accessory: ["Calf Raise (4×15)", "Plank (3×45 sec)"]
+      push_2:
+        main: ["Overhead Press (heavy, 4×4-6)"]
+        supplement: ["Dumbbell Bench Press (volume, 3×8-12)", "Dips (3×10-15)"]
+        accessory: ["Lateral Raise (4×12-15)", "Tricep Pushdown (3×12-15)"]
+      pull_2:
+        main: ["Barbell Row (heavy, 4×6-8)"]
+        supplement: ["Lat Pulldown (3×10-12)", "Dumbbell Row (3×10-12)"]
+        accessory: ["Face Pull (4×15-20)", "Bicep Curl (3×12-15)"]
+      legs_2:
+        main: ["Squat (volume, 4×6-8) OR front squat"]
+        supplement: ["Hip Thrust (3×10-12)", "Bulgarian Split Squat (3×10-12)"]
+        accessory: ["Calf Raise (4×15)", "Dead Bug (3×10)"]
+
+  two_day_minimal:
+    name: "2-Day Minimalist"
+    best_for: "Busy athletes, maintenance during sport season, beginners"
+    description: >
+      Two full-body sessions covering all movement patterns. Enough for
+      significant strength gains in novices and maintenance for intermediates.
+    template:
+      day_a:
+        main: ["Squat (or goblet squat)", "Bench Press (or push-up progression)"]
+        supplement: ["Pull-Up or Lat Pulldown", "Romanian Deadlift"]
+        accessory: ["Plank", "Face Pull"]
+      day_b:
+        main: ["Deadlift (or trap bar)", "Overhead Press"]
+        supplement: ["Dumbbell Row", "Lunge or Bulgarian Split Squat"]
+        accessory: ["Lateral Raise", "Dead Bug"]
+    progression: "Add 2.5 kg to main lifts when all reps completed. 1–2×/week."
+
+  # ── TEMPLATES BY GOAL ──────────────────────────────────────────────────────
+  strength_focused_4x:
+    name: "Strength-Focused Upper/Lower 4×"
+    best_for: "Primary goal: get stronger on the big lifts"
+    description: >
+      Lower volume, higher intensity. Heavy main lifts followed by minimal
+      accessory work. Based on Texas Method / Madcow phasing for intermediates.
+    weekly_schedule:
+      monday_upper_volume: "Bench 5×5 @80%, OHP 3×8, Row 4×8, Pull-up 3 sets, Face Pull 3×15"
+      tuesday_lower_volume: "Squat 5×5 @80%, RDL 3×8, Lunge 3×10, Plank 3×45s"
+      thursday_upper_intensity: "Bench 1×5 @90%+, OHP 1×5, Weighted Pull-up 3×5, Row 3×5 heavy"
+      friday_lower_intensity: "Squat 1×5 @90%+, Deadlift 1×5, Hip Thrust 3×6 heavy"
+    progression: "Increase volume-day weight weekly. Intensity day tracks progress."
+
+  hypertrophy_focused_4x:
+    name: "Hypertrophy Upper/Lower 4×"
+    best_for: "Primary goal: muscle growth"
+    description: >
+      Higher volume, moderate intensity. Focus on mind-muscle connection,
+      time under tension, and progressive volume.
+    weekly_schedule:
+      upper_1: "Bench 4×8-10, Incline DB Press 3×10-12, Row 4×10-12, Lat Pulldown 3×12-15, Lateral Raise 4×15-20, Tricep 3×12-15"
+      lower_1: "Squat 4×8-10, RDL 3×10-12, Leg Press 3×12-15, Lunge 3×12, Calf 4×15-20"
+      upper_2: "OHP 4×8-10, DB Bench 3×10-12, Pull-up 4 sets, DB Row 3×12-15, Face Pull 4×15-20, Bicep 3×12-15"
+      lower_2: "Deadlift 3×8, Front Squat 3×10-12, Bulgarian SS 3×10-12, Hip Thrust 3×12-15, Calf 4×15-20"
+
+  # ── EQUIPMENT-LIMITED TEMPLATES ────────────────────────────────────────────
+  dumbbell_only:
+    name: "Dumbbell-Only Full Body"
+    best_for: "Home gym with dumbbells only, no barbell/rack"
+    constraints: "Limited by dumbbell weight. Focus on unilateral work and high reps."
+    template_3x_week:
+      day_1:
+        - "Goblet Squat 4×8-12"
+        - "Dumbbell Bench Press 4×8-12"
+        - "Dumbbell Row 4×10-12 per arm"
+        - "Romanian Deadlift (dumbbells) 3×10-12"
+        - "Plank 3×45s"
+      day_2:
+        - "Bulgarian Split Squat 3×10-12 per leg"
+        - "Dumbbell Overhead Press 4×8-12"
+        - "Dumbbell Row (other arm first) 4×10-12"
+        - "Hip Thrust (dumbbell on hips) 3×12-15"
+        - "Lateral Raise 3×15-20"
+      day_3:
+        - "Walking Lunge (with dumbbells) 3×12 steps"
+        - "Dumbbell Floor Press 4×10-12"
+        - "Pull-over (single dumbbell) 3×12-15"
+        - "Single-leg RDL 3×10-12 per leg"
+        - "Farmer's Walk 3×40m"
+
+  bodyweight_only:
+    name: "Bodyweight-Only"
+    best_for: "No equipment. Travel, beginners, maintenance."
+    description: >
+      Progressive overload through leverage, volume, tempo, and exercise
+      variation rather than external load.
+    template:
+      squat_pattern:
+        - "Bodyweight squat → Cossack squat → Pistol squat progression"
+        - "Shrimp squat, split squat (rear foot elevated)"
+      hinge_pattern:
+        - "Single-leg glute bridge → Hip thrust → Nordic hamstring curl"
+        - "Single-leg RDL (balance challenge)"
+      horizontal_push:
+        - "Wall push-up → Incline push-up → Push-up → Diamond → Archer push-up"
+      horizontal_pull:
+        - "Doorframe row → Table row → Inverted row (under a sturdy table)"
+        - "Can use bedsheet in door for row (loop around doorknob)"
+      vertical_push:
+        - "Pike push-up → Wall handstand push-up → Handstand push-up"
+      vertical_pull:
+        - "No true bodyweight vertical pull. Find a bar (playground, tree branch)."
+        - "Substitute: doorframe pull (isometric), or resistance band pulldown"
+      core:
+        - "Plank, Side Plank, Dead Bug, Hollow Body Hold, L-Sit progression, Hanging Knee Raise (if bar available)"
+
+  # ── PROGRESSION GUIDANCE ───────────────────────────────────────────────────
+  double_progression:
+    name: "Double Progression"
+    description: >
+      The standard method for intermediates. Progress reps within a rep range
+      first, then add load and reset to the bottom of the range.
+    example: >
+      Target: 3×8-12. Start at 60 kg for 3×8. Next session, try 3×9. Then
+      3×10, 3×11, 3×12. Once 3×12 is achieved with good form, add 2.5–5 kg
+      and start again at 3×8.
+    best_for: "Hypertrophy and general strength for intermediates"
+
+  linear_progression:
+    name: "Linear Progression"
+    description: >
+      Add weight every session. The simplest and most effective method for
+      novices who can recover from session to session.
+    starting_weight: "Weight where bar speed noticeably slows but form is perfect"
+    increments:
+      squat_deadlift: "+2.5–5 kg/session"
+      bench_ohp: "+1.25–2.5 kg/session"
+      row: "+2.5 kg/session"
+    stall_protocol: >
+      If you fail to complete prescribed reps for 3 consecutive sessions at
+      the same weight, deload 10–15% and work back up. After 2–3 resets on a
+      lift, move to intermediate programming for that lift.
+
+  rpe_autoregulation:
+    name: "RPE-Based Autoregulation"
+    description: >
+      Adjust load session-to-session based on daily readiness. Better for
+      intermediates and advanced athletes where day-to-day performance varies.
+    example_program:
+      squat:
+        description: "4×5 @ RPE 8 (2 RIR). If warm-ups feel heavy, work at 5 kg less today."
+      bench:
+        description: "3×5 @ RPE 8-9. Add 2.5 kg from last week if last week felt like RPE 7-8."
+    best_for: "Intermediates and advanced athletes. Especially during cuts or high life stress."
+
+  # ── DELOAD PRESCRIPTIONS ───────────────────────────────────────────────────
+  deload_templates:
+    standard_deload:
+      description: >
+        Cut volume (sets) by 40–50%. Maintain intensity (~85% of normal
+        working weight). Do fewer sets, not lighter sets.
+      example:
+        normal: "Squat 4×5 @ 100 kg"
+        deload: "Squat 2×5 @ 100 kg or 1×5 @ 100 kg + 1×5 @ 80 kg"
+    active_deload:
+      description: >
+        Drop load to ~60% and work on speed/technique. Same sets, different
+        exercises. Good for hypertrophy blocks.
+      example: "Front squat instead of back squat, DB press instead of barbell. 3×5-8 @ 60-65%."
+
+  # ── COMMON GOAL-ORIENTED PROGRAMS ──────────────────────────────────────────
+  get_stronger_beginner_12w:
+    goal: "General Strength"
+    level: "Novice"
+    duration_weeks: 12
+    frequency: "3×/week"
+    description: >
+      Starting Strength-style linear progression. Simple, brutally effective
+      for novices. Add weight every session.
+    phase_1_weeks_1_4:
+      workout_a: "Squat 3×5, Bench Press 3×5, Deadlift 1×5, Plank 3×30s"
+      workout_b: "Squat 3×5, Overhead Press 3×5, Barbell Row 3×5, Dead Bug 3×8"
+      rotation: "A, B, A  —  B, A, B (alternating)"
+    phase_2_weeks_5_8:
+      workout_a: "Squat 3×5, Bench Press 3×5, Deadlift 1×5, Pull-Up (or pulldown) 3 sets, Plank 3×45s"
+      workout_b: "Squat 3×5, Overhead Press 3×5, Barbell Row 3×5, Romanian Deadlift 3×8, Dead Bug 3×10"
+    phase_3_weeks_9_12:
+      workout_a: "Squat 3×5, Bench Press 3×5, Deadlift 1×5 (heavy), Pull-Up 3×5, Plank 3×60s"
+      workout_b: "Squat 3×5, Overhead Press 3×5, Barbell Row 3×5, Romanian Deadlift 3×8, Lateral Raise 3×12"
+
+  fat_loss_preserve_muscle:
+    goal: "Fat loss while preserving muscle"
+    level: "Intermediate"
+    frequency: "3–4×/week"
+    description: >
+      During caloric deficit, volume is the primary driver of muscle retention.
+      Keep intensity moderate-high, volume moderate. Avoid grinding near-max
+      loads (injury risk is higher when recovering in a deficit).
+    template_3x:
+      full_body_a:
+        - "Squat 3×6-8 @ RPE 8"
+        - "Bench Press 3×6-8 @ RPE 8"
+        - "Pull-Up 3 sets"
+        - "Romanian Deadlift 3×8-10"
+        - "Plank 3×45s"
+      full_body_b:
+        - "Deadlift 2×5 @ RPE 8"
+        - "Overhead Press 3×6-8 @ RPE 8"
+        - "Dumbbell Row 3×10-12"
+        - "Lunge 3×12 steps"
+        - "Dead Bug 3×10"
+      full_body_c:
+        - "Front Squat 3×8-10"
+        - "Incline DB Press 3×10-12"
+        - "Lat Pulldown 3×10-12"
+        - "Hip Thrust 3×10-12"
+        - "Face Pull 3×15"
+    progression: "Maintain performance. Progress reps before load. It's OK to plateau — you're in a deficit."
+    cardio: "10K+ steps/day. 2–3× LISS (low-intensity steady state) cardio per week. Do NOT do HIIT before leg day."
