@@ -1,0 +1,173 @@
+---
+# Strength Standards — Assessment Benchmarks
+# Evidence-based strength level classification for program design.
+# Sources: NSCA, Rippetoe Strength Standards, Nuckols/Stronger By Science,
+#          Lon Kilgore & Mark Rippetoe (Practical Programming),
+#          ExRx.net strength standards, ACSM.
+#
+# These are EXERCISE standards (absolute and relative) used by the
+# assess_strength_level tool to classify users.
+
+strength_standards:
+
+  classification_levels:
+    untrained:
+      description: "No consistent resistance training experience (< 2 months)"
+      programming: "Linear progression. Focus on movement quality. 2–3×/week full body."
+    novice:
+      description: "2–6 months of consistent training. Can perform the basic lifts with acceptable form."
+      programming: "Linear progression. 3×/week full body. Add weight every session."
+    early_intermediate:
+      description: "6–18 months of consistent training. Linear progression is stalling on some lifts."
+      programming: "Weekly progression. Upper/lower split recommended. Introduce periodization."
+    intermediate:
+      description: "1–3 years of consistent training. Progress is weekly to monthly."
+      programming: "Periodized. Upper/lower or PPL. 3–5×/week."
+    advanced:
+      description: "3+ years of consistent, structured training. Progress is monthly or per mesocycle."
+      programming: "Block periodization. Highly individualized. 4–6×/week."
+
+  # ── SELF-ASSESSMENT QUESTIONS ──────────────────────────────────────────────
+  assessment_questions:
+    training_history:
+      q1:
+        question: "How long have you been consistently strength training (≥2 sessions/week)?"
+        options:
+          - "< 2 months → Untrained"
+          - "2–6 months → Novice"
+          - "6–18 months → Early Intermediate"
+          - "1–3 years → Intermediate"
+          - "3+ years → Advanced"
+      q2:
+        question: "How comfortable are you with the barbell squat, deadlift, bench press, and overhead press?"
+        options:
+          - "I don't know how to do most of them → Untrained / Novice"
+          - "I can do them but still working on form → Novice"
+          - "I'm comfortable with all of them and can go heavy → Intermediate+"
+      q3:
+        question: "How quickly do you add weight to your main lifts?"
+        options:
+          - "Every session (2.5–5 kg) → Novice (linear progression still working)"
+          - "Weekly (2.5–5 kg/week) → Early Intermediate"
+          - "Every few weeks or monthly → Intermediate"
+          - "Monthly or per training block → Advanced"
+
+    strength_self_report:
+      q4:
+        question: "Relative to your bodyweight, where are your lifts? (Pick closest)"
+        description: >
+          If you don't know exact numbers, estimate: Can you squat your bodyweight
+          for reps? Can you deadlift 1.5× bodyweight?
+        options:
+          - "Can't squat bodyweight → Untrained / Novice"
+          - "Can squat bodyweight, deadlift ~1.25× BW → Novice / Early Intermediate"
+          - "Squat ~1.25–1.5× BW, deadlift ~1.5–1.75× BW → Intermediate"
+          - "Squat >1.5× BW, deadlift >2× BW → Advanced"
+
+    goals:
+      q5:
+        question: "What's your primary goal?"
+        options:
+          - "Get stronger (increase 1RM on the big lifts)"
+          - "Build muscle (hypertrophy, look better)"
+          - "Improve athletic performance (sport-specific)"
+          - "General health and longevity"
+          - "Fat loss while maintaining muscle"
+
+    equipment:
+      q6:
+        question: "What equipment do you have access to?"
+        options:
+          - "Full gym (barbell, rack, dumbbells, cables, machines)"
+          - "Basic gym (barbell, rack, dumbbells)"
+          - "Home gym with dumbbells and bands only"
+          - "Bodyweight only (no equipment)"
+
+    frequency:
+      q7:
+        question: "How many days per week can you realistically commit to strength training?"
+        options:
+          - "2 days"
+          - "3 days"
+          - "4 days"
+          - "5–6 days"
+
+    session_duration:
+      q8:
+        question: "How long can each session be?"
+        options:
+          - "≤45 min"
+          - "45–60 min"
+          - "60–90 min"
+          - "90+ min"
+
+    injury_history:
+      q9:
+        question: "Any current or recent injuries that limit movement?"
+        options:
+          - "No injuries"
+          - "Minor aches (knee, shoulder, back) — nothing serious"
+          - "Recovering from an injury — cleared by doctor/PT"
+          - "Current injury — some movements are painful or restricted"
+      caution: >
+        If current injury: do NOT prescribe exercises that load the injured
+        area without medical clearance. Modify around the injury.
+
+  # ── STRENGTH BENCHMARKS (approximate) ──────────────────────────────────────
+  # For a healthy male ~80 kg (multiply by 0.65–0.75 for female estimates)
+  # All values are approximate 1RM estimates, not prescriptions.
+
+  bench_by_level:
+    untrained: "Bodyweight × 0.3–0.5"
+    novice: "Bodyweight × 0.5–0.8"
+    early_intermediate: "Bodyweight × 0.8–1.0"
+    intermediate: "Bodyweight × 1.0–1.25"
+    advanced: "Bodyweight × 1.25–1.5+"
+
+  squat_by_level:
+    untrained: "Bodyweight × 0.4–0.7"
+    novice: "Bodyweight × 0.7–1.0"
+    early_intermediate: "Bodyweight × 1.0–1.3"
+    intermediate: "Bodyweight × 1.3–1.6"
+    advanced: "Bodyweight × 1.6–2.0"
+
+  deadlift_by_level:
+    untrained: "Bodyweight × 0.6–1.0"
+    novice: "Bodyweight × 1.0–1.5"
+    early_intermediate: "Bodyweight × 1.5–1.75"
+    intermediate: "Bodyweight × 1.75–2.25"
+    advanced: "Bodyweight × 2.25–2.75"
+
+  ohp_by_level:
+    untrained: "Bodyweight × 0.2–0.4"
+    novice: "Bodyweight × 0.4–0.6"
+    early_intermediate: "Bodyweight × 0.6–0.75"
+    intermediate: "Bodyweight × 0.75–0.9"
+    advanced: "Bodyweight × 0.9–1.1"
+
+  pullup_by_level:
+    untrained: "0 reps (cannot do a single pull-up)"
+    novice: "0–3 reps"
+    early_intermediate: "3–8 reps"
+    intermediate: "8–15 reps bodyweight"
+    advanced: "15+ reps or weighted pull-ups with significant load"
+
+  # ── ASSESSMENT OUTPUT FORMAT ───────────────────────────────────────────────
+  assessment_output:
+    description: >
+      After gathering the athlete's answers, classify them and recommend a
+      starting program template from the strength-programming knowledge base.
+    output_fields:
+      level: "Untrained | Novice | Early Intermediate | Intermediate | Advanced"
+      confidence: "high | medium | low (based on consistency of answers)"
+      recommended_split: "Full Body 3× | Upper/Lower 4× | PPL 6× | etc."
+      recommended_program: "Name of the best-fit template from strength-programming"
+      starting_weight_strategy: "How to choose starting weights for their level"
+      progression_method: "Linear | Double Progression | RPE-based"
+      deload_cadence: "Every N weeks"
+      caveats: "Any limitations based on equipment, injury, or time constraints"
+    note: >
+      If the user can provide actual 1RM or estimated 5RM numbers for the main
+      lifts, use the bench_by_level / squat_by_level / etc. tables to refine
+      the classification. Self-reported training history is the primary input;
+      actual lift numbers calibrate it.

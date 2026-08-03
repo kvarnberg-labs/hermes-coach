@@ -1,0 +1,222 @@
+---
+# General Strength Training Principles
+# Evidence-based guidelines for resistance training for health,
+# hypertrophy, strength, and power.
+# Sources: ACSM Position Stand (2009, 2011), Schoenfeld et al. (2016–2021),
+#          NSCA Essentials (4th ed), Helms et al. Muscle & Strength Pyramids,
+#          Nuckols, G. The Art and Science of Lifting.
+
+strength_principles:
+
+  progressive_overload:
+    description: >
+      The foundational principle of all resistance training. The neuromuscular
+      system adapts to imposed demands. Without progressive overload —
+      systematically increasing load, volume, or density over time — adaptation
+      plateaus.
+    methods:
+      - "Increase load: add 1.25–2.5 kg to the bar when all prescribed reps are completed with good form"
+      - "Increase volume: add an additional set or rep before increasing load"
+      - "Increase density: reduce rest intervals while maintaining performance"
+      - "Increase frequency: add a training day per week"
+      - "Increase range of motion: deepen squats, use deficit deadlifts"
+    priority: "Load progression > volume progression > density for strength goals"
+    caveat: >
+      Novices can add load every session (linear progression). Intermediates
+      progress weekly. Advanced athletes progress over mesocycles (3–6 weeks).
+
+  specificity:
+    description: >
+      Training adaptations are specific to the stimulus. Train the movement
+      pattern, energy system, contraction type, velocity, and range of motion
+      that you want to improve.
+    applications:
+      strength: "Heavy loads (≥80% 1RM), low reps (1–6), long rest (3–5 min)"
+      hypertrophy: "Moderate loads (60–85% 1RM), moderate reps (6–12), moderate rest (60–90 sec)"
+      endurance: "Light loads (≤60% 1RM), high reps (15+), short rest (≤60 sec)"
+      power: "Light-moderate loads (30–60% 1RM for ballistic, 75–85% for strength-speed), low reps (1–5), full rest"
+
+  recovery_and_adaptation:
+    description: >
+      Training provides the stimulus; recovery provides the adaptation. The
+      training effect occurs during rest, not during the session.
+    factors:
+      sleep: "7–9 hours. Sleep deprivation reduces testosterone, increases cortisol, impairs recovery."
+      nutrition: "1.6–2.2 g/kg protein daily. Caloric surplus for hypertrophy, maintenance or slight deficit for strength."
+      stress_management: "Chronic stress elevates cortisol, impairs recovery and adaptation."
+      deload: "Planned reduction in volume (40–60%) every 4–8 weeks. Intensity maintained or slightly reduced."
+
+  exercise_selection_principles:
+    description: >
+      Programs should be built around compound movements that involve multiple
+      joints and large muscle groups. Isolation exercises supplement, not replace.
+    movement_patterns:
+      squat: "Barbell back squat, front squat, goblet squat, leg press (machine)"
+      hinge: "Conventional deadlift, sumo deadlift, Romanian deadlift, trap bar deadlift, good morning"
+      horizontal_push: "Barbell bench press, dumbbell bench press, push-up, machine chest press"
+      horizontal_pull: "Barbell row, dumbbell row, cable row, inverted row"
+      vertical_push: "Overhead press, dumbbell shoulder press, push press, landmine press"
+      vertical_pull: "Pull-up, chin-up, lat pulldown"
+      carry_and_core: "Farmer's walk, suitcase carry, plank, Pallof press, ab wheel rollout"
+      unilateral_lower: "Bulgarian split squat, lunge, step-up, single-leg RDL"
+
+  periodization_models:
+    linear:
+      description: >
+        Classic Western periodization. Start with high volume/low intensity,
+        progress to low volume/high intensity over a macrocycle.
+      best_for: "Novices and early intermediates"
+      example_12_week:
+        weeks_1_4: "3×10–12 @ 65–75% 1RM — hypertrophy/accumulation"
+        weeks_5_8: "3–4×6–8 @ 75–85% 1RM — strength/intensification"
+        weeks_9_12: "3–5×3–5 @ 85–95% 1RM — peak/realization"
+    undulating_daily:
+      description: >
+        DUP — vary rep ranges and intensities across training days within
+        the same week rather than across weeks.
+      best_for: "Intermediates who train 3+ days/week"
+      example_week:
+        day_1: "Hypertrophy: 3–4×8–12 @ 70–80%"
+        day_2: "Power: 5–8×2–3 @ 40–60% (speed focus)"
+        day_3: "Strength: 4–5×3–5 @ 85–93%"
+    block:
+      description: >
+        Concentrated loading in 2–4 week blocks, each with a specific
+        fitness target. Accumulation → Transmutation → Realization.
+      best_for: "Advanced athletes"
+      blocks:
+        accumulation: "High volume, moderate intensity (50–75%). Build work capacity."
+        transmutation: "Moderate volume, high intensity (75–90%). Convert capacity to sport-specific strength."
+        realization: "Low volume, very high intensity (≥90%). Peak and express."
+
+  fatigue_management:
+    description: >
+      Managing fatigue is as important as applying stimulus. Three evidence-based
+      tools for autoregulation.
+    rpe_rir:
+      description: >
+        RPE (Rating of Perceived Exertion) on a 1–10 scale correlates with
+        Reps in Reserve (RIR). RPE 8 = 2 reps left in the tank, RPE 9 = 1 rep,
+        RPE 10 = 0 reps (maximal effort).
+      scale:
+        "6": "4 RIR — warm-up weight"
+        "7": "3 RIR — moderate, could move the weight fast"
+        "8": "2 RIR — working weight, challenging but not grinding"
+        "9": "1 RIR — very challenging, last rep was slow"
+        "10": "0 RIR — maximal effort, no reps left"
+    rpe_guidance:
+      hypertrophy: "Most work at RPE 7–9 (1–3 RIR). Some sets to RPE 10 for stimulus."
+      strength: "Work sets at RPE 8–9 (1–2 RIR). Occasional RPE 10 for testing."
+      power: "RPE 5–7 (quality over grind). Bar speed must stay fast."
+
+  strength_standards:
+    description: >
+      Strength levels are typically assessed by 1RM performance on the core
+      lifts relative to bodyweight. These are approximate benchmarks for
+      healthy adults under 40.
+    novice:
+      description: "New to structured training. Linear progression is appropriate."
+      male_benchmarks:
+        squat_bw: "0.8–1.2× bodyweight"
+        deadlift_bw: "1.0–1.5× bodyweight"
+        bench_bw: "0.5–0.8× bodyweight"
+        ohp_bw: "0.4–0.6× bodyweight"
+    intermediate:
+      description: "6–24 months of consistent training. Weekly progression."
+      male_benchmarks:
+        squat_bw: "1.2–1.6× bodyweight"
+        deadlift_bw: "1.5–2.0× bodyweight"
+        bench_bw: "0.8–1.1× bodyweight"
+        ohp_bw: "0.6–0.8× bodyweight"
+    advanced:
+      description: "2–5+ years of consistent training. Monthly progression."
+      male_benchmarks:
+        squat_bw: "1.6–2.0× bodyweight"
+        deadlift_bw: "2.0–2.5× bodyweight"
+        bench_bw: "1.1–1.5× bodyweight"
+        ohp_bw: "0.8–1.1× bodyweight"
+    female_multiplier: "Female benchmarks are approximately 0.65–0.75× of male standards at the same level."
+
+  training_frequency:
+    description: >
+      Optimal frequency depends on training age, volume per session,
+      and recovery capacity.
+    per_muscle_group:
+      minimum_effective: "1× per week — maintains strength in trained individuals"
+      optimal_hypertrophy: "2× per week — 2016 Schoenfeld meta-analysis: 2× > 1× for hypertrophy when volume is equated"
+      high_frequency: "3–4× per week — may provide small additional benefit for advanced athletes"
+    split_considerations:
+      full_body: "3×/week. Best for novices and general strength. Every session hits all patterns."
+      upper_lower: "4×/week (2 upper, 2 lower). Classic intermediate split. Each muscle 2×/week."
+      push_pull_legs: "3–6×/week. Each muscle 1–2×/week depending on rotation."
+      body_part_split: "4–6×/week. Advanced only. Each muscle 1×/week. Requires high per-session volume."
+
+  warm_up_protocol:
+    general: "5–10 min light cardio (bike, rower, jog) to raise core temperature"
+    dynamic: "Dynamic stretches: leg swings, arm circles, hip rotations, cat-cow, world's greatest stretch"
+    specific:
+      empty_bar: "1–2 sets of 5–10 reps with empty bar"
+      ramp_up: "3–5 progressively heavier warm-up sets, decreasing reps"
+      last_warmup: "Single at ~90% of working weight to potentiate without fatigue"
+    example_squat_100kg:
+      - "Empty bar × 8"
+      - "40 kg × 5"
+      - "60 kg × 3"
+      - "80 kg × 2"
+      - "90 kg × 1"
+      - "Work sets: 100 kg × 4 × 5"
+
+  deload_guidelines:
+    description: >
+      A planned reduction in training stress to dissipate accumulated fatigue
+      and allow supercompensation. Deloads are scheduled, not reactive.
+    when: "Every 4–8 weeks depending on training age and intensity"
+    novice: "Every 8–12 weeks. Fatigue accumulation is slower with lighter loads."
+    intermediate: "Every 4–6 weeks during intensification phases."
+    advanced: "Every 3–5 weeks. Higher absolute loads = more systemic fatigue."
+    methods:
+      volume_reduction: "Reduce sets by 40–50%. Keep intensity (~85%). Best for strength athletes."
+      intensity_reduction: "Reduce load to 60–70%. Keep volume. Best for hypertrophy blocks."
+      active_rest: "Light bodybuilding-style work. Different exercises. Lower RPE."
+    signs_of_needed_deload:
+      - "Performance stagnation or regression for 2+ consecutive sessions"
+      - "Persistent joint aches (not muscle soreness)"
+      - "Poor sleep quality despite adequate duration"
+      - "Decreased motivation to train"
+      - "Elevated resting heart rate"
+      - "Bar speed noticeably slower at same loads"
+
+  special_populations:
+    older_adults_55_plus:
+      frequency: "2–3×/week"
+      reps: "8–15 (moderate load). Power training with light loads is highly beneficial."
+      emphasis: "Balance, bone density, functional independence. Avoid Valsalva at max loads."
+      caution: "Longer warm-ups, controlled tempo, avoid failure on overhead movements."
+    youth_14_17:
+      emphasis: "Movement quality, technique, general athleticism. Loads secondary."
+      reps: "8–15. Submaximal effort. Avoid 1RM testing before Tanner stage 5."
+      supervision: "Qualified coaching is non-negotiable."
+    post_rehab:
+      rule: "Medical clearance before loading. Start with isometric → slow eccentric → full ROM."
+      progression: "Pain-free ROM first. Add load conservatively. 48h between sessions initially."
+
+  nutrition_for_strength:
+    protein:
+      daily: "1.6–2.2 g/kg bodyweight. Spread across 3–5 meals, 0.4 g/kg per meal minimum."
+      timing: "Within 2–3 hours post-training. Total daily intake matters more than timing."
+      sources: "Whey, casein, lean meat, fish, eggs, dairy, soy, pea+rice blends."
+    calories:
+      surplus: "+300–500 kcal/day for hypertrophy. Rate of gain target: 0.25–0.5% bodyweight/week."
+      maintenance: "Recomposition possible for novices and detrained individuals."
+      deficit: "-300–500 kcal/day. Keep protein high (2.2–2.8 g/kg). Strength can be maintained or slightly improved."
+    carbohydrates: "3–5 g/kg/day for strength athletes. Higher on training days. Fuels performance."
+    fats: "0.8–1.2 g/kg/day. Essential for hormone production. Do not drop below 0.6 g/kg."
+    hydration: "Start training euhydrated. 5–10 ml/kg 2–4 hours pre-training. Sip during sessions >60 min."
+    supplementation:
+      evidence_based:
+        creatine: "5g/day monohydrate. Most researched supplement. Improves strength and power output."
+        caffeine: "3–6 mg/kg 30–60 min pre-training. Ergogenic for strength and endurance."
+        beta_alanine: "3–5g/day. Buffers H+ ions. Benefits efforts lasting 60–240 seconds."
+        vitamin_d: "2000–4000 IU/day if deficient. Supports bone health and immune function."
+        protein_powder: "Convenient, not essential. Whey for fast absorption, casein for sustained release."
+      not_evidence_based: "BCAAs (whole protein is superior), glutamine, most 'test boosters', fat burners."
