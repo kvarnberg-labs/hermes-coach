@@ -1,0 +1,690 @@
+exercise_database:
+  barbell_back_squat:
+    name: Barbell Back Squat
+    category: Squat
+    primary_muscles:
+    - Quadriceps
+    - Gluteus Maximus
+    - Adductor Magnus
+    secondary_muscles:
+    - Erector Spinae
+    - Hamstrings
+    - Core
+    equipment:
+    - Barbell
+    - Squat Rack
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Bar positioned on upper traps (high bar) or rear delts (low bar)
+      - Hands evenly spaced, just outside shoulders
+      - Unrack with both feet under the bar, step back 2–3 steps
+      - Feet shoulder-width, toes slightly out (15–30°)
+      execution:
+      - Brace core (Valsalva). Break at hips AND knees simultaneously
+      - Descend with controlled tempo (2–3 sec). Track knees over toes
+      - 'Depth: hip crease below top of patella (parallel or below)'
+      - Drive through midfoot. Chest and hips rise together
+      - Lock out at the top without hyperextending
+      breathing: Deep breath into belly at top, hold through rep, exhale at top
+    common_errors:
+    - 'Knees caving in (valgus): cue ''knees out'', strengthen glute medius'
+    - 'Heels rising: ankle mobility limitation, shift weight back, elevate heels on plates if needed'
+    - 'Butt wink (posterior pelvic tilt at depth): reduce depth slightly, work on hip mobility'
+    - 'Good morning squat (hips rise faster than chest): strengthen quads, cue ''chest up'''
+    - 'Not hitting depth: mobility work, reduce load, use box squat as guide'
+    progressions:
+    - Goblet squat → Front squat → Back squat
+    - Box squat (tactile depth feedback) → Free squat
+    regressions:
+    - Goblet squat
+    - Bodyweight squat to box
+    - Leg press (machine)
+    variants:
+      high_bar: More upright torso, greater quad emphasis. Bar on traps.
+      low_bar: More forward lean, greater posterior chain emphasis. Bar on rear delts.
+      front_squat: Bar in front rack position. Demands thoracic mobility. Quad-dominant.
+      pause_squat: 1–3 second pause in the hole. Builds positional strength and confidence.
+      box_squat: Squat to a box. Teaches consistent depth. Wider stance, posterior chain emphasis.
+    set_rep_guidelines:
+      strength: 3–5 sets × 3–6 reps @ 80–90% 1RM
+      hypertrophy: 3–4 sets × 8–12 reps @ 65–80% 1RM
+      technique: 3–5 sets × 5–8 reps @ 60–75% 1RM
+  conventional_deadlift:
+    name: Conventional Deadlift
+    category: Hinge
+    primary_muscles:
+    - Erector Spinae
+    - Gluteus Maximus
+    - Hamstrings
+    secondary_muscles:
+    - Quadriceps
+    - Trapezius
+    - Forearms
+    - Lats
+    equipment:
+    - Barbell
+    - Plates
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Bar over midfoot (~1 inch from shins). Feet hip-width.
+      - Bend at hips, grip bar just outside shins
+      - Shoulders slightly in front of bar, scapulae over bar
+      - Hips at a height where shins are nearly vertical
+      - 'Flatten back: chest up, engage lats (''protect armpits'')'
+      execution:
+      - Take slack out of the bar. Push the floor away with your feet
+      - Bar stays in contact with shins and thighs
+      - Hips and shoulders rise together. Back angle stays constant until bar passes knees
+      - Lock out by extending hips (squeeze glutes). Do NOT hyperextend at top
+      - Lower by hinging hips back first, then bend knees once bar passes knees
+      breathing: Deep breath before pull, hold through the rep
+    common_errors:
+    - 'Rounded lower back: reduce load, focus on bracing, thoracic mobility work'
+    - 'Hips shooting up: start with hips higher, strengthen quads'
+    - 'Bar drifting away from body: cue ''drag the bar up your shins'''
+    - 'Jerking the bar off floor: ''squeeze the slack out'' before pulling'
+    - 'Overextending at lockout: squeeze glutes, don''t lean back'
+    progressions:
+    - Kettlebell deadlift → Romanian deadlift → Trap bar deadlift → Conventional deadlift
+    regressions:
+    - Kettlebell deadlift (kettlebell between feet or two kettlebells outside)
+    - Trap bar deadlift (reduced spinal loading, more quad-dominant)
+    - Rack pull (elevated starting position, shortens ROM)
+    - 45° back extension (bodyweight hinge pattern)
+    variants:
+      sumo: Wide stance, hands inside legs. Shorter ROM. Greater quad and hip adductor demand.
+      trap_bar: Neutral grip, center of mass aligned. Easier on lower back. Higher velocity possible.
+      romanian: Start from standing. Minimal knee bend. Emphasizes hamstring stretch under load.
+      stiff_leg: Nearly straight legs. Maximal hamstring stretch. Lighter load than RDL.
+      deficit: Stand on a platform (1–4 inches). Increased ROM. Builds off-the-floor strength.
+      snatch_grip: Wide grip. Longer ROM. Greater upper back and grip demand.
+    set_rep_guidelines:
+      strength: 3–5 sets × 2–5 reps @ 85–95% 1RM
+      hypertrophy: 3–4 sets × 6–10 reps @ 70–85% 1RM
+      technique: 4–6 sets × 3–5 reps @ 70–80% 1RM (avoid grinding on deadlift)
+      caution: Deadlifts are systemically taxing. 1–2 heavy sets are often sufficient for intermediates.
+  romanian_deadlift:
+    name: Romanian Deadlift (RDL)
+    category: Hinge
+    primary_muscles:
+    - Hamstrings
+    - Gluteus Maximus
+    - Erector Spinae
+    secondary_muscles:
+    - Forearms
+    - Lats
+    equipment:
+    - Barbell
+    - Dumbbells
+    difficulty: Beginner
+    form_cues:
+      setup:
+      - Hold bar at hip level with a shoulder-width grip
+      - Feet hip-width. Soft knees (slightly bent, not locked).
+      execution:
+      - Hinge at hips, push hips BACK (like closing a car door with your butt)
+      - Bar stays close to thighs. Lower until you feel a strong hamstring stretch
+      - Depth is determined by hamstring flexibility, not plates touching floor
+      - Drive hips forward to return to standing. Squeeze glutes at top.
+      breathing: Inhale at top, brace, exhale at top
+    common_errors:
+    - 'Rounding the back: reduce ROM, keep chest up, use lighter load'
+    - 'Bending knees too much (turning it into a squat): think ''hips back, not down'''
+    - 'Letting bar drift forward: drag it down the thighs'
+    set_rep_guidelines:
+      hypertrophy: 3–4 sets × 8–12 reps
+      accessory: 3 sets × 10–15 reps (after main deadlift work)
+  barbell_bench_press:
+    name: Barbell Bench Press
+    category: Horizontal Push
+    primary_muscles:
+    - Pectoralis Major
+    - Anterior Deltoid
+    - Triceps Brachii
+    secondary_muscles:
+    - Serratus Anterior
+    - Latissimus Dorsi (stabilizer)
+    equipment:
+    - Barbell
+    - Bench
+    - Rack (recommended)
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Eyes under the bar. Shoulders retracted and depressed ('put shoulder blades in back pockets')
+      - Moderate arch in lower back (natural, not exaggerated). Feet planted flat on floor
+      - 'Grip width: forearms vertical at bottom (typically 1.5–2× shoulder width)'
+      - 'Bar path: from nipples/lower sternum to above shoulders (slight diagonal)'
+      execution:
+      - Unrack with straight arms. Lower under control (2 sec) to lower chest
+      - Elbows at ~45° from torso (not flared to 90° — shoulder impingement risk)
+      - Touch chest lightly. Press up and slightly BACK toward the rack
+      - Lock out without bouncing. Maintain tight upper back throughout.
+      breathing: Deep breath at top, hold during descent and initial press, exhale near lockout
+    common_errors:
+    - 'Elbows flared (90°): shoulder stress. Cue ''tuck elbows to 45°'''
+    - 'Bouncing off chest: control the descent'
+    - 'Uneven lockout: weaker side collapses. Use dumbbells to address asymmetries'
+    - 'Shoulders coming forward: ''shoulder blades together'' cue'
+    - 'Head or hips lifting off bench: drive through feet'
+    progressions:
+    - Push-up → Dumbbell bench press → Barbell bench press
+    regressions:
+    - Floor press (shortened ROM, protects shoulders)
+    - Dumbbell bench press (unilateral, greater ROM)
+    - Machine chest press
+    - Push-up (with bands or weighted vest for progression)
+    variants:
+      close_grip: Hands shoulder-width. Greater triceps emphasis.
+      incline: 30–45° bench angle. Upper pec and anterior delt emphasis.
+      decline: Slight decline. Greater pec major activation. Less shoulder stress.
+      pause: 1–3 sec pause on chest. Eliminates stretch reflex. Builds off-chest strength.
+      floor_press: Lying on floor. Half-ROM. Overloads lockout. Spars shoulders.
+      larsen: Feet elevated or off floor. Eliminates leg drive. Pure upper body pressing.
+    set_rep_guidelines:
+      strength: 3–5 sets × 3–5 reps @ 85–95% 1RM
+      hypertrophy: 3–4 sets × 8–12 reps @ 65–80% 1RM
+      technique: 3–4 sets × 6–8 reps @ 70–80%
+  push_up:
+    name: Push-Up
+    category: Horizontal Push
+    primary_muscles:
+    - Pectoralis Major
+    - Anterior Deltoid
+    - Triceps Brachii
+    secondary_muscles:
+    - Serratus Anterior
+    - Core
+    equipment:
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Hands slightly wider than shoulder-width. Body in straight line from head to heels
+      - Core braced, glutes squeezed. Lower chest to floor (2–3 sec descent)
+      - Elbows at ~45° from torso. Push through whole hand.
+    progressions:
+    - Wall push-up → Incline push-up → Knee push-up → Full push-up
+    - Full push-up → Diamond push-up → Archer push-up → One-arm push-up
+    set_rep_guidelines:
+      general: 3–5 sets, rep range based on ability. Progress when you can do 3×15 clean reps.
+  barbell_row:
+    name: Barbell Row (Bent-Over Row)
+    category: Horizontal Pull
+    primary_muscles:
+    - Latissimus Dorsi
+    - Trapezius (mid/lower)
+    - Rhomboids
+    - Rear Delts
+    secondary_muscles:
+    - Erector Spinae
+    - Biceps
+    - Forearms
+    equipment:
+    - Barbell
+    - Plates
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Hinge at hips until torso is ~45–60° to floor (or parallel for Pendlay row)
+      - Flat back, neutral neck. Grip just outside shoulder-width.
+      execution:
+      - Pull bar to lower sternum/upper abdomen. Squeeze shoulder blades at top.
+      - Control the eccentric. Do not use momentum.
+      variants:
+        pendlay: Torso parallel to floor. Bar returns to floor each rep. Explosive concentric. Best for strength.
+        yates: More upright (~65°). Underhand grip. Greater biceps involvement. John Meadows style.
+      common_errors:
+      - 'Using too much body english: reduce load, control the concentric'
+      - 'Rounded back: brace harder, reduce ROM if needed'
+      - 'Pulling to chest (traps): pull to lower sternum for lats'
+    set_rep_guidelines:
+      strength: 3–5 sets × 4–6 reps (Pendlay style)
+      hypertrophy: 3–4 sets × 8–12 reps
+  dumbbell_row:
+    name: Dumbbell Row (One-Arm)
+    category: Horizontal Pull
+    primary_muscles:
+    - Latissimus Dorsi
+    - Trapezius
+    - Rhomboids
+    secondary_muscles:
+    - Biceps
+    - Rear Delts
+    equipment:
+    - Dumbbell
+    - Bench
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - One knee and hand on bench. Flat back. Free arm hangs straight down.
+      - Pull dumbbell to hip. Squeeze lat at top. Lower under control.
+      - No twisting. Keep shoulders square to floor.
+    set_rep_guidelines:
+      strength: 3–4 sets × 6–8 reps (heavy)
+      hypertrophy: 3–4 sets × 10–15 reps
+  overhead_press:
+    name: Overhead Press (Standing Barbell)
+    category: Vertical Push
+    primary_muscles:
+    - Anterior Deltoid
+    - Medial Deltoid
+    - Triceps Brachii
+    secondary_muscles:
+    - Upper Trapezius
+    - Serratus Anterior
+    - Core
+    equipment:
+    - Barbell
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Bar on front delts/clavicles. Grip just outside shoulders.
+      - Forearms vertical. Elbows slightly in front of bar.
+      - Feet shoulder-width. Brace everything — this is a full-body lift.
+      execution:
+      - Press bar straight up. Move head back slightly to clear face
+      - Once bar clears head, drive head through ('look through the window')
+      - Lock out with biceps by ears. Bar over midfoot, not forward.
+      - Lower under control. Keep tight.
+      breathing: Big breath before press. Exhale near lockout.
+    common_errors:
+    - 'Bar path forward of midfoot: cue ''push the bar BACK'''
+    - 'Excessive lean back (turning into standing incline press): brace core harder'
+    - 'Not finishing lockout: full ROM is essential for shoulder health'
+    - 'Wrists bent back: straight wrists, bar in heel of palm'
+    regressions:
+    - Seated dumbbell press
+    - Landmine press (neutral grip, less stability demand)
+    - Machine shoulder press
+    set_rep_guidelines:
+      strength: 3–5 sets × 3–5 reps @ 85–93% 1RM
+      hypertrophy: 3–4 sets × 8–12 reps
+  pull_up:
+    name: Pull-Up
+    category: Vertical Pull
+    primary_muscles:
+    - Latissimus Dorsi
+    - Teres Major
+    - Biceps Brachii
+    secondary_muscles:
+    - Lower Trapezius
+    - Rhomboids
+    - Forearms
+    - Core
+    equipment:
+    - Pull-Up Bar
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Overhand grip (pronated), slightly wider than shoulder-width
+      - 'Dead hang start: full extension at the bottom'
+      execution:
+      - Initiate by depressing scapulae ('shoulders down')
+      - Pull chest toward bar. Chin over bar at minimum.
+      - Controlled descent. Do not drop.
+      breathing: Exhale on the way up, inhale on the way down
+    common_errors:
+    - 'Kipping: use strict form. Build strength before adding momentum.'
+    - 'Partial ROM: full dead hang to chin over bar every rep'
+    - 'Chicken neck: keep neck neutral, drive chest up instead'
+    progressions:
+    - Dead hang → Scapular pull-up → Negative → Band-assisted → Full pull-up
+    - Full pull-up → Weighted pull-up → L-sit pull-up
+    regressions:
+    - Lat pulldown
+    - Band-assisted pull-up
+    - Ring row / inverted row
+    - Negative (jump to top, lower slowly)
+    variants:
+      chin_up: Underhand (supinated) grip, shoulder-width. More biceps. Typically 10–15% stronger.
+      neutral_grip: Palms facing each other. Easiest on shoulders. Good for shoulder-sensitive athletes.
+      wide_grip: 1.5–2× shoulder width. Greater lat emphasis. Harder.
+    set_rep_guidelines:
+      strength: 3–5 sets × 3–6 reps (weighted if needed)
+      hypertrophy: 3–4 sets × 8–12 reps
+      volume_accumulation: 5 sets × submaximal reps (e.g., 5×5 at 80% of max reps)
+  lat_pulldown:
+    name: Lat Pulldown
+    category: Vertical Pull
+    primary_muscles:
+    - Latissimus Dorsi
+    - Biceps
+    secondary_muscles:
+    - Rhomboids
+    - Rear Delts
+    - Forearms
+    equipment:
+    - Cable Machine
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Grip 1.5× shoulder width. Slight lean back (~10°). Chest up.
+      - Pull bar to upper chest. Drive elbows down, not back.
+      - Squeeze at bottom. Controlled return. Do not lean back excessively.
+    set_rep_guidelines:
+      hypertrophy: 3–4 sets × 10–15 reps
+      accessory: 3 sets × 12–15 reps (after pull-ups)
+  bulgarian_split_squat:
+    name: Bulgarian Split Squat
+    category: Unilateral Lower
+    primary_muscles:
+    - Quadriceps
+    - Gluteus Maximus
+    secondary_muscles:
+    - Hamstrings
+    - Core (stability)
+    - Adductors
+    equipment:
+    - Bench
+    - Dumbbells or Barbell
+    difficulty: Intermediate
+    form_cues:
+      setup:
+      - Rear foot on bench (~16–18 inches high). Front foot far enough forward that front knee tracks over ankle.
+      - Torso upright. Dumbbells at sides or barbell on back.
+      execution:
+      - Descend until front thigh is parallel or below. Rear knee taps floor (or close).
+      - Drive through front foot. Keep front knee tracking over toes.
+      common_errors:
+      - 'Front foot too close to bench (knee shoots past toes): step further forward'
+      - 'Front heel rising: ankle mobility, shift weight forward slightly'
+      - 'Twisting: brace core, keep hips square'
+    set_rep_guidelines:
+      strength: 3–4 sets × 6–8 reps per leg
+      hypertrophy: 3–4 sets × 10–15 reps per leg
+  walking_lunge:
+    name: Walking Lunge
+    category: Unilateral Lower
+    primary_muscles:
+    - Quadriceps
+    - Gluteus Maximus
+    - Hamstrings
+    secondary_muscles:
+    - Core (stability)
+    - Calves
+    equipment:
+    - Dumbbells (optional)
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Step forward. Both knees bend to ~90°. Rear knee just above floor.
+      - Front knee over ankle (not past toes). Torso upright.
+      - Drive through front foot to step through into next rep.
+    set_rep_guidelines:
+      general: 3–4 sets × 10–16 total steps
+  plank:
+    name: Plank
+    category: Core
+    primary_muscles:
+    - Rectus Abdominis
+    - Transverse Abdominis
+    - Obliques
+    secondary_muscles:
+    - Serratus Anterior
+    - Shoulder Stabilizers
+    equipment:
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Forearms on floor, elbows under shoulders. Body in straight line.
+      - Squeeze glutes, brace core, do not sag hips.
+      - Hold position. Breathe steadily — do not hold breath.
+    progressions:
+    - Knees-down plank → Full plank → Weighted plank → Single-arm/single-leg plank
+    set_rep_guidelines:
+      general: 3 sets × 30–60 sec hold (or to near-failure for strength)
+  pallof_press:
+    name: Pallof Press
+    category: Core
+    primary_muscles:
+    - Transverse Abdominis
+    - Obliques
+    secondary_muscles:
+    - Gluteus Medius
+    equipment:
+    - Cable Machine or Resistance Band
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Stand sideways to cable/band attachment. Hold at sternum.
+      - Press straight out. Resist rotation. Hold extended position 1–3 sec.
+      - Return controlled to chest. Keep hips and shoulders square.
+    set_rep_guidelines:
+      general: 3 sets × 8–12 reps each side
+  dead_bug:
+    name: Dead Bug
+    category: Core
+    primary_muscles:
+    - Transverse Abdominis
+    - Rectus Abdominis
+    secondary_muscles:
+    - Hip Flexors
+    equipment:
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Lie on back. Arms extended toward ceiling. Hips and knees at 90°.
+      - Press lower back into floor. Extend opposite arm and leg simultaneously.
+      - Return to start. Keep lower back flat throughout.
+    set_rep_guidelines:
+      general: 3 sets × 8–12 reps per side
+  hip_thrust:
+    name: Barbell Hip Thrust
+    category: Accessory
+    primary_muscles:
+    - Gluteus Maximus
+    secondary_muscles:
+    - Hamstrings
+    equipment:
+    - Barbell
+    - Bench
+    - Pad (for bar comfort)
+    difficulty: Beginner
+    form_cues:
+      setup:
+      - Upper back against bench. Bar over hip crease. Pad for comfort.
+      - Feet shoulder-width, knees at ~90° at top position.
+      execution:
+      - Drive through heels. Extend hips until body is a straight line from shoulders to knees.
+      - Squeeze glutes hard at top. Hold 1 sec. Lower under control.
+      common_errors:
+      - 'Overextending at top (anterior pelvic tilt): tuck ribs down'
+      - 'Pushing through toes: drive through heels, lift toes if needed'
+      - 'Neck craning: tuck chin, keep neck neutral'
+    set_rep_guidelines:
+      strength: 3–4 sets × 5–8 reps (heavy)
+      hypertrophy: 3–4 sets × 10–15 reps
+  face_pull:
+    name: Face Pull
+    category: Accessory
+    primary_muscles:
+    - Rear Delts
+    - External Rotators
+    - Mid/Lower Traps
+    secondary_muscles:
+    - Rhomboids
+    equipment:
+    - Cable Machine or Resistance Band
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Rope attachment at face height. Pull toward face, separating rope at end.
+      - 'External rotation at end: thumbs back, pinkies forward'
+      - Squeeze shoulder blades. Controlled return.
+    set_rep_guidelines:
+      general: 3–4 sets × 12–20 reps (light, for shoulder health)
+  lateral_raise:
+    name: Dumbbell Lateral Raise
+    category: Accessory
+    primary_muscles:
+    - Medial Deltoid
+    secondary_muscles:
+    - Anterior Deltoid
+    - Upper Traps
+    equipment:
+    - Dumbbells
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Slight forward lean. Dumbbells at sides.
+      - Raise to shoulder height (not higher). Lead with elbows, pinkies slightly up.
+      - Pause at top. Controlled eccentric.
+    set_rep_guidelines:
+      general: 3–4 sets × 12–20 reps
+  bicep_curl:
+    name: Dumbbell Bicep Curl
+    category: Accessory
+    primary_muscles:
+    - Biceps Brachii
+    secondary_muscles:
+    - Brachialis
+    - Brachioradialis
+    equipment:
+    - Dumbbells
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Elbows at sides. No swinging (no body english).
+      - Curl dumbbells to shoulders. Squeeze at top. Controlled eccentric.
+    set_rep_guidelines:
+      general: 3–4 sets × 10–15 reps
+  tricep_pushdown:
+    name: Tricep Pushdown
+    category: Accessory
+    primary_muscles:
+    - Triceps Brachii
+    equipment:
+    - Cable Machine
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Elbows pinned to sides. Push bar/rope down to full extension.
+      - Squeeze triceps at bottom. Controlled return to ~90° elbow.
+    set_rep_guidelines:
+      general: 3–4 sets × 12–20 reps
+  farmer_walk:
+    name: Farmer's Walk
+    category: Carry
+    primary_muscles:
+    - Grip/Forearms
+    - Traps
+    - Core
+    secondary_muscles:
+    - Full body stabilizers
+    equipment:
+    - Dumbbells or Farmer's Walk Handles
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Pick up heavy weights. Stand tall (no leaning). Shoulders back and down.
+      - Walk with short, quick steps. Breathe.
+    set_rep_guidelines:
+      general: 3–4 sets × 30–60 sec or 20–50 meters
+  goblet_squat:
+    name: Goblet Squat
+    category: Squat
+    primary_muscles:
+    - Quadriceps
+    - Gluteus Maximus
+    secondary_muscles:
+    - Core
+    - Upper Back
+    equipment:
+    - Dumbbell
+    - Kettlebell
+    difficulty: Beginner
+    form_cues:
+      setup:
+      - Hold one dumbbell vertically against chest (goblet grip)
+      - Feet shoulder-width, toes slightly out
+      execution:
+      - Break at hips and knees. Descend with upright torso.
+      - Elbows track inside knees. Go as deep as mobility allows.
+      - Drive through midfoot. Keep dumbbell against chest throughout.
+    common_errors:
+    - 'Heels rising: shift weight back, work on ankle mobility'
+    - 'Torso collapsing forward: keep chest up, dumbbell held against sternum'
+    progressions:
+    - Bodyweight squat → Goblet squat → Front squat → Back squat
+    set_rep_guidelines:
+      strength: 3-4 sets x 6-10 reps (heavy dumbbell)
+      hypertrophy: 3-4 sets x 10-15 reps
+      technique: 3 sets x 8-12 reps (moderate load)
+  bodyweight_squat:
+    name: Bodyweight Squat
+    category: Squat
+    primary_muscles:
+    - Quadriceps
+    - Gluteus Maximus
+    secondary_muscles:
+    - Core
+    - Hamstrings
+    equipment:
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Feet shoulder-width. Arms extended forward for counterbalance.
+      - Squat down as low as mobility allows. Keep heels down.
+      - Pause at bottom. Drive up.
+    progressions:
+    - Assisted squat → Full BW squat → Jump squat → Pistol squat progression
+    set_rep_guidelines:
+      general: 3-4 sets x 15-25 reps or to near-failure
+  glute_bridge:
+    name: Glute Bridge
+    category: Hinge
+    primary_muscles:
+    - Gluteus Maximus
+    - Hamstrings
+    secondary_muscles:
+    - Erector Spinae
+    equipment:
+    - Bodyweight
+    difficulty: Beginner
+    form_cues:
+      execution:
+      - Lie on back, knees bent, feet flat on floor hip-width apart
+      - Drive through heels, extend hips until body forms straight line from shoulders to knees
+      - Squeeze glutes hard at top. Hold 1-2 sec.
+      - Lower under control. Do not arch lower back.
+    progressions:
+    - Two-leg bridge → Single-leg bridge → Hip thrust → Weighted hip thrust
+    set_rep_guidelines:
+      general: 3-4 sets x 15-20 reps (add single-leg for progression)
+  inverted_row:
+    name: Inverted Row
+    category: Horizontal Pull
+    primary_muscles:
+    - Latissimus Dorsi
+    - Rhomboids
+    - Rear Delts
+    secondary_muscles:
+    - Biceps
+    - Core
+    equipment:
+    - Bodyweight
+    - Barbell
+    - Suspension Trainer
+    difficulty: Beginner
+    form_cues:
+      setup:
+      - Set bar at waist height. Lie underneath. Grip slightly wider than shoulder-width.
+      - Body in straight line. Heels on floor.
+      execution:
+      - Pull chest to bar. Squeeze shoulder blades.
+      - Controlled descent. Keep body rigid (no hip sag).
+    progressions:
+    - Incline row (higher bar) → Flat inverted row → Feet-elevated inverted row
+    regressions:
+    - Doorframe row (isometric)
+    - Band pull-apart
+    set_rep_guidelines:
+      strength: 3-4 sets x 6-10 reps
+      hypertrophy: 3-4 sets x 10-15 reps
