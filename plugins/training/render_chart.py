@@ -55,7 +55,12 @@ _C = {
 
 
 def _charts_dir() -> Path:
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    hermes_home_raw = os.environ.get("HERMES_HOME")
+    if not hermes_home_raw:
+        raise RuntimeError(
+            "HERMES_HOME is not set — cannot resolve charts directory."
+        )
+    hermes_home = Path(hermes_home_raw)
     d = hermes_home / "charts"
     d.mkdir(parents=True, exist_ok=True)
     return d
