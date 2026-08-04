@@ -42,7 +42,12 @@ _JOB_ACTIVE_DEADLINE = 60  # k8s hard-kills the pod after this many seconds
 
 
 def _plugins_dir() -> Path:
-    hermes_home = Path(os.environ.get("HERMES_HOME", Path.home() / ".hermes"))
+    hermes_home_raw = os.environ.get("HERMES_HOME")
+    if not hermes_home_raw:
+        raise RuntimeError(
+            "HERMES_HOME is not set — cannot resolve plugins directory."
+        )
+    hermes_home = Path(hermes_home_raw)
     d = hermes_home / "plugins"
     d.mkdir(parents=True, exist_ok=True)
     return d
