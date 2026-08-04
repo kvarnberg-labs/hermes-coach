@@ -159,9 +159,10 @@ def register_tools(ctx) -> None:
                 "Retrieve structured coaching knowledge for a specific topic. "
                 "Use this when you need evidence-based principles, workout definitions, "
                 "recovery heuristics, injury protocols, or race preparation guidelines. "
-                "Topics include: altitude, cold weather, female physiology, heat, injury, "
-                "nutrition, power zones, recovery, sleep, strength training, "
-                "tapering, training philosophies, vo2max, workout library."
+                "Topics include: altitude, cold weather, exercise database, female physiology, "
+                "heat, injury, nutrition, power zones, recovery, sleep, "
+                "strength principles, strength programming, strength standards, "
+                "strength training, tapering, training philosophies, vo2max, workout library."
             ),
             "parameters": {
                 "type": "object",
