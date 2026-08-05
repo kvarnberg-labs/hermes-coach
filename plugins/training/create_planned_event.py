@@ -4,8 +4,8 @@ Uses the intervals.icu REST API to POST new events to the athlete's calendar.
 The event appears on intervals.icu and syncs to Garmin automatically.
 
 Structured workout steps (for Garmin step-by-step guidance) are uploaded as
-FIT files via file_contents_base64.  FIT generation requires the fit-tool
-package (installed in the Docker image alongside this plugin).
+FIT files via file_contents_base64.  FIT generation uses fit-tool if available,
+or falls back to a template-based builder using only the standard library.
 
 Authentication uses the same credential files as other intervals.icu tools:
   $HERMES_HOME/users/<discord_id>/intervals_key
@@ -16,17 +16,14 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
 import os
 import re
 import urllib.error
-import urllib.parse
 import urllib.request
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from pathlib import Path
 from typing import Any, Optional
 
-logger = logging.getLogger(__name__)
 
 _API_BASE = "https://intervals.icu/api/v1"
 _DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
@@ -123,15 +120,18 @@ def _build_fit_file(
             msg.custom_target_heart_rate_low = lo
             msg.custom_target_heart_rate_high = hi
         elif target == "POWER":
-            lo = pw_low or s.get("min", 0)
-            hi = pw_high or s.get("max", 0)
-            if isinstance(lo, (int, float)) and float(lo) > 20 and ftp > 0:
+            lo = int(pw_low or s.get("min", 0))
+            hi = int(pw_high or s.get("max", 0))
+            # FIT sends power targets as absolute values — intervals.icu/Garmin
+            # interpret them as %FTP regardless. If values look like watts (>20
+            # and power_pct_* not explicitly set), convert to %FTP.
+            is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
+            if not is_pct and isinstance(lo, (int, float)) and float(lo) > 20 and ftp > 0:
                 lo = round(float(lo) / ftp * 100)
-            if isinstance(hi, (int, float)) and float(hi) > 20 and ftp > 0:
                 hi = round(float(hi) / ftp * 100)
             msg.target_type = WorkoutStepTarget.POWER
-            msg.custom_target_power_low = int(lo) if lo else 0
-            msg.custom_target_power_high = int(hi) if hi else 0
+            msg.custom_target_power_low = int(lo)
+            msg.custom_target_power_high = int(hi)
         elif target == "PACE":
             lo = _parse_pace_to_ms(pc_low or s.get("min", 0))
             hi = _parse_pace_to_ms(pc_high or s.get("max", 0))
