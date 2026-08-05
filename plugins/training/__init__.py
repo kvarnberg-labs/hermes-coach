@@ -13,6 +13,7 @@ Registers all coaching tools via the Hermes plugin ctx interface:
   - render_chart     : dark-mode PNG charts for Discord (3 tools)
   - create_planned_event : interval.icu calendar events (2 tools)
   - get_athlete_stats    : aggregate training statistics (1 tool)
+  - intervals_docs   : search and inspect the intervals.icu OpenAPI spec (2 tools)
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ def register(ctx):
     from .create_planned_event import register_tools as register_calendar
     from .get_athlete_stats import register_tools as register_stats
     from .strength_coach import register_tools as register_strength
+    from .intervals_docs import register_tools as register_intervals_docs
 
     register_intervals(ctx)
     register_weather(ctx)
@@ -39,3 +41,4 @@ def register(ctx):
     register_calendar(ctx)
     register_stats(ctx)
     register_strength(ctx)
+    register_intervals_docs(ctx)
