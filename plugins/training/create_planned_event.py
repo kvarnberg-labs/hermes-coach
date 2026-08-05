@@ -16,18 +16,14 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
 import os
 import re
-import struct
 import urllib.error
-import urllib.parse
 import urllib.request
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from pathlib import Path
 from typing import Any, Optional
 
-logger = logging.getLogger(__name__)
 
 _API_BASE = "https://intervals.icu/api/v1"
 _DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
