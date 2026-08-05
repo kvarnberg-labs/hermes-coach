@@ -33,7 +33,7 @@ def test_store_and_load_athlete_name():
     """store_user_credentials saves the athlete_name file when given."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         store_user_credentials(
             "test_user", "i12345", "dummy_key", athlete_name="Joey"
         )
@@ -52,7 +52,7 @@ def test_load_verified_name_returns_none_when_missing():
     """_load_verified_name returns None when no name file exists."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         result = _load_verified_name("no_name_user")
 
     assert result is None
@@ -65,7 +65,7 @@ def test_load_verified_name_returns_none_for_empty_file():
     name_file = user_dir / "intervals_athlete_name"
     name_file.write_text("   \n")
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         result = _load_verified_name("empty_name_user")
 
     assert result is None
@@ -77,7 +77,7 @@ def test_verify_athlete_identity_no_stored_name():
     """verify_athlete_identity returns verified=False when no name was stored."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         # Store credentials without a name (simulates manual placement)
         store_user_credentials("discord_dm", "i494629", "test_key", athlete_name="")
 
@@ -100,7 +100,7 @@ def test_verify_athlete_identity_with_stored_name():
     """verify_athlete_identity returns verified=True when name is stored."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         # Simulate onboarding: store credentials WITH a name
         store_user_credentials(
             "discord_dm", "i494629", "test_key", athlete_name="Millberg"
@@ -127,7 +127,7 @@ def test_get_athlete_profile_includes_athlete_name():
     """get_athlete_profile returns athlete_name from the stored name file."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         store_user_credentials(
             "discord_dm", "i344591", "test_key", athlete_name="Joey"
         )
@@ -161,7 +161,7 @@ def test_get_athlete_profile_athlete_name_none_when_missing():
     """get_athlete_profile returns athlete_name=None when name file absent."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         store_user_credentials(
             "discord_dm", "i344591", "test_key", athlete_name=""
         )
@@ -193,7 +193,7 @@ def test_verify_onboarded_credentials_remain_verified():
     """After onboarding, verify_athlete_identity stays verified on re-check."""
     user_dir = _temp_user_dir()
 
-    with patch("training.intervals_icu._user_dir", return_value=user_dir):
+    with patch("training._credentials._user_dir", return_value=user_dir):
         # First: onboard
         store_user_credentials(
             "discord_dm", "i344591", "test_key", athlete_name="Joey"

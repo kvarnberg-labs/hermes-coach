@@ -1,16 +1,19 @@
 """Training plugin for Hermes Coach.
 
 Registers all coaching tools via the Hermes plugin ctx interface:
-  - intervals_icu   : fetch athlete data from intervals.icu (6 tools)
-  - weather         : Open-Meteo forecast (1 tool)
-  - coaching        : retrieve coach-brain knowledge (1 tool)
-  - onboarding      : /start slash command handler (1 tool)
-  - sandbox_client  : autonomous tool development via k8s Jobs (1 tool)
-  - render_chart    : generate dark-mode PNG charts for Discord (3 tools)
-  - create_planned_event : create/delete planned events on intervals.icu calendar (2 tools)
-  - get_athlete_stats    : aggregate training statistics over a date range (1 tool)
-  - strength_coach  : strength training tools (4 tools: assess, lookup, workout, program)
-  - intervals_docs  : search and inspect the intervals.icu OpenAPI spec (2 tools)
+  - intervals_icu    : intervals.icu API integration (10 tools)
+  - _credentials     : per-user credential storage (shared by intervals_icu + onboarding)
+  - _http            : intervals.icu HTTP transport + cache layer
+  - _brain           : shared coach-brain YAML loader (used by coaching + strength_coach)
+  - coaching         : coach-brain knowledge retrieval (1 tool)
+  - strength_coach   : strength training tools (4 tools)
+  - weather          : Open-Meteo forecast (1 tool)
+  - onboarding       : /start slash command handler (1 tool)
+  - sandbox_client   : autonomous tool development via k8s Jobs (1 tool)
+  - render_chart     : dark-mode PNG charts for Discord (3 tools)
+  - create_planned_event : interval.icu calendar events (2 tools)
+  - get_athlete_stats    : aggregate training statistics (1 tool)
+  - intervals_docs   : search and inspect the intervals.icu OpenAPI spec (2 tools)
 """
 
 from __future__ import annotations

@@ -31,189 +31,55 @@ Cache:
 
 from __future__ import annotations
 
-import base64
-import hashlib
 import json
 import logging
-import os
-import re
-import time
-import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any, Optional
+
+from ._credentials import (
+    _load_credentials,
+    _load_verified_name,
+    _require_user_id,
+    store_user_credentials,
+)
+from ._http import (
+    _API_BASE,
+    _TTL_ACTIVITIES,
+    _TTL_EVENTS,
+    _TTL_POWER_CURVE,
+    _TTL_PROFILE,
+    _TTL_SPORT_SETTINGS,
+    _TTL_WELLNESS,
+    _cache_get,
+    _cache_key,
+    _cache_set,
+    _n_days_ago_iso,
+    _request,
+    _today_iso,
+)
+
+# Re-export internal functions for backward compatibility (tests access these).
+# These live in _credentials or _http but are historically imported from here.
+from ._credentials import (  # noqa: E402, F401
+    _load_credentials,
+    _load_verified_name,
+    _require_user_id,
+    _user_dir,
+    store_user_credentials,
+)
+from ._http import (  # noqa: E402, F401
+    _auth_header,
+)
 
 logger = logging.getLogger(__name__)
 
-# Discord snowflake IDs are 17–20 decimal digits, never all-zeros.
-_DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
-
-
-def _require_user_id(kw: dict) -> str:
-    """Return the Discord snowflake from the gateway, or raise ValueError.
-
-    Raises ValueError when the gateway has not injected a valid Discord
-    snowflake into kw["user_id"].  This prevents the silent fallback to a
-    shared credential directory that would mix data between users.
-    """
-    uid = str(kw.get("user_id", ""))
-    if _DISCORD_ID_RE.match(uid):
-        return uid
-
-    raise ValueError(
-        "User identity not available — the Discord gateway did not provide "
-        "a valid user ID.  Your training data cannot be loaded without "
-        "a known identity.  Please reconnect or try again."
-    )
-
-
-_API_BASE = "https://intervals.icu/api/v1"
-
-# Cache TTLs in seconds
-_TTL_PROFILE = 6 * 3600  # athlete profile changes rarely
-_TTL_SPORT_SETTINGS = 6 * 3600
-_TTL_ACTIVITIES = 15 * 60  # workouts update after syncing a ride
-_TTL_WELLNESS = 15 * 60
-_TTL_EVENTS = 15 * 60
-_TTL_POWER_CURVE = 30 * 60
-
-
 # ---------------------------------------------------------------------------
-# Key storage
+# Tool implementations
 # ---------------------------------------------------------------------------
-
-
-def _user_dir(discord_id: str) -> Path:
-    """Return the credential directory for a Discord user.
-
-    Hermes core now passes Discord snowflakes to tool dispatch via
-    kw["user_id"] (see Hermes core PR for model_tools/run_agent).  The
-    Path.home() fallback is intentionally removed: when multiple users
-    share the old fallback path they end up overwriting each other's
-    credentials.  With real snowflakes every user gets their own
-    isolated directory.
-
-    Raises RuntimeError if HERMES_HOME is not set.
-    """
-    hermes_home_raw = os.environ.get("HERMES_HOME")
-    if not hermes_home_raw:
-        raise RuntimeError(
-            "HERMES_HOME is not set — cannot resolve credential directory. "
-            "The gateway must export HERMES_HOME before loading plugins."
-        )
-    hermes_home = Path(hermes_home_raw)
-    d = hermes_home / "users" / str(discord_id)
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
-def _key_path(discord_id: str) -> Path:
-    return _user_dir(discord_id) / "intervals_key"
-
-
-def _athlete_id_path(discord_id: str) -> Path:
-    return _user_dir(discord_id) / "intervals_athlete_id"
-
-
-def _athlete_name_path(discord_id: str) -> Path:
-    """Returns the path to the file storing the athlete's Discord display name.
-
-    Written during onboarding; used to verify the credential files still
-    belong to the same person.  If absent, credentials were manually placed
-    without onboarding — treat as unverified.
-    """
-    return _user_dir(discord_id) / "intervals_athlete_name"
-
-
-def store_user_credentials(discord_id: str, athlete_id: str, api_key: str, athlete_name: str = "") -> None:
-    """Persist an athlete's intervals.icu credentials.
-
-    In production the key file should be encrypted with age.  For v1 we
-    write plaintext with mode 0600 — the PVC is not world-readable, and
-    the file is only accessible inside the container.  A TODO to add age
-    encryption is tracked in the issue tracker.
-
-    Args:
-        athlete_name: The athlete's Discord display name (not intervals.icu
-            profile name).  Stored in a separate file so subsequent tool
-            calls and coaching sessions can verify the credentials still
-            belong to the same person.  When missing or empty, the name
-            file is not written — credentials are treated as unverified.
-    """
-    key_file = _key_path(discord_id)
-    key_file.write_text(api_key, encoding="utf-8")
-    key_file.chmod(0o600)
-
-    id_file = _athlete_id_path(discord_id)
-    id_file.write_text(athlete_id.strip(), encoding="utf-8")
-    id_file.chmod(0o600)
-    logger.info("Stored intervals.icu credentials for discord_id=%s", discord_id)
-
-    if athlete_name:
-        name_file = _athlete_name_path(discord_id)
-        name_file.write_text(athlete_name.strip(), encoding="utf-8")
-        name_file.chmod(0o600)
-        logger.info(
-            "Stored athlete display name '%s' for discord_id=%s",
-            athlete_name, discord_id,
-        )
-
-
-def _load_credentials(discord_id: str) -> tuple[str, str]:
-    """Return (athlete_id, api_key) or raise ValueError if not configured."""
-    key_file = _key_path(discord_id)
-    id_file = _athlete_id_path(discord_id)
-
-    if not key_file.exists() or not id_file.exists():
-        raise ValueError(
-            f"No intervals.icu credentials found for Discord user {discord_id}. "
-            "Please run /start to connect your intervals.icu account."
-        )
-    api_key = key_file.read_text(encoding="utf-8").strip()
-    athlete_id = id_file.read_text(encoding="utf-8").strip()
-    if not api_key or not athlete_id:
-        raise ValueError(
-            "intervals.icu credentials are empty. Please run /start again."
-        )
-    return athlete_id, api_key
-
-
-def _load_verified_name(discord_id: str) -> Optional[str]:
-    """Return the athlete's Discord display name stored during onboarding.
-
-    Returns None if the name file is absent (credentials were manually placed
-    without onboarding) or unreadable.
-    """
-    name_file = _athlete_name_path(discord_id)
-    if not name_file.exists():
-        return None
-    try:
-        raw = name_file.read_text(encoding="utf-8").strip()
-        return raw or None
-    except Exception:
-        return None
 
 
 def verify_athlete_identity(discord_id: str, **_: Any) -> str:
-    """Verify that stored credentials belong to the expected athlete.
-
-    Fetches the athlete profile from intervals.icu and compares the
-    returned athlete_id against the value stored in the credential files.
-    Also checks that the stored Discord display name (written during
-    onboarding) is present — missing means credentials were manually
-    placed without onboarding.
-
-    Returns a JSON object with:
-      verified: true if the stored athlete_id matches the API response
-      stored_athlete_id / stored_name: what the credential files say
-      api_athlete_id / api_name: what the API just returned
-      has_stored_name: whether a display name was saved during onboarding
-
-    Call this at the start of every coaching session to catch credential
-    file swaps or stale wrong-athlete files before pulling training data.
-    """
+    """Verify that stored credentials belong to the expected athlete."""
     try:
         athlete_id, api_key = _load_credentials(discord_id)
     except ValueError as exc:
@@ -246,7 +112,7 @@ def verify_athlete_identity(discord_id: str, **_: Any) -> str:
         "verified": len(mismatched) == 0,
         "stored_athlete_id": athlete_id,
         "stored_name": stored_name,
-        "api_athlete_id": athlete_id,  # same as stored — API endpoint uses this id
+        "api_athlete_id": athlete_id,
         "api_name": api_name,
         "has_stored_name": stored_name is not None,
     }
@@ -263,100 +129,6 @@ def verify_athlete_identity(discord_id: str, **_: Any) -> str:
                 "Re-run /start to re-onboard."
             )
     return json.dumps(result)
-
-
-# ---------------------------------------------------------------------------
-# Cache
-# ---------------------------------------------------------------------------
-
-
-def _cache_dir(discord_id: str) -> Path:
-    d = _user_dir(discord_id) / "cache"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
-def _cache_key(endpoint: str, params: dict) -> str:
-    raw = endpoint + json.dumps(params, sort_keys=True)
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
-
-
-def _cache_get(discord_id: str, cache_key: str, ttl: int) -> Optional[Any]:
-    path = _cache_dir(discord_id) / f"{cache_key}.json"
-    if not path.exists():
-        return None
-    age = time.time() - path.stat().st_mtime
-    if age > ttl:
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-
-
-def _cache_set(discord_id: str, cache_key: str, data: Any) -> None:
-    path = _cache_dir(discord_id) / f"{cache_key}.json"
-    path.write_text(json.dumps(data), encoding="utf-8")
-
-
-# ---------------------------------------------------------------------------
-# HTTP client
-# ---------------------------------------------------------------------------
-
-
-def _auth_header(api_key: str) -> str:
-    """Build the Basic Auth header value for intervals.icu."""
-    token = base64.b64encode(f"API_KEY:{api_key}".encode()).decode()
-    return f"Basic {token}"
-
-
-def _request(
-    athlete_id: str,
-    api_key: str,
-    path: str,
-    params: Optional[dict] = None,
-    timeout: int = 20,
-) -> Any:
-    """Make an authenticated GET request to intervals.icu and return parsed JSON."""
-    url = f"{_API_BASE}{path}"
-    if params:
-        url += "?" + urllib.parse.urlencode(
-            {k: v for k, v in params.items() if v is not None}
-        )
-
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": _auth_header(api_key),
-            "Accept": "application/json",
-            "User-Agent": "hermes-coach/1.0",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        if exc.code == 401:
-            raise ValueError(
-                "intervals.icu returned 401 Unauthorized. "
-                "Your API key may have expired — please run /start to reconnect."
-            ) from exc
-        raise RuntimeError(f"intervals.icu API error {exc.code}: {exc.reason}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
-
-
-def _today_iso() -> str:
-    return date.today().isoformat()
-
-
-def _n_days_ago_iso(n: int) -> str:
-    return (date.today() - timedelta(days=n)).isoformat()
-
-
-# ---------------------------------------------------------------------------
-# Tool implementations
-# ---------------------------------------------------------------------------
 
 
 def get_athlete_profile(discord_id: str, **_: Any) -> str:

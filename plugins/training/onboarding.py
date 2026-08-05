@@ -17,7 +17,8 @@ import json
 import logging
 from typing import Any
 
-from .intervals_icu import _require_user_id
+from ._credentials import _require_user_id
+from .intervals_icu import _request, store_user_credentials
 
 logger = logging.getLogger(__name__)
 
