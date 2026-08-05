@@ -61,25 +61,7 @@ def _build_fit_file(
     max_hr: int,
     ftp: int,
 ) -> bytes:
-    """Build a FIT workout file from step definitions.
-
-    Uses fit-tool if available, otherwise a minimal template-based builder.
-    """
-    try:
-        import fit_tool  # noqa: F401
-        return _build_fit_with_fittool(sport, steps, max_hr, ftp)
-    except ImportError:
-        pass
-    try:
-        import fit_tool  # noqa: F401  # second attempt after path setup
-    except ImportError:
-        pass
-    # Fall back to template-based builder
-    return _build_fit_template(sport, steps, max_hr, ftp)
-
-
-def _build_fit_with_fittool(sport, steps, max_hr, ftp):
-    """Build FIT using the fit-tool library."""
+    """Build a FIT workout file from step definitions using fit-tool."""
     from fit_tool.fit_file_builder import FitFileBuilder
     from fit_tool.profile.messages.workout_message import WorkoutMessage
     from fit_tool.profile.messages.workout_step_message import WorkoutStepMessage
@@ -88,7 +70,9 @@ def _build_fit_with_fittool(sport, steps, max_hr, ftp):
         Sport, Intensity, WorkoutStepDuration, WorkoutStepTarget, FileType,
     )
 
-    sport_map = {"Run": Sport.RUNNING, "Ride": Sport.CYCLING, "VirtualRide": Sport.CYCLING}
+    sport_map = {"Run": Sport.RUNNING, "Ride": Sport.CYCLING,
+                 "VirtualRide": Sport.CYCLING, "GravelRide": Sport.CYCLING,
+                 "MountainBikeRide": Sport.CYCLING}
     intensity_map = {"WARMUP": Intensity.WARMUP, "ACTIVE": Intensity.ACTIVE,
                      "REST": Intensity.REST, "COOLDOWN": Intensity.COOLDOWN}
 
@@ -100,7 +84,6 @@ def _build_fit_with_fittool(sport, steps, max_hr, ftp):
 
     w = WorkoutMessage()
     w.sport = sport_map.get(sport, Sport.CYCLING)
-    w.workout_name = ""
     w.num_valid_steps = len(steps)
     builder.add(w)
 
@@ -110,7 +93,6 @@ def _build_fit_with_fittool(sport, steps, max_hr, ftp):
         target = str(s.get("target", "")).upper()
         name = str(s.get("name", ""))[:16]
 
-        # Auto-detect target from provided fields
         hr_low = s.get("hr_min")
         hr_high = s.get("hr_max")
         pw_low = s.get("power_pct_min") or s.get("power_min")
@@ -135,7 +117,7 @@ def _build_fit_with_fittool(sport, steps, max_hr, ftp):
         if target == "HR":
             lo = int(hr_low or s.get("min", 0))
             hi = int(hr_high or s.get("max", 0))
-            if max_hr > 0:  # convert BPM → %max HR
+            if max_hr > 0:
                 lo = max(1, min(100, round(lo / max_hr * 100)))
                 hi = max(1, min(100, round(hi / max_hr * 100)))
             msg.target_type = WorkoutStepTarget.HEART_RATE
@@ -157,164 +139,11 @@ def _build_fit_with_fittool(sport, steps, max_hr, ftp):
             msg.target_type = WorkoutStepTarget.SPEED
             msg.custom_target_speed_low = float(lo)
             msg.custom_target_speed_high = float(hi)
-        else:
-            msg.duration_type = WorkoutStepDuration.TIME
-            msg.duration_time = dur
 
         builder.add(msg)
 
-    fit_file = builder.build()
-    return fit_file.to_bytes()
+    return builder.build().to_bytes()
 
-
-def _build_fit_template(sport, steps, max_hr, ftp):
-    """Minimal FIT builder using a known-good template pattern.
-
-    Constructs a simple single-definition FIT file with file_id,
-    workout, and workout_step messages.  Avoids external dependencies.
-    """
-    buf = bytearray()
-
-    # ── Header (12 bytes) ──────────────────────────────────────────
-    buf.append(0x0E)            # header size (14)
-    buf.append(0x10)            # protocol version
-    buf.append(0x00)            # profile version low
-    buf.append(0x00)            # profile version high
-    buf.extend(b"\x00\x00\x00\x00")  # data size (placeholder)
-    buf.extend(b".FIT")          # data type
-
-    # ── Helpers ─────────────────────────────────────────────────────
-    def emit_define(local_num, global_num, fields):
-        """fields: list of (field_num, size, base_type)."""
-        buf.append(0x40 | local_num)
-        buf.append(0x00)  # reserved
-        buf.append(0x01)  # little-endian
-        buf.extend(struct.pack("<H", global_num))
-        buf.append(len(fields))
-        for fn, fs, ft in fields:
-            buf.extend([fn, fs, ft])
-        buf.append(local_num)
-        return buf
-
-    def u8(v): return struct.pack("<B", v & 0xFF)
-    def u16(v): return struct.pack("<H", v & 0xFFFF)
-    def u32(v): return struct.pack("<I", v & 0xFFFFFFFF)
-    def f32(v): return struct.pack("<f", float(v))
-
-    # ── File ID message (global 0) ─────────────────────────────────
-    # fields: type(0,1,enum), manufacturer(1,2,uint16), product(2,2,uint16),
-    #         serial(3,4,uint32z), time_created(4,4,uint32)
-    emit_define(0, 0, [
-        (0, 1, 0x00), (1, 2, 0x84), (2, 2, 0x84),
-        (3, 4, 0x8C), (4, 4, 0x86),
-    ])
-    buf.append(0x06)  # type = workout
-    buf.extend(u16(1))  # manufacturer = garmin
-    buf.extend(u16(0))  # product
-    buf.extend(u32(0))  # serial
-    buf.extend(u32(0))  # time_created (0 = not set)
-
-    # ── Workout message (global 26) ─────────────────────────────────
-    # fields: sport(4,1,enum), sub_sport(5,2,uint16), num_valid_steps(8,4,uint32)
-    sport_enum = {"Run": 1, "Ride": 2, "VirtualRide": 2}.get(sport, 2)
-    emit_define(1, 26, [
-        (4, 1, 0x00), (11, 2, 0x84), (14, 4, 0x86),
-    ])
-    buf.append(sport_enum)
-    buf.extend(u16(0))  # sub_sport
-    buf.extend(u32(len(steps)))
-
-    # ── Workout Step messages (global 27) ───────────────────────────
-    for si, s in enumerate(steps):
-        dur = int(s.get("duration_sec", 0))
-        stype = str(s.get("type", "ACTIVE")).upper()
-        target = str(s.get("target", "")).upper()
-        name = str(s.get("name", ""))[:16]
-
-        hr_low = s.get("hr_min") or s.get("min")
-        hr_high = s.get("hr_max") or s.get("max")
-        pw_low = s.get("power_pct_min") or s.get("power_min") or s.get("min")
-        pw_high = s.get("power_pct_max") or s.get("power_max") or s.get("max")
-        pc_low = s.get("pace_min") or s.get("min")
-        pc_high = s.get("pace_max") or s.get("max")
-
-        if not target:
-            if hr_low is not None:
-                target = "HR"
-            elif pw_low is not None:
-                target = "POWER"
-            elif pc_low is not None:
-                target = "PACE"
-
-        intensity = {"WARMUP": 1, "ACTIVE": 0, "REST": 3, "COOLDOWN": 2}.get(stype, 0)
-        ttype = {"HR": 1, "POWER": 2, "PACE": 0}.get(target, 0)
-
-        emit_define(2 + si, 27, [
-            (1, 1, 0x00),   # duration_type
-            (2, 4, 0x86),   # duration_value
-            (3, 1, 0x00),   # target_type
-            (5, 4, 0x86),   # custom_target_value_low
-            (6, 4, 0x86),   # custom_target_value_high
-            (7, 1, 0x00),   # intensity
-            (8, 16, 0x07),  # name (string)
-        ])
-
-        buf.append(0x00)  # duration_type = time
-        buf.extend(u32(dur))
-
-        buf.append(ttype)
-
-        if target == "HR":
-            lo = int(hr_low or 0)
-            hi = int(hr_high or 0)
-            if max_hr > 0:
-                lo = max(1, min(100, round(lo / max_hr * 100)))
-                hi = max(1, min(100, round(hi / max_hr * 100)))
-            buf.extend(u32(lo))
-            buf.extend(u32(hi))
-        elif target == "POWER":
-            lo_val = float(pw_low or 0)
-            hi_val = float(pw_high or 0)
-            if lo_val > 20 and ftp > 0:
-                lo_val = round(lo_val / ftp * 100)
-            if hi_val > 20 and ftp > 0:
-                hi_val = round(hi_val / ftp * 100)
-            buf.extend(u32(int(lo_val)))
-            buf.extend(u32(int(hi_val)))
-        elif target == "PACE":
-            lo = _parse_pace_to_ms(pc_low)
-            hi = _parse_pace_to_ms(pc_high)
-            # Speed in m/s stored as float in uint32 field
-            buf.extend(f32(lo))
-            buf.extend(f32(hi))
-        else:
-            buf.extend(u32(0))
-            buf.extend(u32(0))
-
-        buf.append(intensity)
-        buf.extend(name.encode("utf-8")[:16].ljust(16, b"\x00"))
-
-    # ── CRC ──────────────────────────────────────────────────────────
-    data_size = len(buf) - 14
-    struct.pack_into("<I", buf, 4, data_size)
-
-    # CRC16-CCITT
-    crc = 0
-    for byte in bytes(buf):
-        crc = ((crc >> 4) & 0x0FFF) ^ [
-            0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
-            0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400,
-        ][(crc ^ byte) & 0xF]
-        crc = ((crc >> 4) & 0x0FFF) ^ [
-            0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
-            0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400,
-        ][(crc ^ (byte >> 4)) & 0xF]
-    buf.extend(struct.pack("<H", crc & 0xFFFF))
-
-    return bytes(buf)
-
-
-# ── Credential helpers ─────────────────────────────────────────────────────
 
 
 def _require_user_id(kw: dict) -> str:
