@@ -111,6 +111,44 @@ def _post_json(
         raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
 
 
+def _put_json(
+    athlete_id: str,
+    api_key: str,
+    path: str,
+    payload: dict,
+    timeout: int = 20,
+) -> Any:
+    """Make an authenticated PUT request to intervals.icu."""
+    url = f"{_API_BASE}{path}"
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Authorization": _auth_header(api_key),
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "hermes-coach/1.0",
+        },
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = ""
+        try:
+            body = exc.read().decode("utf-8")[:500]
+        except Exception:
+            pass
+        raise RuntimeError(
+            f"intervals.icu API error {exc.code}: {exc.reason}. Body: {body}"
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
+
+
 def _delete_json(
     athlete_id: str,
     api_key: str,
@@ -142,6 +180,48 @@ def _delete_json(
         ) from exc
 
 
+def _build_workout_doc(steps: list[dict], description: str) -> dict:
+    """Build a workout_doc structure from step definitions.
+
+    Each step dict may contain:
+        name: Step name (e.g. "Warmup", "Main Set").
+        duration_sec: Duration in seconds.
+        type: Step type — "WARMUP", "ACTIVE", "REST", "COOLDOWN".
+        target: Target metric — "HR", "POWER", "PACE".
+        min: Lower bound of the target range.
+        max: Upper bound of the target range.
+        description: Optional step-level description.
+
+    Returns a workout_doc dict suitable for the intervals.icu events API.
+    """
+    built_steps: list[dict] = []
+    total_duration = 0
+    for s in steps:
+        dur = int(s.get("duration_sec", 0))
+        total_duration += dur
+        step: dict[str, Any] = {
+            "duration": dur,
+            "name": str(s.get("name", "")),
+            "type": str(s.get("type", "ACTIVE")),
+        }
+        target = str(s.get("target", "")).upper()
+        if target in ("HR", "POWER", "PACE"):
+            step["target"] = target
+            step["min"] = int(s.get("min", 0))
+            step["max"] = int(s.get("max", 0))
+        if s.get("description"):
+            step["description"] = str(s["description"])
+        built_steps.append(step)
+
+    return {
+        "steps": built_steps,
+        "description": description or "",
+        "distance": 0,
+        "duration": total_duration,
+        "options": {},
+    }
+
+
 def create_event(discord_id: str, **kw: Any) -> str:
     """Create a new planned event on the athlete's intervals.icu calendar.
 
@@ -156,6 +236,8 @@ def create_event(discord_id: str, **kw: Any) -> str:
         indoor: Set True for Zwift/indoor trainer sessions.
         category: Event category, default "WORKOUT".
         start_time: Optional ISO datetime like "2026-07-13T08:00:00".
+        steps: Optional list of workout step dicts for structured Garmin sync.
+               Each step: {name, duration_sec, type, target?, min?, max?}
 
     Returns a JSON object with the created event's id and details, or an error.
     """
@@ -169,6 +251,7 @@ def create_event(discord_id: str, **kw: Any) -> str:
     indoor = kw.get("indoor", False)
     category = str(kw.get("category", "WORKOUT")).strip()
     start_time = str(kw.get("start_time", "")).strip()
+    step_list: list[dict] = kw.get("steps") or []
 
     if not name:
         return json.dumps({"error": "name is required"})
@@ -206,6 +289,15 @@ def create_event(discord_id: str, **kw: Any) -> str:
     if indoor:
         payload["indoor"] = True
 
+    # Build structured workout steps for Garmin sync
+    if step_list:
+        payload["workout_doc"] = _build_workout_doc(step_list, description)
+        # Auto-compute moving_time from steps if not explicitly provided
+        if duration_min is None:
+            total_sec = sum(int(s.get("duration_sec", 0)) for s in step_list)
+            if total_sec > 0:
+                payload["moving_time"] = total_sec
+
     try:
         result = _post_json(
             athlete_id, api_key,
@@ -214,6 +306,21 @@ def create_event(discord_id: str, **kw: Any) -> str:
         )
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
+
+    # If structured steps were provided, add workout_doc via PUT.
+    # POST ignores workout_doc — only PUT accepts it.
+    if step_list:
+        wdoc = _build_workout_doc(step_list, description)
+        try:
+            event_id = result["id"]
+            _put_json(
+                athlete_id, api_key,
+                f"/athlete/{athlete_id}/events/{event_id}",
+                {"workout_doc": wdoc},
+            )
+        except (ValueError, RuntimeError) as exc:
+            logger.warning("Event %s created but steps PUT failed: %s", result.get("id"), exc)
+            result["_steps_warning"] = str(exc)
 
     return json.dumps({
         "created": True,
@@ -299,6 +406,15 @@ def register_tools(ctx) -> None:
             "indoor": {"type": "boolean", "description": "True for Zwift/indoor."},
             "category": {"type": "string", "description": "Category, default WORKOUT."},
             "start_time": {"type": "string", "description": "ISO datetime override."},
+            "steps": {
+                "type": "array",
+                "description": (
+                    "Structured workout steps for Garmin live guidance. "
+                    "Each step: {name, duration_sec, type (WARMUP|ACTIVE|REST|COOLDOWN), "
+                    "target? (HR|POWER|PACE), min?, max?, description?}."
+                ),
+                "items": {"type": "object"},
+            },
         },
         required=["discord_id", "name", "date_iso"],
         fn=create_event,
