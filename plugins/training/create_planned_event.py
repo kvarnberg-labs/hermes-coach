@@ -4,8 +4,8 @@ Uses the intervals.icu REST API to POST new events to the athlete's calendar.
 The event appears on intervals.icu and syncs to Garmin automatically.
 
 Structured workout steps (for Garmin step-by-step guidance) are uploaded as
-FIT files via file_contents_base64.  FIT generation uses fit-tool if available,
-or falls back to a template-based builder using only the standard library.
+FIT files via file_contents_base64.  FIT generation requires the fit-tool
+package (installed in the Docker image alongside this plugin).
 
 Authentication uses the same credential files as other intervals.icu tools:
   $HERMES_HOME/users/<discord_id>/intervals_key
@@ -19,7 +19,6 @@ import json
 import logging
 import os
 import re
-import struct
 import urllib.error
 import urllib.parse
 import urllib.request
