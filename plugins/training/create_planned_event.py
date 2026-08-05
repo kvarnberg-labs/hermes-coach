@@ -111,6 +111,44 @@ def _post_json(
         raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
 
 
+def _put_json(
+    athlete_id: str,
+    api_key: str,
+    path: str,
+    payload: dict,
+    timeout: int = 20,
+) -> Any:
+    """Make an authenticated PUT request to intervals.icu."""
+    url = f"{_API_BASE}{path}"
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            "Authorization": _auth_header(api_key),
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "hermes-coach/1.0",
+        },
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = ""
+        try:
+            body = exc.read().decode("utf-8")[:500]
+        except Exception:
+            pass
+        raise RuntimeError(
+            f"intervals.icu API error {exc.code}: {exc.reason}. Body: {body}"
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
+
+
 def _delete_json(
     athlete_id: str,
     api_key: str,
@@ -142,6 +180,99 @@ def _delete_json(
         ) from exc
 
 
+def _parse_pace_to_ms(pace_str: str) -> float:
+    """Convert a human-readable pace to m/s.
+
+    Accepts '5:40' (min:sec per km) or raw float m/s.
+    Returns m/s.
+    """
+    if isinstance(pace_str, (int, float)):
+        return float(pace_str)
+    pace_str = str(pace_str).strip()
+    if ":" in pace_str:
+        parts = pace_str.split(":")
+        if len(parts) == 2:
+            mins, secs = int(parts[0]), int(parts[1])
+            total_sec = mins * 60 + secs
+            if total_sec > 0:
+                return round(1000.0 / total_sec, 2)
+    try:
+        return float(pace_str)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def _build_workout_doc(steps: list[dict], description: str, sport_type: str) -> dict:
+    """Build a workout_doc structure from step definitions.
+
+    Each step dict may contain:
+        name: Step name (e.g. "Warmup", "Main Set").
+        duration_sec: Duration in seconds.
+        type: Step type — "WARMUP", "ACTIVE", "REST", "COOLDOWN".
+        target: Target metric — "HR", "POWER", "PACE". Auto-detected if omitted.
+        hr_min, hr_max: Heart rate bounds in BPM.
+        power_min, power_max: Power bounds in watts.
+        pace_min, pace_max: Pace bounds — accepts '5:40' (min:sec/km) or m/s.
+        description: Optional step-level description.
+
+    Returns a workout_doc dict suitable for the intervals.icu events API.
+    """
+    built_steps: list[dict] = []
+    total_duration = 0
+    for s in steps:
+        dur = int(s.get("duration_sec", 0))
+        total_duration += dur
+        step: dict[str, Any] = {"duration": dur, "name": str(s.get("name", "")), "type": str(s.get("type", "ACTIVE"))}
+
+        # Determine target from explicit field, or infer from provided values
+        target = str(s.get("target", "")).upper()
+        hr_min_val = s.get("hr_min")
+        hr_max_val = s.get("hr_max")
+        power_min_val = s.get("power_min")
+        power_max_val = s.get("power_max")
+        pace_min_val = s.get("pace_min")
+        pace_max_val = s.get("pace_max")
+
+        if not target:
+            if hr_min_val is not None or hr_max_val is not None:
+                target = "HR"
+            elif power_min_val is not None or power_max_val is not None:
+                target = "POWER"
+            elif pace_min_val is not None or pace_max_val is not None:
+                target = "PACE"
+            elif sport_type.upper() in ("RIDE", "VIRTUALRIDE"):
+                target = "POWER"
+
+        step["target"] = target
+
+        if target == "HR":
+            step["min"] = int(hr_min_val) if hr_min_val is not None else int(s.get("min", 0))
+            step["max"] = int(hr_max_val) if hr_max_val is not None else int(s.get("max", 0))
+        elif target == "POWER":
+            step["min"] = int(power_min_val) if power_min_val is not None else int(s.get("min", 0))
+            step["max"] = int(power_max_val) if power_max_val is not None else int(s.get("max", 0))
+        elif target == "PACE":
+            pmin = _parse_pace_to_ms(pace_min_val) if pace_min_val is not None else float(s.get("min", 0))
+            pmax = _parse_pace_to_ms(pace_max_val) if pace_max_val is not None else float(s.get("max", 0))
+            step["min"] = pmin
+            step["max"] = pmax
+        else:
+            step["min"] = int(s.get("min", 0))
+            step["max"] = int(s.get("max", 0))
+
+        if s.get("description"):
+            step["description"] = str(s["description"])
+        built_steps.append(step)
+
+    return {
+        "steps": built_steps,
+        "description": description or "",
+        "distance": 0,
+        "duration": total_duration,
+        "options": {},
+    }
+
+
 def create_event(discord_id: str, **kw: Any) -> str:
     """Create a new planned event on the athlete's intervals.icu calendar.
 
@@ -156,6 +287,8 @@ def create_event(discord_id: str, **kw: Any) -> str:
         indoor: Set True for Zwift/indoor trainer sessions.
         category: Event category, default "WORKOUT".
         start_time: Optional ISO datetime like "2026-07-13T08:00:00".
+        steps: Optional list of workout step dicts for structured Garmin sync.
+               Each step: {name, duration_sec, type, target?, min?, max?}
 
     Returns a JSON object with the created event's id and details, or an error.
     """
@@ -169,6 +302,7 @@ def create_event(discord_id: str, **kw: Any) -> str:
     indoor = kw.get("indoor", False)
     category = str(kw.get("category", "WORKOUT")).strip()
     start_time = str(kw.get("start_time", "")).strip()
+    step_list: list[dict] = kw.get("steps") or []
 
     if not name:
         return json.dumps({"error": "name is required"})
@@ -206,6 +340,20 @@ def create_event(discord_id: str, **kw: Any) -> str:
     if indoor:
         payload["indoor"] = True
 
+    # Build structured workout steps for Garmin sync
+    if step_list:
+        wdoc = _build_workout_doc(step_list, description, event_type)
+        # Auto-compute moving_time from steps if not explicitly provided
+        if duration_min is None:
+            total_sec = sum(int(s.get("duration_sec", 0)) for s in step_list)
+            if total_sec > 0:
+                payload["moving_time"] = total_sec
+        # Set event-level target based on sport
+        if event_type in ("Run", "TrailRun", "VirtualRun"):
+            payload["target"] = "PACE"
+        elif event_type in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide"):
+            payload["target"] = "POWER"
+
     try:
         result = _post_json(
             athlete_id, api_key,
@@ -214,6 +362,21 @@ def create_event(discord_id: str, **kw: Any) -> str:
         )
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
+
+    # If structured steps were provided, add workout_doc via PUT.
+    # POST ignores workout_doc — only PUT accepts it.
+    if step_list:
+        wdoc = _build_workout_doc(step_list, description, event_type)
+        try:
+            event_id = result["id"]
+            _put_json(
+                athlete_id, api_key,
+                f"/athlete/{athlete_id}/events/{event_id}",
+                {"workout_doc": wdoc},
+            )
+        except (ValueError, RuntimeError) as exc:
+            logger.warning("Event %s created but steps PUT failed: %s", result.get("id"), exc)
+            result["_steps_warning"] = str(exc)
 
     return json.dumps({
         "created": True,
@@ -299,6 +462,17 @@ def register_tools(ctx) -> None:
             "indoor": {"type": "boolean", "description": "True for Zwift/indoor."},
             "category": {"type": "string", "description": "Category, default WORKOUT."},
             "start_time": {"type": "string", "description": "ISO datetime override."},
+            "steps": {
+                "type": "array",
+                "description": (
+                    "Structured workout steps for Garmin live guidance. "
+                    "Each step: {name, duration_sec, type (WARMUP|ACTIVE|REST|COOLDOWN), "
+                    "description?, target? (auto-detected from hr/power/pace fields). "
+                    "Use hr_min/hr_max for HR (BPM), power_min/power_max for watts, "
+                    "pace_min/pace_max for pace ('5:40' min:sec/km or m/s)."
+                ),
+                "items": {"type": "object"},
+            },
         },
         required=["discord_id", "name", "date_iso"],
         fn=create_event,
