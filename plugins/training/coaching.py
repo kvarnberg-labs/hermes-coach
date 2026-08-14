@@ -47,7 +47,7 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
     # Sections that are always returned in full regardless of topic match —
     # they are too large to usefully inject via keyword search and would
     # dominate the context window. The agent should request them explicitly.
-    _OMNIBUS_SECTIONS = {"nutrition"}
+    _OMNIBUS_SECTIONS = {"nutrition", "strength_programming", "exercise_database"}
 
     matched: dict[str, Any] = {}
     for key, value in brain.items():

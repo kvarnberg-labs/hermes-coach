@@ -61,6 +61,7 @@ training_philosophies:
       Threshold intensity must be honest. Many athletes run easy days too hard
       (grey zone) and threshold days too easy. Use lactate or power to calibrate.
 
+  threshold_focused:
     summary: >
       Significant volume at lactate threshold (FTP ±5%), typically 1–2 sessions/week
       at threshold alongside moderate base volume.

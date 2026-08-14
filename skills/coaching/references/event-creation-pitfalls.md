@@ -79,6 +79,8 @@ See `references/fit-workout-generation.md` for the full FIT encoding details.
 | `pace_min`, `pace_max` | string/number | Pace bounds: `"5:40"` (min:sec/km) or m/s |
 | `description` | string | Optional step description |
 
+⚠️ **ONE target type per step.** Auto-detection: HR > power > pace. Including both `hr_min/hr_max` and `pace_min/pace_max` on the same step silently drops pace. Use pace OR HR per step — pace for work intervals, HR for warmup/cooldown.
+
 ### Easy runs should NOT have warmup/cooldown
 
 Athletes explicitly prefer this. An easy run is one steady block — not

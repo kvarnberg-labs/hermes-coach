@@ -16,17 +16,11 @@ from __future__ import annotations
 
 import base64
 import json
-import os
-import re
-import urllib.error
-import urllib.request
 from datetime import date
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-
-_API_BASE = "https://intervals.icu/api/v1"
-_DISCORD_ID_RE = re.compile(r"^[1-9]\d{16,19}$")
+from ._credentials import _load_credentials, _require_user_id
+from ._http import _delete_json, _post_json, _request
 
 # ── Pace conversion ─────────────────────────────────────────────────────────
 
@@ -144,87 +138,6 @@ def _build_fit_file(
     return builder.build().to_bytes()
 
 
-
-def _require_user_id(kw: dict) -> str:
-    uid = str(kw.get("user_id", ""))
-    if not _DISCORD_ID_RE.match(uid):
-        raise ValueError(
-            "User identity not available — the Discord gateway did not provide a valid user ID."
-        )
-    return uid
-
-
-def _user_dir(discord_id: str) -> Path:
-    hermes_home = os.environ.get("HERMES_HOME")
-    if not hermes_home:
-        raise RuntimeError("HERMES_HOME is not set")
-    d = Path(hermes_home) / "users" / str(discord_id)
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
-def _load_credentials(discord_id: str) -> tuple[str, str]:
-    key_file = _user_dir(discord_id) / "intervals_key"
-    id_file = _user_dir(discord_id) / "intervals_athlete_id"
-    if not key_file.exists() or not id_file.exists():
-        raise ValueError("No intervals.icu credentials found. Please run /start first.")
-    api_key = key_file.read_text(encoding="utf-8").strip()
-    athlete_id = id_file.read_text(encoding="utf-8").strip()
-    if not api_key or not athlete_id:
-        raise ValueError("Credentials are empty. Please run /start again.")
-    return athlete_id, api_key
-
-
-def _auth_header(api_key: str) -> str:
-    token = base64.b64encode(f"API_KEY:{api_key}".encode()).decode()
-    return f"Basic {token}"
-
-
-def _post_json(athlete_id: str, api_key: str, path: str, payload: dict, timeout: int = 20) -> Any:
-    url = f"{_API_BASE}{path}"
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=data,
-        headers={"Authorization": _auth_header(api_key), "Accept": "application/json",
-                 "Content-Type": "application/json", "User-Agent": "hermes-coach/1.0"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = ""
-        try:
-            body = exc.read().decode("utf-8")[:500]
-        except Exception:
-            pass
-        if exc.code == 401:
-            raise ValueError("intervals.icu 401. API key may have expired — run /start.") from exc
-        raise RuntimeError(f"intervals.icu error {exc.code}: {exc.reason}. Body: {body}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
-
-
-def _delete_json(athlete_id: str, api_key: str, path: str, timeout: int = 20) -> bool:
-    url = f"{_API_BASE}{path}"
-    req = urllib.request.Request(
-        url,
-        headers={"Authorization": _auth_header(api_key), "Accept": "application/json",
-                 "User-Agent": "hermes-coach/1.0"},
-        method="DELETE",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status in (200, 204)
-    except urllib.error.HTTPError as exc:
-        body = ""
-        try:
-            body = exc.read().decode("utf-8")[:300]
-        except Exception:
-            pass
-        raise RuntimeError(f"intervals.icu DELETE error {exc.code}. Body: {body}") from exc
-
-
 # ── Tool implementations ────────────────────────────────────────────────────
 
 
@@ -313,20 +226,36 @@ def create_event(discord_id: str, **kw: Any) -> str:
         max_hr = 193
         ftp = 0
         try:
-            hdrs = {
-                "Authorization": _auth_header(api_key),
-                "Accept": "application/json",
-                "User-Agent": "hermes-coach/1.0",
-            }
-            req = urllib.request.Request(f"{_API_BASE}/athlete/{athlete_id}", headers=hdrs)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                max_hr = json.loads(resp.read()).get("max_hr") or max_hr
-            req2 = urllib.request.Request(
-                f"{_API_BASE}/athlete/{athlete_id}/sport-settings/{event_type}", headers=hdrs)
-            with urllib.request.urlopen(req2, timeout=10) as resp2:
-                ftp = json.loads(resp2.read()).get("ftp") or 0
+            profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}", timeout=10)
+            max_hr = profile.get("max_hr") or max_hr
+            settings = _request(
+                athlete_id, api_key,
+                f"/athlete/{athlete_id}/sport-settings/{event_type}", timeout=10,
+            )
+            ftp = settings.get("ftp") or 0
         except Exception:
             pass
+
+        # Safety: FIT power targets are interpreted by Garmin as %FTP. If we
+        # could not fetch the athlete's FTP, watt-based targets would be
+        # written verbatim and read as %FTP (e.g. 200W -> 200% FTP = a
+        # dangerous target). Refuse rather than prescribe a dangerous workout.
+        # %FTP steps (power_pct_*) are safe — they don't need the athlete's FTP.
+        if event_type in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide") and ftp <= 0:
+            needs_ftp = any(
+                (s.get("power_min") is not None or s.get("power_max") is not None)
+                and not (s.get("power_pct_min") or s.get("power_pct_max"))
+                for s in step_list
+            )
+            if needs_ftp:
+                return json.dumps({
+                    "error": (
+                        "Could not retrieve the athlete's FTP from intervals.icu, "
+                        "so watt-based power targets cannot be safely converted to "
+                        "%FTP for the FIT file. Retry, or specify targets as "
+                        "power_pct_min/power_pct_max (% FTP) directly."
+                    ),
+                })
 
         fit_bytes = _build_fit_file(event_type, step_list, max_hr, ftp)
         payload["file_contents_base64"] = base64.b64encode(fit_bytes).decode()

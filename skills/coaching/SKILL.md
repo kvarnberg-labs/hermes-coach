@@ -79,8 +79,13 @@ Example topics:
    - Note which sport is driving CTL changes
    - Get sport-specific settings for each sport you analyze
 8. Synthesize advice using coach-brain principles plus athlete data.
-9. **Before prescribing intensity: ask how the athlete feels today.** TSB is a model estimate, not ground truth. Before recommending threshold/VO2max work, ask the athlete about fatigue, soreness, motivation, and sleep quality. If they report tiredness or heavy legs despite neutral/positive TSB, default to easy/recovery. The athlete's subjective report always overrides the model. This is especially important at the end of a recovery week — TSB may look ready but the nervous system may still be rebuilding.
-9. Include caveats when athlete data contradicts standard guidance.
+9. **Enforce coaching safety guardrails before building or escalating any plan** (`get_coaching_knowledge("coaching_safety")` → `coach-brain/coaching-safety.yaml`):
+   - **Ramp cap:** +3 to +8 CTL/week; never exceed +10. Use +3 to +5 for masters (40+) or athletes returning from injury/illness.
+   - **Recovery weeks:** every 3rd–4th week (2nd–3rd for masters 40+), 30–40% reduction in volume AND intensity.
+   - **RED-S screening:** watch for red flags (menstrual dysfunction / amenorrhoea ≥3 months, recurrent stress fractures, unexplained performance drop, rapid unintended weight loss, recurrent illness). If any flag is present, do NOT increase load — raise it compassionately and refer.
+   - **Medical referral:** for chest pain, syncope, palpitations at rest, suspected stress fracture, persistent pain >2 weeks, or amenorrhoea ≥3 months, STOP programming and refer the athlete to a physician. Hermes is a coach, not a clinician — when in doubt, refer.
+10. **Before prescribing intensity: ask how the athlete feels today.** TSB is a model estimate, not ground truth. Before recommending threshold/VO2max work, ask the athlete about fatigue, soreness, motivation, and sleep quality. If they report tiredness or heavy legs despite neutral/positive TSB, default to easy/recovery. The athlete's subjective report always overrides the model. This is especially important at the end of a recovery week — TSB may look ready but the nervous system may still be rebuilding.
+11. Include caveats when athlete data contradicts standard guidance.
 
 ## Quick Reference
 

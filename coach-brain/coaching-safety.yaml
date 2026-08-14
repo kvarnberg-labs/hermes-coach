@@ -1,0 +1,100 @@
+# Coaching Safety Guardrails — hard limits, red flags, and medical referral.
+#
+# Consolidates the safety-critical DECISIONS a coach must enforce. Detailed
+# physiology and recovery heuristics live in recovery-heuristics.yaml,
+# injury-return.yaml, female-physiology.yaml, and nutrition.yaml — this file is
+# the authoritative "stop / refer / cap" reference, consulted before building
+# or escalating any training plan.
+#
+# Evidence:
+#   - RED-S: Mountjoy M et al., IOC consensus statement on Relative Energy
+#     Deficiency in Sport (RED-S), British Journal of Sports Medicine 2014;
+#     2018 update (International Olympic Committee).
+#   - Ramp rate / recovery weeks: per recovery-heuristics.yaml (the +3 to +8
+#     CTL/week convention used by TrainingPeaks / 80-20 endurance).
+#   - Energy availability LEA threshold: Loucks & Thuma (2003); commonly cited
+#     cutoff ~30 kcal/kg fat-free mass/day.
+
+coaching_safety:
+  purpose: >
+    Hard safety limits the coach enforces before and while building any
+    training plan. When a red flag is present, STOP programming and follow the
+    referral protocol — never "train through" a medical red flag.
+
+  ramp_rate_caps:
+    description: Maximum tolerable chronic training load (CTL) increase per week.
+    general_safe: "+3 to +8 CTL/week"
+    conservative: "+3 to +5 CTL/week"   # masters 40+, returning from injury, post-illness
+    hard_cap: "+10 CTL/week is never acceptable — reduce the planned load"
+    see_also: coach-brain/recovery-heuristics.yaml (ramp_rate)
+
+  recovery_weeks:
+    required: true
+    general: "Every 3rd or 4th week"
+    masters_40_plus: "Every 2nd or 3rd week"
+    volume_reduction: "30–40% from the peak week; reduce intensity AND volume"
+    see_also: coach-brain/recovery-heuristics.yaml (recovery_week_frequency)
+
+  red_s_screening:
+    description: >
+      Relative Energy Deficiency in Sport (RED-S): impaired physiological
+      functioning caused by low energy availability (LEA). Affects bone health,
+      menstrual function, immunity, cardiovascular health, and performance.
+      Can affect ANY athlete, but risk is elevated in athletes who restrict
+      intake to chase power-to-weight (common in cycling) and in female
+      athletes.
+    red_flags:
+      - "Menstrual dysfunction: amenorrhoea (no period) ≥3 months, or irregular cycles in a previously regular athlete"
+      - "Recurrent stress fractures / stress reactions (femoral neck, sacrum, metatarsals)"
+      - "Unexplained performance decline despite increased training"
+      - "Persistent low BMI or rapid unintended weight loss"
+      - "Frequent illness, slow recovery, recurrent infections"
+      - "Low libido, mood disturbance, depression"
+      - "Disordered eating or anxiety around food / body composition"
+      - "Known low bone mineral density (DEXA)"
+    who_to_screen:
+      - "Athletes who raise weight, body composition, or power-to-weight unprompted"
+      - "Female athletes (higher prevalence, but RED-S is not female-only)"
+      - "Athletes in heavy training blocks reporting fatigue or under-fuelling"
+      - "Athletes returning from a stress fracture"
+    action_on_red_flag:
+      - "Do NOT increase training load — hold or reduce volume."
+      - "Raise it directly and compassionately with the athlete."
+      - "Refer to a sports physician and/or registered dietitian (see medical_referral)."
+      - "Signpost fuelling: energy availability above ~30 kcal/kg fat-free mass/day is the commonly cited LEA threshold."
+    evidence: "Mountjoy M et al., IOC consensus on RED-S, BJSM 2014; 2018 update."
+    see_also:
+      - coach-brain/female-physiology.yaml
+      - coach-brain/nutrition.yaml
+
+  medical_referral:
+    description: >
+      Triggers that require the coach to STOP programming and refer the athlete
+      to a qualified medical professional. The coach is not a physician — when
+      any trigger is present, the correct action is referral, not a training fix.
+    stop_and_refer_triggers:
+      - "Chest pain, palpitations at rest, syncope (fainting), or breathlessness disproportionate to effort — possible cardiac; refer urgently"
+      - "Suspected stress fracture (focal bone pain, pain on hopping/loading) — refer before any further running/riding"
+      - "Amenorrhoea ≥3 months or any RED-S red flag (see red_s_screening)"
+      - "Pain persisting >2 weeks or worsening despite rest"
+      - "Neurological symptoms: numbness, tingling, weakness, radiating pain"
+      - "Overtraining-syndrome signs unresponsive to a recovery week (persistent fatigue, declining performance, disturbed sleep, elevated resting HR)"
+      - "Significant unintended weight loss, or any sign of an eating disorder"
+      - "Concussion / head injury — return to sport only under medical supervision"
+    referral_script: >
+      Be direct and non-alarmist. Name the specific symptom, state it is
+      outside the coach's scope, and recommend a sports physician or GP. Offer
+      to pause the plan and resume once cleared. Keep the recommendation in the
+      conversation record.
+    scope_reminder: >
+      Hermes is an AI coach, not a clinician. It cannot diagnose. When in
+      doubt, refer.
+
+  hard_stops:
+    description: "Absolute contraindications — the coach must NOT prescribe training."
+    rules:
+      - "Never prescribe training through a current, undiagnosed injury."
+      - "Never increase load on an athlete with an active RED-S red flag."
+      - "Never prescribe two consecutive hard days for a masters (60+) athlete."
+      - "Never exceed the +10 CTL/week hard cap."
+      - "Never ignore an athlete reporting chest pain or syncope — refer immediately."

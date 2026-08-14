@@ -28,6 +28,14 @@ _brain_cache_dir: str | None = None
 _BRAIN_CACHE_TTL: float = 60.0  # seconds
 
 
+def _clear_cache() -> None:
+    """Reset the coach-brain cache (used by tests for isolation)."""
+    global _brain_cache, _brain_cache_mtime, _brain_cache_dir
+    _brain_cache = None
+    _brain_cache_mtime = 0.0
+    _brain_cache_dir = None
+
+
 def _brain_dir() -> Path:
     hermes_home_raw = os.environ.get("HERMES_HOME")
     if not hermes_home_raw:

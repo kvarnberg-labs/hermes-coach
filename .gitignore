@@ -16,3 +16,6 @@ build/
 .idea/
 .vscode/
 .todos/
+
+# pi coding-agent subagent scratch (local session artifacts)
+.pi/

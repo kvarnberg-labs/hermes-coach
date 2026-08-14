@@ -101,8 +101,14 @@ def verify_athlete_identity(discord_id: str, **_: Any) -> str:
         })
 
     api_name = (data.get("name") or "").strip()
+    api_athlete_id = str(data.get("id") or "").strip()
 
     mismatched = []
+    # Actually compare the API-returned id against the stored one. Previously
+    # api_athlete_id was set to the stored value, so this check was a tautology
+    # and a wrong/stale athlete_id file could never be detected.
+    if api_athlete_id and api_athlete_id != athlete_id:
+        mismatched.append("athlete_id")
     if stored_name is None:
         mismatched.append("no_stored_name")
     if not api_name:
@@ -112,13 +118,19 @@ def verify_athlete_identity(discord_id: str, **_: Any) -> str:
         "verified": len(mismatched) == 0,
         "stored_athlete_id": athlete_id,
         "stored_name": stored_name,
-        "api_athlete_id": athlete_id,
+        "api_athlete_id": api_athlete_id or athlete_id,
         "api_name": api_name,
         "has_stored_name": stored_name is not None,
     }
     if mismatched:
         result["mismatched_fields"] = mismatched
-        if "no_stored_name" in mismatched:
+        if "athlete_id" in mismatched:
+            result["error"] = (
+                f"Stored athlete_id {athlete_id!r} does not match the id "
+                f"({api_athlete_id!r}) returned by the intervals.icu API. "
+                "Re-run /start to re-onboard."
+            )
+        elif "no_stored_name" in mismatched:
             result["error"] = (
                 "Credentials were not written through the onboarding flow "
                 "(no stored display name).  Run /start to re-onboard."
@@ -196,7 +208,14 @@ def get_sport_settings(discord_id: str, sport: str = "Ride", **_: Any) -> str:
     ftp_w_kg = None
     if ftp:
         try:
-            profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+            # Reuse the profile cache that get_athlete_profile populates
+            # (same endpoint + params → same cache key) to avoid a redundant
+            # network round-trip on every sport-settings lookup.
+            pck = _cache_key(f"/athlete/{athlete_id}", {})
+            profile = _cache_get(discord_id, pck, _TTL_PROFILE)
+            if profile is None:
+                profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+                _cache_set(discord_id, pck, profile)
             weight_kg = profile.get("icu_weight")
             if weight_kg:
                 ftp_w_kg = round(ftp / weight_kg, 2)

@@ -16,12 +16,20 @@ Source: `github.com/kvarnberg-labs/hermes-coach`
 ```
 apps/hermes/            k8s manifests (Deployment, NetworkPolicy, Secrets, ConfigMaps)
 apps/hermes-sandbox/    k8s manifests for the sandbox Job namespace
-plugins/training/       training plugin source
-  intervals_icu.py      intervals.icu HTTP API integration (6 tools)
+plugins/training/       training plugin source (shared modules prefixed _)
+  _credentials.py       shared identity validation + credential loading (single source of truth)
+  _http.py              shared intervals.icu HTTP transport (GET/POST/DELETE) + response cache + 429/503 retry
+  _brain.py             coach-brain YAML loader + cache (consumed by coaching.py)
+  intervals_icu.py      intervals.icu API integration (10 tools: activities, streams, profile, wellness, sport-settings, power curve, fitness chart, planned events, identity verify)
+  create_planned_event.py  create/delete planned events + FIT workout generation (2 tools)
+  get_athlete_stats.py  aggregated activity statistics for a date range (1 tool)
   coaching.py           get_coaching_knowledge tool (reads coach-brain/)
+  strength_coach.py     strength training (assess, exercise lookup, workout, program — 4 tools)
   onboarding.py         coach_onboard tool (first-time setup)
   sandbox_client.py     develop_tool (toolset: self-improve, not discord)
   weather.py            weather integration
+  render_chart.py       chart rendering tools
+  intervals_docs.py     intervals.icu API field/docs lookup
 coach-brain/            YAML knowledge files consumed by get_coaching_knowledge()
 skills/                 Hermes skill files synced to /opt/data/skills/ at startup
   coaching/SKILL.md     coaching instructions loaded in the #coach channel

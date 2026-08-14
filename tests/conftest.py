@@ -14,9 +14,8 @@ def _clear_coaching_cache() -> None:
     for up to 60 seconds.
     """
     try:
-        from training import coaching
+        from training import _brain
     except ImportError:
         return
 
-    coaching._brain_cache = None
-    coaching._brain_cache_mtime = 0.0
+    _brain._clear_cache()
