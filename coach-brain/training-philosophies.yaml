@@ -111,21 +111,8 @@ periodization:
 
 # Intensity Zones
 intensity_zones:
-  coggan_power_7_zone:
-    description: Coggan 7-zone power model (most common in cycling)
-    zones:
-      Z1_active_recovery: "< 55% FTP"
-      Z2_endurance: "56–75% FTP"
-      Z3_tempo: "76–90% FTP"
-      Z4_threshold: "91–105% FTP"
-      Z5_vo2max: "106–120% FTP"
-      Z6_anaerobic: "121–150% FTP"
-      Z7_neuromuscular: "> 150% FTP"
-    coaching_note: >
-      Z2 is the primary base-building zone. Most athletes spend too little time
-      here and too much in Z3 (the grey zone). Z4 threshold work is where
-      most structured training sessions should target.
-
+  # Coggan 7-zone power model lives in power-zones.yaml (coggan_power_7_zone) —
+  # the rich version with per-zone purpose. Kept here: the 3-zone HR model.
   heart_rate_3_zone:
     description: Simple 3-zone HR model based on ventilatory thresholds
     zones:

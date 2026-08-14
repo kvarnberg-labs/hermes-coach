@@ -25,7 +25,10 @@ For **strength training** coaching (form cues, workouts, programs, exercise
 database) use the sibling skill `strength-coaching` — it provides its own
 tools (`assess_strength_level`, `exercise_lookup`, `generate_strength_workout`,
 `design_strength_program`) and has no intervals.icu dependency. When an athlete
-trains both endurance and strength, load both skills.
+trains both endurance and strength, load both skills. Do not call
+`get_coaching_knowledge` for strength topics from this skill — the strength
+topics in its schema exist for the `strength-coaching` skill, which owns
+strength knowledge alongside its dedicated tools.
 
 ## When to Use
 
