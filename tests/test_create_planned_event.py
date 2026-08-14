@@ -184,3 +184,85 @@ class TestPaceParse:
 
     def test_garbage_returns_zero(self):
         assert create_planned_event._parse_pace_to_ms("not a pace") == 0.0
+
+
+class TestFitValidation:
+    """The safety invariant now lives in the builder, not only the call site.
+
+    These are pure (no fit_tool) — they verify the guard refuses unsafe inputs
+    before any FIT encoding happens.
+    """
+
+    def test_rejects_watts_without_ftp(self):
+        with pytest.raises(ValueError, match="FTP"):
+            create_planned_event._validate_fit_targets(
+                [{"power_min": 250, "power_max": 270}], max_hr=0, ftp=0)
+
+    def test_rejects_hr_without_max_hr(self):
+        with pytest.raises(ValueError, match="max_hr"):
+            create_planned_event._validate_fit_targets(
+                [{"hr_min": 150, "hr_max": 160}], max_hr=0, ftp=250)
+
+    def test_allows_pct_power_without_ftp(self):
+        create_planned_event._validate_fit_targets(
+            [{"power_pct_min": 95, "power_pct_max": 100}], max_hr=0, ftp=0)
+
+    def test_allows_small_watts_without_ftp(self):
+        # values <= 20 are treated as % already, not dangerous
+        create_planned_event._validate_fit_targets(
+            [{"power_min": 10, "power_max": 15}], max_hr=0, ftp=0)
+
+    def test_allows_pace_without_ftp_or_max_hr(self):
+        create_planned_event._validate_fit_targets(
+            [{"pace_min": "5:00", "pace_max": "4:50"}], max_hr=0, ftp=0)
+
+
+class TestFitConversion:
+    """Real FIT encoding tests — run only where fit_tool is installed
+    (the runtime image). Skipped locally via importorskip.
+    """
+
+    def test_watts_converted_to_pct_ftp(self):
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "power_min": 200, "power_max": 220},
+            max_hr=0, ftp=250)
+        assert msg.custom_target_power_low == 80   # 200/250*100
+        assert msg.custom_target_power_high == 88  # 220/250*100
+
+    def test_pct_power_passthrough(self):
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "power_pct_min": 95, "power_pct_max": 100},
+            max_hr=0, ftp=0)
+        assert msg.custom_target_power_low == 95
+        assert msg.custom_target_power_high == 100
+
+    def test_hr_converted_to_pct_max_hr(self):
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "hr_min": 150, "hr_max": 160},
+            max_hr=200, ftp=0)
+        assert msg.custom_target_heart_rate_low == 75   # 150/200*100
+        assert msg.custom_target_heart_rate_high == 80  # 160/200*100
+
+    def test_pace_to_speed(self):
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "pace_min": "5:00", "pace_max": "4:50"},
+            max_hr=0, ftp=0)
+        assert msg.custom_target_speed_low == round(1000 / 300, 2)
+
+    def test_name_truncated_to_16(self):
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 60, "name": "A very long step name here"},
+            max_hr=0, ftp=0)
+        assert len(msg.workout_step_name) == 16
+
+    def test_build_fit_file_returns_bytes(self):
+        pytest.importorskip("fit_tool")
+        b = create_planned_event._build_fit_file(
+            "Ride", [{"duration_sec": 600, "power_pct_min": 95, "power_pct_max": 100}],
+            max_hr=190, ftp=250)
+        assert isinstance(b, (bytes, bytearray)) and len(b) > 0
