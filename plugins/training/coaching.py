@@ -18,9 +18,6 @@ from typing import Any
 
 from ._brain import _load_all
 
-# Re-export for backward compatibility (tests import these from coaching)
-from ._brain import _brain_dir  # noqa: F401
-
 logger = logging.getLogger(__name__)
 
 

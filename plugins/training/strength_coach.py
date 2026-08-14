@@ -338,7 +338,6 @@ def design_strength_program(
     """
     brain = _load_all()
     programming = brain.get("strength_programming", {})
-    principles = brain.get("strength_principles", {})
     standards = brain.get("strength_standards", {})
 
     # Select split
