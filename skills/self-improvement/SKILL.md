@@ -31,11 +31,11 @@ and tool availability. Think like a curious engineer, not a checklist robot.
 ## Mandatory first steps (every run)
 
 0. **Verify model pin** — check **Model:** and **Provider:** lines in your system prompt.
-   - Current target: `deepseek-v4-pro` / `opencode-go` (pinned 2026-07-28).
+   - Current target: `gpt-5.6-luna` / `opencode-go`.
    - If model is wrong, you cannot fix it from cron (`cronjob` tool not available).
      Log the finding and proceed with the audit anyway.
-   - This is no longer the recurring glm-5.2 pin-loss bug — deepseek-v4-pro is the
-     intended model. Only flag if model/provider are null or a completely wrong model.
+   - Do NOT re-pin cron jobs to a hardcoded model, and do NOT treat the global config model as "drift" — the operator sets it intentionally. A job with `model: null` inherits the global config (correct, not a bug).
+   - ⛔ Never pin a job to `deepseek-*` — the operator has retired deepseek.
 
 1. Read `loops/self-improve/CONTRACT.md` — your rules, boundaries, and active backlog
 2. Read the last 10 entries in `loops/worklog.md` — recent context.
