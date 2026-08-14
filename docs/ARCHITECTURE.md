@@ -158,7 +158,7 @@ Isolated environment for autonomous tool development:
 | `HERMES_HOME` | Data directory (`/opt/data`) |
 | `HERMES_INFERENCE_PROVIDER` | LLM provider (`opencode-go`) |
 | `HERMES_INFERENCE_MODEL` | Primary model (`gpt-5.6-luna`) |
-| `HERMES_INFERENCE_BASE_URL` | Model API endpoint |
+| `OPENCODE_GO_BASE_URL` | opencode-go API endpoint (read at runtime; wins over persisted `model.base_url` — hermes-agent runtime_provider #6039) |
 | `API_SERVER_ENABLED` | Enable health probe endpoint |
 | `API_SERVER_PORT` | Health probe port (`8642`) |
 | `DISCORD_REQUIRE_MENTION` | Not needed in DM-only mode (`false`) |
@@ -167,8 +167,8 @@ Isolated environment for autonomous tool development:
 ### Hermes Config (set by initContainer)
 
 Set via `hermes config set` commands in the deployment initContainer:
-- `model.provider`, `model.default`, `model.base_url`
-- `auxiliary.<task>.provider/model/base_url` (cheap model for side tasks)
+- `model.provider`, `model.default` (base_url is NOT set — opencode-go reads `OPENCODE_GO_BASE_URL` at runtime)
+- `auxiliary.<task>.provider/model` (base_url omitted — same env-var-wins reason)
 - `tools.discord.enabled` → `["training","weather","memory","skills","clarify"]`
 - `memory.memory_char_limit` → 8000
 - `memory.user_char_limit` → 12000
