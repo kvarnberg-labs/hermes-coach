@@ -48,15 +48,14 @@ spec:
               if [ -n "${HERMES_INFERENCE_MODEL:-}" ]; then
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set model.default "$HERMES_INFERENCE_MODEL"
               fi
-              if [ -n "${HERMES_INFERENCE_BASE_URL:-}" ]; then
-                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set model.base_url "$HERMES_INFERENCE_BASE_URL"
-              fi
+              # model.base_url is NOT set here: for opencode-go the
+              # OPENCODE_GO_BASE_URL env var wins at runtime (hermes-agent
+              # runtime_provider #6039), so persisting it is a no-op.
 
               # Auxiliary tasks use Flash model (cheap)
               for t in compression curator title_generation triage_specifier \
                        profile_describer approval mcp skills_hub web_extract vision; do
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go
-                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.base_url "$HERMES_INFERENCE_BASE_URL"
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model mimo-v2.5-pro
               done
 
