@@ -4,8 +4,8 @@ Uses the intervals.icu REST API to POST new events to the athlete's calendar.
 The event appears on intervals.icu and syncs to Garmin automatically.
 
 Structured workout steps (for Garmin step-by-step guidance) are uploaded as
-FIT files via file_contents_base64.  FIT generation uses fit-tool if available,
-or falls back to a template-based builder using only the standard library.
+FIT files via file_contents_base64.  FIT generation requires the fit-tool
+package (installed in the runtime image).
 
 Authentication uses the same credential files as other intervals.icu tools:
   $HERMES_HOME/users/<discord_id>/intervals_key
@@ -45,6 +45,106 @@ def _parse_pace_to_ms(pace_str) -> float:
 # ── FIT generation ──────────────────────────────────────────────────────────
 
 
+def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
+    """Refuse inputs FIT would silently misread as dangerous targets.
+
+    Garmin/Intervals interpret FIT power targets as %FTP and HR targets as
+    %maxHR. Writing raw watts with no FTP, or raw BPM with no max_hr, would be
+    read as a percentage (e.g. 200W -> 200% FTP). The call site (create_event)
+    guards the user-facing path; this puts the invariant next to the
+    conversion so the builder is safe to call directly.
+    """
+    for s in steps:
+        is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
+        has_watts = s.get("power_min") is not None or s.get("power_max") is not None
+        if has_watts and not is_pct and ftp <= 0:
+            lo = s.get("power_min")
+            if isinstance(lo, (int, float)) and float(lo) > 20:
+                raise ValueError(
+                    "watt-based power target cannot be safely converted to %FTP "
+                    "without the athlete's FTP. Specify power_pct_min/power_pct_max."
+                )
+        has_hr = s.get("hr_min") is not None or s.get("hr_max") is not None
+        if has_hr and max_hr <= 0:
+            raise ValueError(
+                "HR target cannot be safely converted to %maxHR without the "
+                "athlete's max_hr."
+            )
+
+
+def _step_message(s: dict, max_hr: int, ftp: int):
+    """Build one WorkoutStepMessage from a step dict.
+
+    Owns target auto-detection (precedence HR > POWER > PACE), the
+    watts->%FTP and BPM->%maxHR conversions, and pace parsing. FIT encodes
+    one target per step, so only the first detected target is written.
+    """
+    from fit_tool.profile.messages.workout_step_message import WorkoutStepMessage
+    from fit_tool.profile.profile_type import (
+        Intensity, WorkoutStepDuration, WorkoutStepTarget,
+    )
+
+    intensity_map = {"WARMUP": Intensity.WARMUP, "ACTIVE": Intensity.ACTIVE,
+                     "REST": Intensity.REST, "COOLDOWN": Intensity.COOLDOWN}
+
+    dur = float(s.get("duration_sec", 0))
+    stype = str(s.get("type", "ACTIVE")).upper()
+    target = str(s.get("target", "")).upper()
+    name = str(s.get("name", ""))[:16]
+
+    hr_low = s.get("hr_min")
+    hr_high = s.get("hr_max")
+    pw_low = s.get("power_pct_min") or s.get("power_min")
+    pw_high = s.get("power_pct_max") or s.get("power_max")
+    pc_low = s.get("pace_min")
+    pc_high = s.get("pace_max")
+
+    if not target:
+        if hr_low is not None or hr_high is not None:
+            target = "HR"
+        elif pw_low is not None or pw_high is not None:
+            target = "POWER"
+        elif pc_low is not None or pc_high is not None:
+            target = "PACE"
+
+    msg = WorkoutStepMessage()
+    msg.workout_step_name = name
+    msg.intensity = intensity_map.get(stype, Intensity.ACTIVE)
+    msg.duration_type = WorkoutStepDuration.TIME
+    msg.duration_time = dur
+
+    if target == "HR":
+        lo = int(hr_low or s.get("min", 0))
+        hi = int(hr_high or s.get("max", 0))
+        if max_hr > 0:
+            lo = max(1, min(100, round(lo / max_hr * 100)))
+            hi = max(1, min(100, round(hi / max_hr * 100)))
+        msg.target_type = WorkoutStepTarget.HEART_RATE
+        msg.custom_target_heart_rate_low = lo
+        msg.custom_target_heart_rate_high = hi
+    elif target == "POWER":
+        lo = int(pw_low or s.get("min", 0))
+        hi = int(pw_high or s.get("max", 0))
+        # FIT sends power targets as absolute values — intervals.icu/Garmin
+        # interpret them as %FTP regardless. If values look like watts (>20
+        # and power_pct_* not explicitly set), convert to %FTP.
+        is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
+        if not is_pct and isinstance(lo, (int, float)) and float(lo) > 20 and ftp > 0:
+            lo = round(float(lo) / ftp * 100)
+            hi = round(float(hi) / ftp * 100)
+        msg.target_type = WorkoutStepTarget.POWER
+        msg.custom_target_power_low = int(lo)
+        msg.custom_target_power_high = int(hi)
+    elif target == "PACE":
+        lo = _parse_pace_to_ms(pc_low or s.get("min", 0))
+        hi = _parse_pace_to_ms(pc_high or s.get("max", 0))
+        msg.target_type = WorkoutStepTarget.SPEED
+        msg.custom_target_speed_low = float(lo)
+        msg.custom_target_speed_high = float(hi)
+
+    return msg
+
+
 def _build_fit_file(
     sport: str,
     steps: list[dict],
@@ -52,19 +152,16 @@ def _build_fit_file(
     ftp: int,
 ) -> bytes:
     """Build a FIT workout file from step definitions using fit-tool."""
+    _validate_fit_targets(steps, max_hr, ftp)
+
     from fit_tool.fit_file_builder import FitFileBuilder
     from fit_tool.profile.messages.workout_message import WorkoutMessage
-    from fit_tool.profile.messages.workout_step_message import WorkoutStepMessage
     from fit_tool.profile.messages.file_id_message import FileIdMessage
-    from fit_tool.profile.profile_type import (
-        Sport, Intensity, WorkoutStepDuration, WorkoutStepTarget, FileType,
-    )
+    from fit_tool.profile.profile_type import Sport, FileType
 
     sport_map = {"Run": Sport.RUNNING, "Ride": Sport.CYCLING,
                  "VirtualRide": Sport.CYCLING, "GravelRide": Sport.CYCLING,
                  "MountainBikeRide": Sport.CYCLING}
-    intensity_map = {"WARMUP": Intensity.WARMUP, "ACTIVE": Intensity.ACTIVE,
-                     "REST": Intensity.REST, "COOLDOWN": Intensity.COOLDOWN}
 
     builder = FitFileBuilder(auto_define=True)
 
@@ -78,62 +175,7 @@ def _build_fit_file(
     builder.add(w)
 
     for s in steps:
-        dur = float(s.get("duration_sec", 0))
-        stype = str(s.get("type", "ACTIVE")).upper()
-        target = str(s.get("target", "")).upper()
-        name = str(s.get("name", ""))[:16]
-
-        hr_low = s.get("hr_min")
-        hr_high = s.get("hr_max")
-        pw_low = s.get("power_pct_min") or s.get("power_min")
-        pw_high = s.get("power_pct_max") or s.get("power_max")
-        pc_low = s.get("pace_min")
-        pc_high = s.get("pace_max")
-
-        if not target:
-            if hr_low is not None or hr_high is not None:
-                target = "HR"
-            elif pw_low is not None or pw_high is not None:
-                target = "POWER"
-            elif pc_low is not None or pc_high is not None:
-                target = "PACE"
-
-        msg = WorkoutStepMessage()
-        msg.workout_step_name = name
-        msg.intensity = intensity_map.get(stype, Intensity.ACTIVE)
-        msg.duration_type = WorkoutStepDuration.TIME
-        msg.duration_time = dur
-
-        if target == "HR":
-            lo = int(hr_low or s.get("min", 0))
-            hi = int(hr_high or s.get("max", 0))
-            if max_hr > 0:
-                lo = max(1, min(100, round(lo / max_hr * 100)))
-                hi = max(1, min(100, round(hi / max_hr * 100)))
-            msg.target_type = WorkoutStepTarget.HEART_RATE
-            msg.custom_target_heart_rate_low = lo
-            msg.custom_target_heart_rate_high = hi
-        elif target == "POWER":
-            lo = int(pw_low or s.get("min", 0))
-            hi = int(pw_high or s.get("max", 0))
-            # FIT sends power targets as absolute values — intervals.icu/Garmin
-            # interpret them as %FTP regardless. If values look like watts (>20
-            # and power_pct_* not explicitly set), convert to %FTP.
-            is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
-            if not is_pct and isinstance(lo, (int, float)) and float(lo) > 20 and ftp > 0:
-                lo = round(float(lo) / ftp * 100)
-                hi = round(float(hi) / ftp * 100)
-            msg.target_type = WorkoutStepTarget.POWER
-            msg.custom_target_power_low = int(lo)
-            msg.custom_target_power_high = int(hi)
-        elif target == "PACE":
-            lo = _parse_pace_to_ms(pc_low or s.get("min", 0))
-            hi = _parse_pace_to_ms(pc_high or s.get("max", 0))
-            msg.target_type = WorkoutStepTarget.SPEED
-            msg.custom_target_speed_low = float(lo)
-            msg.custom_target_speed_high = float(hi)
-
-        builder.add(msg)
+        builder.add(_step_message(s, max_hr, ftp))
 
     return builder.build().to_bytes()
 
@@ -257,7 +299,10 @@ def create_event(discord_id: str, **kw: Any) -> str:
                     ),
                 })
 
-        fit_bytes = _build_fit_file(event_type, step_list, max_hr, ftp)
+        try:
+            fit_bytes = _build_fit_file(event_type, step_list, max_hr, ftp)
+        except ValueError as exc:
+            return json.dumps({"error": str(exc)})
         payload["file_contents_base64"] = base64.b64encode(fit_bytes).decode()
         payload["filename"] = "workout.fit"
 

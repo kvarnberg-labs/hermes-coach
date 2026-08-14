@@ -18,10 +18,21 @@ from typing import Any
 
 from ._brain import _load_all
 
-# Re-export for backward compatibility (tests import these from coaching)
-from ._brain import _brain_dir  # noqa: F401
-
 logger = logging.getLogger(__name__)
+
+
+# Omnibus sections are returned ONLY on an explicit key-match, never via
+# content-fallback. Two reasons a section is listed here (see ADR 0001):
+#   1. Large databases (nutrition, exercise_database, strength_programming)
+#      that would dominate the context window on every fuzzy match.
+#   2. Strength knowledge (strength_standards/principles/training) the
+#      endurance skill must NOT pull via fuzzy match — the strength-coaching
+#      skill owns strength topics. Explicit key-match still serves the
+#      strength skill (e.g. get_coaching_knowledge("strength principles")).
+_OMNIBUS_SECTIONS = {
+    "nutrition", "strength_programming", "exercise_database",
+    "strength_standards", "strength_principles", "strength_training",
+}
 
 
 def get_coaching_knowledge(topic: str, **_: Any) -> str:
@@ -43,11 +54,6 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
 
     topic_lower = topic.lower()
     keywords = set(topic_lower.replace("-", " ").split())
-
-    # Sections that are always returned in full regardless of topic match —
-    # they are too large to usefully inject via keyword search and would
-    # dominate the context window. The agent should request them explicitly.
-    _OMNIBUS_SECTIONS = {"nutrition", "strength_programming", "exercise_database"}
 
     matched: dict[str, Any] = {}
     for key, value in brain.items():

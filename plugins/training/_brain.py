@@ -85,7 +85,19 @@ def _load_all() -> dict[str, Any]:
         try:
             file_content = yaml.safe_load(f.read_text(encoding="utf-8"))
             if isinstance(file_content, dict):
-                brain.update(file_content)
+                # Detect cross-file top-level key collisions: a later file
+                # silently overwriting an earlier key is the class of bug that
+                # broke norwegian_singles/threshold_focused once before. Warn
+                # (keep last, preserving historical dict.update semantics) so a
+                # collision is visible instead of silently losing knowledge.
+                for k, v in file_content.items():
+                    if k in brain:
+                        logger.warning(
+                            "coach-brain: top-level key %r in %s overwrites an "
+                            "earlier definition (keeping the last).",
+                            k, f.name,
+                        )
+                    brain[k] = v
         except Exception as exc:
             logger.warning("Failed to load coach-brain file %s: %s", f.name, exc)
 

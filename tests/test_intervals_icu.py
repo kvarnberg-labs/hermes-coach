@@ -97,6 +97,38 @@ class TestDateHelpers:
         expected = (date.today() - timedelta(days=7)).isoformat()
         assert intervals_icu._n_days_ago_iso(7) == expected
 
+    def test_today_iso_with_tz(self):
+        from datetime import datetime
+        try:
+            from zoneinfo import ZoneInfo
+        except ImportError:
+            pytest.skip("zoneinfo unavailable")
+        assert intervals_icu._today_iso("UTC") == datetime.now(ZoneInfo("UTC")).date().isoformat()
+
+    def test_n_days_ago_iso_with_tz(self):
+        from datetime import datetime, timedelta
+        try:
+            from zoneinfo import ZoneInfo
+        except ImportError:
+            pytest.skip("zoneinfo unavailable")
+        expected = (datetime.now(ZoneInfo("UTC")).date() - timedelta(days=7)).isoformat()
+        assert intervals_icu._n_days_ago_iso(7, "UTC") == expected
+
+    def test_invalid_tz_falls_back_to_server_local(self):
+        from datetime import date, timedelta
+        # Unknown zone must NOT raise; falls back to server-local date.
+        assert intervals_icu._today_iso("not/a/zone") == date.today().isoformat()
+        assert intervals_icu._n_days_ago_iso(3, "not/a/zone") == (
+            date.today() - timedelta(days=3)
+        ).isoformat()
+
+    def test_none_tz_uses_server_local(self):
+        from datetime import date, timedelta
+        assert intervals_icu._today_iso(None) == date.today().isoformat()
+        assert intervals_icu._n_days_ago_iso(7, None) == (
+            date.today() - timedelta(days=7)
+        ).isoformat()
+
 
 class TestStoreAndLoadCredentials:
     def test_store_credentials(self, tmp_path, monkeypatch):
@@ -651,6 +683,28 @@ class TestGetSportSettingsParser:
         assert isinstance(result["power_zones"], list)
         assert result["pace_zones"] is None
         assert result["sport"] == "Ride"
+
+    def test_ftp_w_kg_from_projected_profile(self):
+        """W/kg uses the projected profile's weight_kg (not raw icu_weight)."""
+        sport_raw = {"ftp": 270, "power_zones": [], "hr_zones": [], "pace_zones": None}
+        profile_raw = {"icu_weight": 72.0, "name": "J"}
+        with patch.object(intervals_icu, "_request", side_effect=[sport_raw, profile_raw]):
+            result = json.loads(intervals_icu.get_sport_settings("u444", sport="Ride"))
+        assert result["ftp_w_kg"] == round(270 / 72.0, 2)  # 3.75
+
+    def test_sport_settings_reuses_profile_cache(self):
+        """get_athlete_profile caches the projected profile; sport-settings must
+        reuse it (one API call for sport-settings only) — no poisoning, no
+        redundant profile fetch."""
+        sport_raw = {"ftp": 270, "power_zones": [], "hr_zones": [], "pace_zones": None}
+        profile_raw = {"icu_weight": 72.0, "name": "J", "timezone": "UTC"}
+        with patch.object(intervals_icu, "_request", side_effect=[profile_raw]):
+            json.loads(intervals_icu.get_athlete_profile("u444"))
+        # sport-settings: profile already cached -> only sport-settings hits the API
+        with patch.object(intervals_icu, "_request", return_value=sport_raw) as mock_req:
+            result = json.loads(intervals_icu.get_sport_settings("u444", sport="Ride"))
+        assert result["ftp_w_kg"] == round(270 / 72.0, 2)  # 3.75
+        mock_req.assert_called_once()
 
 
 class TestGetPlannedEventsParser:

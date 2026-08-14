@@ -15,9 +15,12 @@ Security boundaries (enforced by k8s, not this code):
   - NetworkPolicy: default-deny-all in hermes-sandbox (no internet access)
   - Resource limits: 250m CPU, 256Mi RAM per Job
   - Timeout: activeDeadlineSeconds=60 (hard kill)
-  - Read-only root filesystem (except /tmp)
+  - No secrets in the Job env, no service-account token, all caps dropped
 
-The generated tools directory persists on the PVC across restarts.
+The sandbox runs each tool as a self-contained package under /tmp; it does
+NOT mount the baked-in training plugins, so generated tools cannot import
+training.* helpers and must be self-contained. The generated plugin is
+written to $HERMES_HOME/plugins/<tool_name>/ and persists across restarts.
 """
 
 from __future__ import annotations
@@ -53,13 +56,6 @@ def _plugins_dir() -> Path:
     return d
 
 
-def _generated_dir() -> Path:
-    # ponytail: kept for sync-coach-assets.sh compatibility
-    d = _plugins_dir() / "generated"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
 def _plugin_dir(tool_name: str) -> Path:
     """Return the plugin directory for a generated tool."""
     return _plugins_dir() / tool_name
@@ -77,14 +73,18 @@ from . import tool as _tool_module
 
 
 def register(ctx) -> None:
-    if hasattr(_tool_module, "register_tools"):
-        _tool_module.register_tools(ctx)
+    if not hasattr(_tool_module, "register_tools"):
+        raise RuntimeError(
+            f"Generated plugin {__name__} has no register_tools(ctx); "
+            "the tool will not be exposed. Define register_tools(ctx) in tool.py."
+        )
+    _tool_module.register_tools(ctx)
 """
 
 
 def _job_name(tool_name: str) -> str:
     slug = tool_name.lower().replace("_", "-")[:40]
-    suffix = hashlib.sha256(f"{tool_name}{time.time()}".encode()).hexdigest()[:6]
+    suffix = hashlib.sha256(f"{tool_name}{time.time_ns()}".encode()).hexdigest()[:6]
     return f"sandbox-{slug}-{suffix}"
 
 
@@ -113,12 +113,11 @@ def _k8s_client():
 def _build_job_manifest(job_name: str, code_b64: str, test_b64: str) -> dict:
     """Build the k8s Job spec that runs pytest on the provided code.
 
-    The sandbox runs the generated tool as a proper Python package under
-    ``/tmp/generated_tool`` and also mounts the baked-in training plugin under
-    ``/opt/hermes/plugins`` onto ``PYTHONPATH``. That keeps tests close to the
-    runtime shape Hermes uses and allows generated tools to reuse shared helpers
-    like ``training.intervals_icu._request`` instead of forcing everything into
-    one self-contained file.
+    The sandbox runs the generated tool as a self-contained Python package
+    under ``/tmp/generated_tool`` on ``PYTHONPATH=/tmp``. The baked-in
+    training plugins are NOT mounted, so generated tools must be self-contained
+    (no ``training.*`` imports). This keeps the sandbox hermetic and matches
+    what the sandbox image can actually guarantee.
     """
     return {
         "apiVersion": "batch/v1",
@@ -158,7 +157,7 @@ def _build_job_manifest(job_name: str, code_b64: str, test_b64: str) -> dict:
                                 f"printf '%s\n' 'from .tool import *' > /tmp/generated_tool/__init__.py && "
                                 f"echo '{code_b64}' | base64 -d > /tmp/generated_tool/tool.py && "
                                 f"echo '{test_b64}' | base64 -d > /tmp/test_tool.py && "
-                                "PYTHONPATH=/tmp:/opt/hermes/plugins "
+                                "PYTHONPATH=/tmp "
                                 "python -m pytest /tmp/test_tool.py -v --tb=short "
                                 "--import-mode=importlib 2>&1"
                             ],
@@ -234,15 +233,28 @@ def _fetch_logs(core_api, pod_name: str) -> str:
         return f"(could not fetch logs: {exc})"
 
 
-def _register_generated_tool(tool_name: str, description: str, code: str) -> str:
-    """Write a proper Hermes plugin directory and hot-reload it."""
+def _register_generated_tool(
+    tool_name: str, description: str, code: str,
+) -> tuple[str, str]:
+    """Write a Hermes plugin directory and hot-reload it.
+
+    Returns (status, detail):
+      "ok"             — written and hot-reloaded into the live session
+      "pending_restart" — written to disk, but hot-reload failed
+                         (available after a pod restart)
+      "failed"          — write failed; existing plugin restored from backup
+    """
     plugin_dir = _plugin_dir(tool_name)
-    backup_dir = _plugins_dir() / f"{tool_name}.bak"
+    # Keep backups OUTSIDE plugins/ so plugin discovery never scans a .bak
+    # directory as a duplicate plugin.
+    backups_root = _plugins_dir().parent / ".plugin-backups"
+    backup_dir = backups_root / tool_name
 
     # Back up existing plugin for rollback
     if plugin_dir.exists():
         import shutil
 
+        backups_root.mkdir(parents=True, exist_ok=True)
         if backup_dir.exists():
             shutil.rmtree(backup_dir)
         shutil.copytree(plugin_dir, backup_dir)
@@ -256,15 +268,17 @@ def _register_generated_tool(tool_name: str, description: str, code: str) -> str
         (plugin_dir / "tool.py").write_text(code, encoding="utf-8")
         (plugin_dir / "__init__.py").write_text(_INIT_TEMPLATE, encoding="utf-8")
 
-        # Hot-reload via Hermes plugin discovery
+        # Hot-reload via Hermes plugin discovery. Failure is non-fatal: the
+        # tool is on disk and loads on the next restart, but we report it
+        # honestly rather than claiming it is already live.
         try:
             from hermes_cli.plugins import discover_plugins
 
             discover_plugins(force=True)
+            return "ok", ""
         except Exception as exc:
             logger.warning("discover_plugins failed (may need restart): %s", exc)
-
-        return "ok"
+            return "pending_restart", str(exc)
     except Exception as exc:
         # Roll back
         import shutil
@@ -272,7 +286,7 @@ def _register_generated_tool(tool_name: str, description: str, code: str) -> str
         shutil.rmtree(plugin_dir, ignore_errors=True)
         if backup_dir.exists():
             shutil.copytree(backup_dir, plugin_dir)
-        return f"Failed to write plugin — rolled back: {exc}"
+        return "failed", f"Failed to write plugin — rolled back: {exc}"
 
 
 def develop_tool(
@@ -290,11 +304,14 @@ def develop_tool(
     Args:
         tool_name:   Snake_case name for the new tool (e.g. 'calculate_monotony').
         description: One-sentence description of what the tool does.
-        code:        Complete Python source of the tool module.
-                     Must define a function named tool_name() and call
-                     ctx.register_tool() or use the registry pattern.
-        test_code:   Complete pytest test file that imports from /tmp/tool.py.
-                     Must contain at least one test function.
+        code:        Complete Python source of the tool module. Must define
+                     register_tools(ctx) that calls ctx.register_tool(...) to
+                     expose the tool (a missing register_tools fails loudly at
+                     load time). The sandbox does NOT mount the training
+                     plugins, so the tool must be self-contained.
+        test_code:   Complete pytest test file. Import the tool with
+                     ``from generated_tool.tool import <fn>``. Must contain at
+                     least one test_* function.
 
     Returns JSON with keys: success (bool), output (test output), message.
     """
@@ -359,26 +376,35 @@ def develop_tool(
         )
 
     # Tests passed — register the tool
-    result = _register_generated_tool(tool_name, description, code)
-    if result != "ok":
+    status, detail = _register_generated_tool(tool_name, description, code)
+    if status == "failed":
         return json.dumps(
             {
                 "success": False,
                 "output": logs,
-                "message": f"Tests passed but tool registration failed: {result}",
+                "message": f"Tests passed but tool registration failed: {detail}",
             }
         )
 
-    logger.info("Tool %s deployed to generated plugins", tool_name)
+    loaded = status == "ok"
+    if loaded:
+        message = (
+            f"Tool '{tool_name}' deployed successfully. "
+            "It is now available in this session and will persist across restarts."
+        )
+    else:
+        message = (
+            f"Tool '{tool_name}' written to disk but not hot-reloaded "
+            f"(available after a restart: {detail})."
+        )
+    logger.info("Tool %s deployed (loaded=%s)", tool_name, loaded)
     return json.dumps(
         {
             "success": True,
             "output": logs,
-            "message": (
-                f"Tool '{tool_name}' deployed successfully. "
-                "It is now available in this session and will persist across restarts."
-            ),
+            "message": message,
             "tool_path": str(_plugin_dir(tool_name)),
+            "loaded": loaded,
         }
     )
 
@@ -410,21 +436,21 @@ def register_tools(ctx) -> None:
                     "code": {
                         "type": "string",
                         "description": (
-                            "Complete Python source of the tool. "
-                            "Sandbox tests import it as generated_tool.tool on PYTHONPATH. "
-                            "Shared helpers from /opt/hermes/plugins (for example "
-                            "training.intervals_icu) are also importable."
+                            "Complete Python source of the tool. Must define "
+                            "register_tools(ctx) that calls ctx.register_tool(...) "
+                            "to expose the tool. The sandbox runs the tool as a "
+                            "self-contained package (generated_tool.tool); the "
+                            "training plugins are NOT mounted, so do not import "
+                            "training.* — the tool must be self-contained."
                         ),
                     },
                     "test_code": {
                         "type": "string",
                         "description": (
-                            "Complete pytest test file. Import the tool with: "
-                            "import sys; sys.path.insert(0, '/tmp'); "
-                            "from generated_tool.tool import <fn>. "
-                            "Shared helpers can be imported from training.* because "
-                            "/opt/hermes/plugins is on PYTHONPATH. Must include at least "
-                            "one test_* function."
+                            "Complete pytest test file. Import the tool with "
+                            "'from generated_tool.tool import <fn>' and include "
+                            "at least one test_* function. The sandbox runs pytest "
+                            "with PYTHONPATH=/tmp; only the generated tool is importable."
                         ),
                     },
                 },

@@ -12,5 +12,4 @@ resources:
   - hermes-model-sealed-secret.yaml
   - hermes-api-server-sealed-secret.yaml
   - hermes-github-token-sealed-secret.yaml
-  - coaching-prompt-configmap.yaml
   - configmap.yaml

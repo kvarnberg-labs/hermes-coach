@@ -20,7 +20,7 @@ import re
 from typing import Any
 
 from ._credentials import _load_credentials, _require_user_id
-from ._http import _request
+from ._http import _TTL_ACTIVITIES, _cache_get, _cache_key, _cache_set, _request
 
 logger = logging.getLogger(__name__)
 
@@ -90,12 +90,20 @@ def get_athlete_stats(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
+    params = {"oldest": start_date, "newest": end_date}
+    # Distinct cache key from get_recent_activities (different projection):
+    # both hit /activities but return different shapes, so they must not share.
+    ck = _cache_key(f"/athlete/{athlete_id}/activities:stats", params)
+    cached = _cache_get(discord_id, ck, _TTL_ACTIVITIES)
+    if cached is not None:
+        return json.dumps(cached)
+
     try:
         activities = _request(
             athlete_id,
             api_key,
             f"/athlete/{athlete_id}/activities",
-            params={"oldest": start_date, "newest": end_date},
+            params=params,
         )
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
@@ -158,6 +166,7 @@ def get_athlete_stats(
         "total_training_load": total_training_load,
         "sports": sports,
     }
+    _cache_set(discord_id, ck, result)
     return json.dumps(result)
 
 

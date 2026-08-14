@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
 
@@ -10,7 +11,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "plugins"))
 
-from training.coaching import _brain_dir, _load_all, get_coaching_knowledge
+from training._brain import _brain_dir, _load_all
+from training.coaching import get_coaching_knowledge
 
 
 @pytest.fixture
@@ -19,7 +21,7 @@ def coach_brain_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     d = tmp_path / "coach-brain"
     d.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    monkeypatch.setattr("training.coaching._brain_dir", lambda: d)
+    monkeypatch.setattr("training._brain._brain_dir", lambda: d)
     return d
 
 
@@ -64,9 +66,19 @@ class TestLoadAll:
 
     def test_returns_empty_when_directory_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        monkeypatch.setattr("training.coaching._brain_dir", lambda: tmp_path / "nonexistent")
+        monkeypatch.setattr("training._brain._brain_dir", lambda: tmp_path / "nonexistent")
         result = _load_all()
         assert result == {}
+
+    def test_collision_warns_and_keeps_last(self, coach_brain_dir: Path, caplog):
+        """Two files defining the same top-level key: last (sorted) wins, and a
+        warning is logged so the silent-overwrite class of bug is visible."""
+        (coach_brain_dir / "a.yaml").write_text("shared:\n  from: a\n")
+        (coach_brain_dir / "b.yaml").write_text("shared:\n  from: b\n")
+        with caplog.at_level(logging.WARNING, logger="training._brain"):
+            result = _load_all()
+        assert result["shared"]["from"] == "b"  # last file (sorted) wins
+        assert any("overwrites" in r.message for r in caplog.records)
 
 
 class TestGetCoachingKnowledge:
@@ -102,7 +114,7 @@ class TestGetCoachingKnowledge:
 
     def test_returns_error_when_brain_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        monkeypatch.setattr("training.coaching._brain_dir", lambda: tmp_path / "missing")
+        monkeypatch.setattr("training._brain._brain_dir", lambda: tmp_path / "missing")
         result = json.loads(get_coaching_knowledge("anything"))
         assert "error" in result
 

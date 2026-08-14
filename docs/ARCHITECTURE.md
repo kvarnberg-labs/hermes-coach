@@ -12,7 +12,7 @@ Hermes Coach is a multi-user endurance coaching agent built on [hermes-agent](ht
 ┌─────────────────────────────────────────────────────────────────┐
 │ Discord Server                                                   │
 │                                                                  │
-│  #coach channel  ←→  Hermes Gateway (Discord adapter)           │
+│  Discord DMs     ←→  Hermes Gateway (Discord adapter)           │
 │                                                                  │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
@@ -67,15 +67,20 @@ The base image `ghcr.io/nousresearch/hermes-agent:main` provides:
 
 ### 2. Training Plugin (`plugins/training/`)
 
-Five modules, each registering tools with the Hermes plugin context:
+Ten modules, each registering tools with the Hermes plugin context:
 
 | Module | Tools | Purpose |
 |--------|-------|---------|
-| `intervals_icu.py` | 6 tools | Fetch athlete data from intervals.icu API |
+| `intervals_icu.py` | 10 tools | Fetch athlete data from intervals.icu API |
 | `weather.py` | 1 tool | Open-Meteo forecast (free, no key) |
 | `coaching.py` | 1 tool | Retrieve coach-brain knowledge by topic |
 | `onboarding.py` | 1 tool | `/start` flow for connecting intervals.icu |
-| `sandbox_client.py` | 1 tool | Autonomous tool development via k8s Jobs |
+| `sandbox_client.py` | 1 tool | Autonomous tool development via k8s Jobs (toolset: `self-improve`) |
+| `render_chart.py` | 3 tools | Render power-curve, wellness, zone-distribution charts |
+| `create_planned_event.py` | 2 tools | Create/delete planned events + FIT workout generation |
+| `get_athlete_stats.py` | 1 tool | Aggregated activity statistics for a date range |
+| `strength_coach.py` | 4 tools | Strength assessment, exercise lookup, workout/program design |
+| `intervals_docs.py` | 2 tools | intervals.icu API endpoint lookup + docs search |
 
 **Tool registration pattern:**
 ```python
@@ -90,7 +95,7 @@ def register_tools(ctx) -> None:
 
 ### 3. Coach Brain (`coach-brain/`)
 
-Structured coaching knowledge in YAML files. Loaded at runtime by `coaching.py`:
+Structured coaching knowledge in 19 YAML files (examples below). Loaded at runtime by `coaching.py`:
 
 | File | Content |
 |------|---------|
@@ -104,7 +109,7 @@ Structured coaching knowledge in YAML files. Loaded at runtime by `coaching.py`:
 
 ### 4. Coaching Skill (`skills/coaching/SKILL.md`)
 
-Hermes skill file that instructs the agent how to use coaching tools. Loaded automatically when the user is in the `#coach` Discord channel (configured via `DISCORD_FREE_RESPONSE_CHANNELS`).
+Hermes skill file that instructs the agent how to use coaching tools. Synced to `$HERMES_HOME/skills/` at startup, listed in the agent's `<available_skills>` index, and loaded on demand via `skill_view` (or the `/skill` command) when the agent needs coaching knowledge. The bot is DM-only — there is no channel-specific skill binding (`DISCORD_FREE_RESPONSE_CHANNELS` controls mention behavior, not skill loading, and is unset here).
 
 ### 5. Sandbox (`sandbox/`)
 
@@ -118,9 +123,9 @@ Isolated environment for autonomous tool development:
 
 ### Coaching Request Flow
 
-1. User sends message in `#coach` on Discord
+1. User sends a Discord DM to the bot
 2. Discord gateway routes to Hermes agent
-3. Agent loads coaching skill (channel-specific)
+3. Agent loads the coaching skill on demand (via `skill_view`)
 4. Agent calls `get_wellness(discord_id)` → intervals.icu API (cached 15min)
 5. Agent calls `get_coaching_knowledge("threshold intervals")` → coach-brain YAML
 6. Agent synthesizes advice from athlete data + coach-brain principles
@@ -152,8 +157,8 @@ Isolated environment for autonomous tool development:
 |----------|---------|
 | `HERMES_HOME` | Data directory (`/opt/data`) |
 | `HERMES_INFERENCE_PROVIDER` | LLM provider (`opencode-go`) |
-| `HERMES_INFERENCE_MODEL` | Primary model (`deepseek-v4-pro`) |
-| `HERMES_INFERENCE_BASE_URL` | Model API endpoint |
+| `HERMES_INFERENCE_MODEL` | Primary model (`gpt-5.6-luna`) |
+| `OPENCODE_GO_BASE_URL` | opencode-go API endpoint (read at runtime; wins over persisted `model.base_url` — hermes-agent runtime_provider #6039) |
 | `API_SERVER_ENABLED` | Enable health probe endpoint |
 | `API_SERVER_PORT` | Health probe port (`8642`) |
 | `DISCORD_REQUIRE_MENTION` | Not needed in DM-only mode (`false`) |
@@ -162,8 +167,8 @@ Isolated environment for autonomous tool development:
 ### Hermes Config (set by initContainer)
 
 Set via `hermes config set` commands in the deployment initContainer:
-- `model.provider`, `model.default`, `model.base_url`
-- `auxiliary.<task>.provider/model/base_url` (cheap model for side tasks)
+- `model.provider`, `model.default` (base_url is NOT set — opencode-go reads `OPENCODE_GO_BASE_URL` at runtime)
+- `auxiliary.<task>.provider/model` (base_url omitted — same env-var-wins reason)
 - `tools.discord.enabled` → `["training","weather","memory","skills","clarify"]`
 - `memory.memory_char_limit` → 8000
 - `memory.user_char_limit` → 12000

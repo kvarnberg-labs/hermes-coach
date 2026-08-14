@@ -37,6 +37,39 @@ def test_every_yaml_parses_to_dict(path: Path):
     assert data, f"{path.name} is empty"
 
 
+def test_no_cross_file_top_level_key_collisions():
+    """A top-level key must not be defined in two files. _brain.py warns and
+    keeps the last on collision, silently losing the earlier definition — guard
+    the whole corpus in CI (ADR 0001, decision D2)."""
+    seen: dict[str, str] = {}
+    collisions = []
+    for path in YAML_FILES:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            continue
+        for key in data:
+            if key in seen:
+                collisions.append(f"{key!r} in both {seen[key]} and {path.name}")
+            else:
+                seen[key] = path.name
+    assert not collisions, "cross-file key collisions:\n  " + "\n  ".join(collisions)
+
+
+def test_every_omnibus_section_exists_in_corpus():
+    """Every key in coaching._OMNIBUS_SECTIONS must exist in the merged corpus.
+    A stale/renamed omnibus entry silently no-ops — guard it in CI (ADR 0001,
+    decision D3)."""
+    from training.coaching import _OMNIBUS_SECTIONS
+
+    all_keys: set[str] = set()
+    for path in YAML_FILES:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            all_keys.update(data.keys())
+    missing = _OMNIBUS_SECTIONS - all_keys
+    assert not missing, f"omnibus entries not found in corpus: {sorted(missing)}"
+
+
 class TestTrainingPhilosophies:
     """Regression guard for the threshold_focused/norwegian_singles overwrite bug."""
 
