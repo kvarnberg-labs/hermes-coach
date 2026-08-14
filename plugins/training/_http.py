@@ -27,9 +27,14 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:  # Python < 3.9 (not expected; defensive)
+    ZoneInfo = None  # type: ignore[assignment]
 
 from ._credentials import _user_dir
 
@@ -218,9 +223,23 @@ def _delete_json(
         raise RuntimeError(f"intervals.icu DELETE error {exc.code}. Body: {body}") from exc
 
 
-def _today_iso() -> str:
-    return date.today().isoformat()
+def _today_date(tz: Optional[str] = None) -> date:
+    """Current date in the athlete's timezone (best-effort).
+
+    Falls back to server-local time when tz is None, unknown, or zoneinfo is
+    unavailable, so callers can always pass an optional tz safely.
+    """
+    if tz and ZoneInfo is not None:
+        try:
+            return datetime.now(ZoneInfo(tz)).date()
+        except Exception:
+            pass  # unknown zone -> server-local fallback
+    return date.today()
 
 
-def _n_days_ago_iso(n: int) -> str:
-    return (date.today() - timedelta(days=n)).isoformat()
+def _today_iso(tz: Optional[str] = None) -> str:
+    return _today_date(tz).isoformat()
+
+
+def _n_days_ago_iso(n: int, tz: Optional[str] = None) -> str:
+    return (_today_date(tz) - timedelta(days=n)).isoformat()

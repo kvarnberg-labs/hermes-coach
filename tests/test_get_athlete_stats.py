@@ -127,6 +127,24 @@ class TestGetAthleteStats:
         params = mock_req.call_args.kwargs.get("params") or mock_req.call_args[1].get("params")
         assert params == {"oldest": "2026-08-01", "newest": "2026-08-31"}
 
+    def test_caches_repeated_calls(self, mock_credentials):
+        """Second call with identical params is served from cache (one API hit)."""
+        with patch.object(get_athlete_stats, "_request", return_value=[]) as mock_req:
+            get_athlete_stats.get_athlete_stats(
+                "test-user-123", start_date="2026-08-01", end_date="2026-08-31")
+            get_athlete_stats.get_athlete_stats(
+                "test-user-123", start_date="2026-08-01", end_date="2026-08-31")
+        assert mock_req.call_count == 1  # second call served from cache
+
+    def test_different_params_bypass_cache(self, mock_credentials):
+        """Different date range → different cache key → fresh API call."""
+        with patch.object(get_athlete_stats, "_request", return_value=[]) as mock_req:
+            get_athlete_stats.get_athlete_stats(
+                "test-user-123", start_date="2026-08-01", end_date="2026-08-10")
+            get_athlete_stats.get_athlete_stats(
+                "test-user-123", start_date="2026-08-01", end_date="2026-08-31")
+        assert mock_req.call_count == 2
+
 
 class TestHelpers:
     def test_float_or_zero(self):

@@ -33,23 +33,22 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 from ._credentials import (
     _load_credentials,
     _load_verified_name,
     _require_user_id,
-    store_user_credentials,
+    store_user_credentials,  # noqa: F401  (re-exported for tests)
 )
 from ._http import (
-    _API_BASE,
     _TTL_ACTIVITIES,
     _TTL_EVENTS,
     _TTL_POWER_CURVE,
     _TTL_PROFILE,
     _TTL_SPORT_SETTINGS,
     _TTL_WELLNESS,
+    _auth_header,  # noqa: F401  (re-exported for tests)
     _cache_get,
     _cache_key,
     _cache_set,
@@ -58,24 +57,58 @@ from ._http import (
     _today_iso,
 )
 
-# Re-export internal functions for backward compatibility (tests access these).
-# These live in _credentials or _http but are historically imported from here.
-from ._credentials import (  # noqa: E402, F401
-    _load_credentials,
-    _load_verified_name,
-    _require_user_id,
-    _user_dir,
-    store_user_credentials,
-)
-from ._http import (  # noqa: E402, F401
-    _auth_header,
-)
-
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Tool implementations
 # ---------------------------------------------------------------------------
+
+
+def _profile_cache_key(athlete_id: str) -> str:
+    """Single source for the athlete-profile cache key (shared by the profile
+    fetch and the best-effort timezone lookup)."""
+    return _cache_key(f"/athlete/{athlete_id}", {})
+
+
+def _profile_result(discord_id: str, athlete_id: str, api_key: str) -> dict:
+    """Fetch + project + cache the athlete profile.
+
+    Single owner of the profile cache entry: both get_athlete_profile and
+    get_sport_settings go through here, so the cache always holds the SAME
+    projected shape (no raw-vs-projected poisoning) and the cache key is
+    constructed in one place. Raises ValueError/RuntimeError on API errors.
+    """
+    ck = _profile_cache_key(athlete_id)
+    cached = _cache_get(discord_id, ck, _TTL_PROFILE)
+    if cached is not None:
+        return cached
+    data = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+    result = {
+        "source": "intervals.icu",
+        "athlete_id": athlete_id,
+        "name": data.get("name"),
+        "athlete_name": _load_verified_name(discord_id),
+        "timezone": data.get("timezone"),
+        "weight_kg": data.get("icu_weight"),
+        "resting_hr": data.get("icu_resting_hr"),
+        "sex": data.get("sex"),
+        "date_of_birth": data.get("icu_date_of_birth"),
+    }
+    _cache_set(discord_id, ck, result)
+    return result
+
+
+def _athlete_tz(discord_id: str, athlete_id: str) -> Optional[str]:
+    """Best-effort athlete timezone from the profile cache (no extra API call).
+
+    Returns None when the profile isn't already cached, so date helpers fall
+    back to server-local time. In a coaching session the profile is normally
+    fetched early, so the timezone flows to later date-bounded calls for free.
+    """
+    profile = _cache_get(discord_id, _profile_cache_key(athlete_id), _TTL_PROFILE)
+    if isinstance(profile, dict):
+        return profile.get("timezone")
+    return None
 
 
 def verify_athlete_identity(discord_id: str, **_: Any) -> str:
@@ -153,29 +186,10 @@ def get_athlete_profile(discord_id: str, **_: Any) -> str:
         athlete_id, api_key = _load_credentials(discord_id)
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
-
-    ck = _cache_key(f"/athlete/{athlete_id}", {})
-    cached = _cache_get(discord_id, ck, _TTL_PROFILE)
-    if cached is not None:
-        return json.dumps(cached)
-
     try:
-        data = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
+        result = _profile_result(discord_id, athlete_id, api_key)
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
-
-    result = {
-        "source": "intervals.icu",
-        "athlete_id": athlete_id,
-        "name": data.get("name"),
-        "athlete_name": _load_verified_name(discord_id),
-        "timezone": data.get("timezone"),
-        "weight_kg": data.get("icu_weight"),
-        "resting_hr": data.get("icu_resting_hr"),
-        "sex": data.get("sex"),
-        "date_of_birth": data.get("icu_date_of_birth"),
-    }
-    _cache_set(discord_id, ck, result)
     return json.dumps(result)
 
 
@@ -203,20 +217,14 @@ def get_sport_settings(discord_id: str, sport: str = "Ride", **_: Any) -> str:
     except (ValueError, RuntimeError) as exc:
         return json.dumps({"error": str(exc)})
 
-    # Compute W/kg: sport-settings API doesn't return weight, so fetch profile
+    # Compute W/kg: sport-settings API doesn't return weight, so reuse the
+    # projected profile cache (shared with get_athlete_profile via
+    # _profile_result) — same shape, no raw-vs-projected cache poisoning.
     ftp = data.get("ftp")
     ftp_w_kg = None
     if ftp:
         try:
-            # Reuse the profile cache that get_athlete_profile populates
-            # (same endpoint + params → same cache key) to avoid a redundant
-            # network round-trip on every sport-settings lookup.
-            pck = _cache_key(f"/athlete/{athlete_id}", {})
-            profile = _cache_get(discord_id, pck, _TTL_PROFILE)
-            if profile is None:
-                profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}")
-                _cache_set(discord_id, pck, profile)
-            weight_kg = profile.get("icu_weight")
+            weight_kg = _profile_result(discord_id, athlete_id, api_key).get("weight_kg")
             if weight_kg:
                 ftp_w_kg = round(ftp / weight_kg, 2)
         except (ValueError, RuntimeError):
@@ -262,9 +270,10 @@ def get_recent_activities(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
+    tz = _athlete_tz(discord_id, athlete_id)
     params: dict = {
-        "oldest": _n_days_ago_iso(days),
-        "newest": _today_iso(),
+        "oldest": _n_days_ago_iso(days, tz),
+        "newest": _today_iso(tz),
         # Request all fields needed for both cycling and running coaching.
         "fields": (
             "id,name,start_date_local,type,moving_time,distance,"
@@ -578,9 +587,10 @@ def get_wellness(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
+    tz = _athlete_tz(discord_id, athlete_id)
     params = {
-        "oldest": _n_days_ago_iso(days),
-        "newest": _today_iso(),
+        "oldest": _n_days_ago_iso(days, tz),
+        "newest": _today_iso(tz),
     }
 
     ck = _cache_key(f"/athlete/{athlete_id}/wellness", params)
@@ -664,10 +674,10 @@ def get_planned_events(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
-    today = _today_iso()
+    tz = _athlete_tz(discord_id, athlete_id)
     params = {
-        "oldest": today,
-        "newest": (date.today() + timedelta(days=days_ahead)).isoformat(),
+        "oldest": _today_iso(tz),
+        "newest": _n_days_ago_iso(-days_ahead, tz),
     }
 
     ck = _cache_key(f"/athlete/{athlete_id}/events", params)
@@ -730,10 +740,11 @@ def get_power_curve(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
+    tz = _athlete_tz(discord_id, athlete_id)
     params = {
         "type": sport,
-        "oldest": _n_days_ago_iso(days),
-        "newest": _today_iso(),
+        "oldest": _n_days_ago_iso(days, tz),
+        "newest": _today_iso(tz),
     }
 
     ck = _cache_key(f"/athlete/{athlete_id}/power-curves", params)
@@ -796,9 +807,10 @@ def get_fitness_chart(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
+    tz = _athlete_tz(discord_id, athlete_id)
     params = {
-        "oldest": _n_days_ago_iso(days),
-        "newest": _today_iso(),
+        "oldest": _n_days_ago_iso(days, tz),
+        "newest": _today_iso(tz),
     }
 
     ck = _cache_key(f"/athlete/{athlete_id}/wellness-fitness-{days}", params)
