@@ -32,7 +32,7 @@ plugins/training/       training plugin source (shared modules prefixed _)
   intervals_docs.py     intervals.icu API field/docs lookup
 coach-brain/            YAML knowledge files consumed by get_coaching_knowledge()
 skills/                 Hermes skill files synced to /opt/data/skills/ at startup
-  coaching/SKILL.md     coaching instructions loaded in the #coach channel
+  coaching/SKILL.md     coaching instructions; indexed in <available_skills>, loaded on demand via skill_view (DM-only bot)
   self-improvement/SKILL.md  this cron loop's instructions (READ THIS)
 loops/                  self-improvement loop infrastructure
   self-improve/CONTRACT.md  loop contract — READ FIRST every run

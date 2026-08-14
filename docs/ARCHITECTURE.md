@@ -12,7 +12,7 @@ Hermes Coach is a multi-user endurance coaching agent built on [hermes-agent](ht
 ┌─────────────────────────────────────────────────────────────────┐
 │ Discord Server                                                   │
 │                                                                  │
-│  #coach channel  ←→  Hermes Gateway (Discord adapter)           │
+│  Discord DMs     ←→  Hermes Gateway (Discord adapter)           │
 │                                                                  │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
@@ -109,7 +109,7 @@ Structured coaching knowledge in 19 YAML files (examples below). Loaded at runti
 
 ### 4. Coaching Skill (`skills/coaching/SKILL.md`)
 
-Hermes skill file that instructs the agent how to use coaching tools. Loaded automatically when the user is in the `#coach` Discord channel (configured via `DISCORD_FREE_RESPONSE_CHANNELS`).
+Hermes skill file that instructs the agent how to use coaching tools. Synced to `$HERMES_HOME/skills/` at startup, listed in the agent's `<available_skills>` index, and loaded on demand via `skill_view` (or the `/skill` command) when the agent needs coaching knowledge. The bot is DM-only — there is no channel-specific skill binding (`DISCORD_FREE_RESPONSE_CHANNELS` controls mention behavior, not skill loading, and is unset here).
 
 ### 5. Sandbox (`sandbox/`)
 
@@ -123,9 +123,9 @@ Isolated environment for autonomous tool development:
 
 ### Coaching Request Flow
 
-1. User sends message in `#coach` on Discord
+1. User sends a Discord DM to the bot
 2. Discord gateway routes to Hermes agent
-3. Agent loads coaching skill (channel-specific)
+3. Agent loads the coaching skill on demand (via `skill_view`)
 4. Agent calls `get_wellness(discord_id)` → intervals.icu API (cached 15min)
 5. Agent calls `get_coaching_knowledge("threshold intervals")` → coach-brain YAML
 6. Agent synthesizes advice from athlete data + coach-brain principles
