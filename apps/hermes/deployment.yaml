@@ -110,9 +110,6 @@ spec:
               # Discord platform toolsets: members get training tools only
               HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tools.discord.enabled '["training","weather","memory","skills","clarify"]'
 
-              # Discord channel skill binding: auto-load coaching skill in #coach
-              # This is set via the gateway config extra, not hermes config set.
-              # The configmap env var DISCORD_FREE_RESPONSE_CHANNELS handles the channel.
           envFrom:
             - configMapRef:
                 name: hermes-config

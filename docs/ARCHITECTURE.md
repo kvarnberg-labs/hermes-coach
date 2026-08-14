@@ -67,15 +67,20 @@ The base image `ghcr.io/nousresearch/hermes-agent:main` provides:
 
 ### 2. Training Plugin (`plugins/training/`)
 
-Five modules, each registering tools with the Hermes plugin context:
+Ten modules, each registering tools with the Hermes plugin context:
 
 | Module | Tools | Purpose |
 |--------|-------|---------|
-| `intervals_icu.py` | 6 tools | Fetch athlete data from intervals.icu API |
+| `intervals_icu.py` | 10 tools | Fetch athlete data from intervals.icu API |
 | `weather.py` | 1 tool | Open-Meteo forecast (free, no key) |
 | `coaching.py` | 1 tool | Retrieve coach-brain knowledge by topic |
 | `onboarding.py` | 1 tool | `/start` flow for connecting intervals.icu |
-| `sandbox_client.py` | 1 tool | Autonomous tool development via k8s Jobs |
+| `sandbox_client.py` | 1 tool | Autonomous tool development via k8s Jobs (toolset: `self-improve`) |
+| `render_chart.py` | 3 tools | Render power-curve, wellness, zone-distribution charts |
+| `create_planned_event.py` | 2 tools | Create/delete planned events + FIT workout generation |
+| `get_athlete_stats.py` | 1 tool | Aggregated activity statistics for a date range |
+| `strength_coach.py` | 4 tools | Strength assessment, exercise lookup, workout/program design |
+| `intervals_docs.py` | 2 tools | intervals.icu API endpoint lookup + docs search |
 
 **Tool registration pattern:**
 ```python
@@ -90,7 +95,7 @@ def register_tools(ctx) -> None:
 
 ### 3. Coach Brain (`coach-brain/`)
 
-Structured coaching knowledge in YAML files. Loaded at runtime by `coaching.py`:
+Structured coaching knowledge in 19 YAML files (examples below). Loaded at runtime by `coaching.py`:
 
 | File | Content |
 |------|---------|
@@ -152,7 +157,7 @@ Isolated environment for autonomous tool development:
 |----------|---------|
 | `HERMES_HOME` | Data directory (`/opt/data`) |
 | `HERMES_INFERENCE_PROVIDER` | LLM provider (`opencode-go`) |
-| `HERMES_INFERENCE_MODEL` | Primary model (`deepseek-v4-pro`) |
+| `HERMES_INFERENCE_MODEL` | Primary model (`gpt-5.6-luna`) |
 | `HERMES_INFERENCE_BASE_URL` | Model API endpoint |
 | `API_SERVER_ENABLED` | Enable health probe endpoint |
 | `API_SERVER_PORT` | Health probe port (`8642`) |

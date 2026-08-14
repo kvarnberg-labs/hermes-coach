@@ -31,5 +31,5 @@ data:
   LOG_LEVEL: "WARNING"
 
   # Self-improvement loop: Discord channel where improvement summaries are announced.
-  # Loop always runs at 04:00 UTC and creates PRs. This channel gets the summary.
+  # Loop always runs at 11:00 UTC and creates PRs. This channel gets the summary.
   SELF_IMPROVE_CHANNEL: "1508814801869082758"
