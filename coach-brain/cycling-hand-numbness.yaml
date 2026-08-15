@@ -1,0 +1,44 @@
+# Cycling hand numbness: practical triage and load modification.
+# Sources: USA Cycling (hand numbness guidance, 2023); AAFP peripheral nerve
+# entrapment guidance (2020); Bini & Hume, bike-fit biomechanics (2016).
+
+cycling_hand_numbness:
+  overview: >
+    Numbness during cycling is commonly related to prolonged pressure on the
+    ulnar or median nerve, sustained wrist posture, or excessive weight through
+    the hands. It is a symptom to manage, not a diagnosis; persistent or
+    progressive symptoms require clinical assessment.
+
+  distribution_clues:
+    ulnar_pattern: "Little and ring fingers, often from pressure on the heel/outer edge of the palm."
+    median_pattern: "Thumb, index, middle, and sometimes radial half of ring finger."
+    proximal_or_unclear: "Whole hand, forearm symptoms, neck pain, or weakness: do not self-diagnose from distribution."
+
+  immediate_adjustments:
+    - "Change hand position frequently; briefly unload the hands every 5–10 minutes."
+    - "Keep wrists near neutral, elbows softly bent, shoulders relaxed, and grip light."
+    - "Check gloves, bar tape, and hood/bar position; avoid a hard edge pressing the palm."
+    - "Reduce duration or stop the ride if symptoms intensify rather than settling with position changes."
+
+  bike_fit_checks:
+    - "Review reach, handlebar drop, saddle position, cleat alignment, and front-end support with a qualified fitter."
+    - "Do not force an exact posture or use aggressive stretching/manipulation when symptoms are active."
+
+  return_and_referral:
+    mild_transient: "If symptoms fully resolve after changing position and do not recur outside riding, resume conservatively and monitor the pattern."
+    seek_assessment: >
+      Arrange medical or physiotherapy assessment if numbness persists after the
+      ride, recurs despite adjustments, is progressively worse, or is accompanied
+      by weakness, loss of grip, severe pain, neck symptoms, or reduced coordination.
+    urgent: "Seek urgent care for sudden one-sided weakness/numbness, facial or speech changes, or rapidly progressive neurological symptoms."
+
+  coaching_notes:
+    - "Do not attribute hand numbness to a lower-limb power asymmetry without evidence."
+    - "Track finger distribution, onset time, hand position, duration, and recovery across rides."
+    - "Avoid prescribing a training workaround that masks worsening neurological symptoms."
+
+  evidence_note: "This guidance supports symptom management and referral; it does not diagnose nerve entrapment."
+
+# Sources: USA Cycling, How to Prevent Hand Numbness While Cycling (2023);
+# American Academy of Family Physicians, Peripheral Nerve Entrapment and Injury (2020);
+# Bini RR, Hume PA, eds. Bike Fit (2016).
