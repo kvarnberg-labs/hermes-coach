@@ -372,7 +372,9 @@ def create_event(discord_id: str, **kw: Any) -> str:
         # Not scoped to cycling: watt targets are dangerous for any sport.
         if ftp <= 0:
             needs_ftp = any(
-                (s.get("power_min") is not None or s.get("power_max") is not None)
+                # Tool schemas may serialize omitted numeric fields as 0;
+                # zero is not a real watt target.
+                (s.get("power_min") not in (None, 0) or s.get("power_max") not in (None, 0))
                 and not (s.get("power_pct_min") or s.get("power_pct_max"))
                 for s in step_list
             )
