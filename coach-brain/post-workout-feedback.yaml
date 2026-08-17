@@ -1,0 +1,33 @@
+---
+# Post-workout feedback
+# Evidence-informed structure for useful, athlete-centred session reviews.
+
+post_workout_feedback:
+  purpose: >
+    Explain what the recorded session shows, what it means for adaptation and
+    recovery, and what the athlete should do next. Avoid praise or criticism
+    without tying it to observed data and the planned objective.
+  required_sections:
+    - session_context: "Identify sport, duration, distance, workout objective, and whether the activity was completed as planned."
+    - execution: "Compare intensity, pacing/power, duration, and interval consistency with the intended session."
+    - physiological_response: "Use HR, power/pace, zones, RPE, and decoupling when available; distinguish measured facts from inference."
+    - positives: "Name 1–3 specific behaviours or metrics that supported the objective."
+    - limitations: "Mention meaningful deviations, missing data, or uncertainty without inventing values."
+    - next_step: "Give one concrete recovery or training recommendation, with a contingency for poor symptoms."
+  evidence_rules:
+    - "Use the detailed activity endpoint for interval, zone, lap, or decoupling claims; recent-activity summaries are insufficient for fine analysis."
+    - "Do not infer fatigue, fitness, or causation from one metric. Combine objective data with RPE, sleep, soreness, and recent load when available."
+    - "If a field is unavailable, say so explicitly and avoid approximate numbers presented as measurements."
+    - "Separate what happened (data) from why it may have happened (hypothesis)."
+  proportionality:
+    easy_session: "Keep the review concise but still cover execution, one useful observation, and the next step."
+    quality_session: "Explain interval quality, pacing, recovery, and whether the session met its purpose."
+    unexpected_result: "Ask a focused follow-up about symptoms, terrain, equipment, or fueling before assigning blame."
+  safety:
+    - "Chest pain, fainting, unusual breathlessness, neurological symptoms, or illness signs require stopping and appropriate medical advice."
+    - "After illness or injury, prioritise symptoms and gradual progression over target metrics."
+  evidence_base: >
+    Training-monitoring guidance supports integrating internal load (RPE and HR)
+    with external load (power, pace, duration) and context rather than relying
+    on a single measure (Bourdon et al., 2017; Halson, 2014). Session-RPE is a
+    validated practical measure of internal training load (Foster et al., 2001).
