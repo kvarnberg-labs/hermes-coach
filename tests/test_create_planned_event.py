@@ -87,6 +87,67 @@ class TestCreateEventMinimal:
         assert payload["moving_time"] == 1800
 
 
+class TestEmptyStepsGuard:
+    """A non-empty steps list with no real content (e.g. [{}] when the model
+    couldn't fill the step schema) must be refused — not turned into a
+    degenerate FIT that intervals.icu accepts with a broken workout. This was
+    the create→delete loop root cause: the model sent [{}], the tool built a
+    0-duration/no-target FIT, reported has_steps=True, and the model kept
+    deleting and retrying."""
+
+    def test_rejects_single_empty_step(self, mock_credentials):
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run", steps=[{}]))
+        assert "error" in r
+        assert "empty" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_rejects_multiple_empty_steps(self, mock_credentials):
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run", steps=[{}, {}]))
+        assert "error" in r
+        assert "empty" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_allows_step_with_duration(self, mock_credentials):
+        """A step with duration but no target is not 'empty' — a real step
+        (e.g. a free-ride block). The guard must not block it."""
+        with patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
+            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_post.return_value = {"id": 1, "name": "Run", "type": "Run"}
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run", steps=[{"name": "easy", "duration_sec": 600}]))
+        assert r.get("created") is True
+
+
+class TestStepSchema:
+    def test_steps_items_define_properties(self):
+        """The step item schema must enumerate fields — a bare {type: object}
+        leaves the model with no fields to fill, so strict tool-call enforcement
+        emits empty {} steps (the create→delete loop root cause)."""
+        registered = {}
+
+        class FakeCtx:
+            def register_tool(self, name, toolset, schema, handler):
+                registered[name] = schema
+
+        create_planned_event.register_tools(FakeCtx())
+        steps = registered["create_planned_event"]["parameters"]["properties"]["steps"]
+        assert steps["type"] == "array"
+        props = steps["items"].get("properties", {})
+        for f in ("duration_sec", "name", "type", "pace_min", "pace_max",
+                  "hr_min", "hr_max", "power_min", "power_max",
+                  "power_pct_min", "power_pct_max"):
+            assert f in props, f"step schema missing field {f}"
+
+
 class TestFtpGuard:
     """The safety-critical guard: refuse watt-based targets when FTP is unknown."""
 
@@ -266,3 +327,33 @@ class TestFitConversion:
             "Ride", [{"duration_sec": 600, "power_pct_min": 95, "power_pct_max": 100}],
             max_hr=190, ftp=250)
         assert isinstance(b, (bytes, bytearray)) and len(b) > 0
+
+    def test_create_event_attaches_fit_to_payload(self):
+        pytest.importorskip("fit_tool")
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post:
+            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_post.return_value = {"id": 1, "name": "Run", "type": "Run",
+                                      "start_date_local": "2026-08-20T09:00:00",
+                                      "category": "WORKOUT"}
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Tempo", date_iso="2026-08-20", event_type="Run",
+                steps=[{"name": "on", "duration_sec": 600,
+                        "pace_min": "5:00", "pace_max": "5:30"}]))
+        assert r["created"] is True
+        payload = mock_post.call_args[0][3]
+        assert payload["filename"] == "workout.fit"
+        assert payload["file_contents_base64"]  # non-empty base64 FIT attached
+
+    def test_step_description_mapped_to_notes(self):
+        """The schema's optional `description` field must reach the FIT (not be
+        silently ignored — the same anti-pattern as the empty-steps bug)."""
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "pace_min": "5:00", "description": "stay relaxed"},
+            max_hr=0, ftp=0)
+        assert msg.notes == "stay relaxed"
+        # absent/blank description must not set notes
+        msg2 = create_planned_event._step_message(
+            {"duration_sec": 600, "pace_min": "5:00"}, max_hr=0, ftp=0)
+        assert not msg2.notes

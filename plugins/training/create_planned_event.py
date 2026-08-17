@@ -109,6 +109,9 @@ def _step_message(s: dict, max_hr: int, ftp: int):
 
     msg = WorkoutStepMessage()
     msg.workout_step_name = name
+    desc = s.get("description")
+    if isinstance(desc, str) and desc.strip():
+        msg.notes = desc.strip()
     msg.intensity = intensity_map.get(stype, Intensity.ACTIVE)
     msg.duration_type = WorkoutStepDuration.TIME
     msg.duration_time = dur
@@ -260,6 +263,26 @@ def create_event(discord_id: str, **kw: Any) -> str:
     if duration_min is not None:
         payload["moving_time"] = int(float(duration_min) * 60)
 
+    # Refuse a non-empty steps list whose steps have no real content (e.g. [{}]
+    # when the model couldn't fill the step schema). An empty step builds a
+    # 0-duration/no-target FIT that intervals.icu accepts, so the event lands
+    # with a broken workout and the model loops create→delete. Surface the gap.
+    if step_list and not any(
+        s.get("duration_sec")
+        or s.get("target")
+        or any(s.get(k) is not None for k in (
+            "hr_min", "hr_max", "power_min", "power_max",
+            "power_pct_min", "power_pct_max", "pace_min", "pace_max",
+        ))
+        for s in step_list
+    ):
+        return json.dumps({"error": (
+            "steps were provided but every step is empty. Each step needs at "
+            "least one of duration_sec or a target — pace_min/pace_max (running), "
+            "hr_min/hr_max (BPM), power_min/power_max (watts) or "
+            "power_pct_min/power_pct_max (% FTP)."
+        )})
+
     # Set event-level target and generate FIT file for structured steps
     if step_list:
         if event_type in ("Run", "TrailRun", "VirtualRun"):
@@ -389,14 +412,31 @@ def register_tools(ctx) -> None:
             "steps": {
                 "type": "array",
                 "description": (
-                    "Structured workout steps for Garmin live guidance. "
-                    "Each step: {name, duration_sec, type (WARMUP|ACTIVE|REST|COOLDOWN), "
-                    "description?, target? (auto-detected). "
-                    "Use hr_min/hr_max for HR (BPM), power_min/power_max for watts, "
-                    "power_pct_min/power_pct_max for % FTP, "
-                    "pace_min/pace_max for pace ('5:40' min:sec/km or m/s)."
+                    "Structured workout steps for Garmin live guidance. Each step "
+                    "needs duration_sec and exactly one target: pace_min/pace_max "
+                    "(running, '5:40' = 5min40sec/km), hr_min/hr_max (BPM), "
+                    "power_min/power_max (watts, needs athlete FTP) or "
+                    "power_pct_min/power_pct_max (% FTP). target is auto-detected "
+                    "from which fields you fill."
                 ),
-                "items": {"type": "object"},
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "description": "Short step label, e.g. 'Interval'."},
+                        "duration_sec": {"type": "integer", "description": "Step duration in seconds."},
+                        "type": {"type": "string", "enum": ["WARMUP", "ACTIVE", "REST", "COOLDOWN"], "description": "Step intensity."},
+                        "target": {"type": "string", "description": "Explicit target HR/POWER/PACE; auto-detected if omitted."},
+                        "description": {"type": "string", "description": "Optional step notes."},
+                        "hr_min": {"type": "integer", "description": "HR target low (BPM)."},
+                        "hr_max": {"type": "integer", "description": "HR target high (BPM)."},
+                        "power_min": {"type": "integer", "description": "Power target low (watts). Needs athlete FTP."},
+                        "power_max": {"type": "integer", "description": "Power target high (watts). Needs athlete FTP."},
+                        "power_pct_min": {"type": "integer", "description": "Power target low (% FTP)."},
+                        "power_pct_max": {"type": "integer", "description": "Power target high (% FTP)."},
+                        "pace_min": {"type": "string", "description": "Pace fast bound, e.g. '5:30' (min:sec/km)."},
+                        "pace_max": {"type": "string", "description": "Pace slow bound, e.g. '6:00' (min:sec/km)."},
+                    },
+                },
             },
         },
         required=["discord_id", "name", "date_iso"],
