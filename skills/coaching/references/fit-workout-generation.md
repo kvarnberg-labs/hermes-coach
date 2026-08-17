@@ -75,6 +75,10 @@ if not is_pct and value > 20 and ftp > 0:
 **Never** send watt values — Garmin will interpret them as %FTP (160 → 160%
 of FTP = 457W).
 
+**Indoor events** (`indoor=True`, e.g. Zwift/VirtualRide): the tool uses
+`indoor_ftp` from sport-settings for the watts→%FTP conversion, falling back
+to outdoor FTP if `indoor_ftp` isn't set. `max_hr` is the same indoors/out.
+
 ### Sport mapping
 
 | intervals.icu type | FIT sport | Default target type |

@@ -563,3 +563,34 @@ class TestFitConversion:
             {"duration_sec": 600, "pace_min": "5:00", "description": "x" * 400},
             max_hr=0, ftp=0)
         assert len(msg.notes) == 255
+
+
+class TestIndoorFtp:
+    """Indoor events (indoor=True, e.g. Zwift/VirtualRide) use indoor_ftp from
+    sport-settings for the watts->%FTP conversion, falling back to outdoor ftp."""
+
+    def test_indoor_event_uses_indoor_ftp(self, mock_credentials):
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT") as mock_fit:
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 250, "indoor_ftp": 220}]
+            mock_post.return_value = {"id": 1, "name": "Zwift", "type": "VirtualRide"}
+            json.loads(create_planned_event.create_event(
+                "test-user-123", name="Zwift", date_iso="2026-08-20",
+                event_type="VirtualRide", indoor=True,
+                steps=[{"name": "on", "duration_sec": 600, "power_min": 200, "power_max": 220}]))
+        # _build_fit_file(sport, steps, max_hr, ftp) — ftp is the 4th positional
+        assert mock_fit.call_args[0][3] == 220  # indoor_ftp, not outdoor 250
+
+    def test_indoor_event_falls_back_to_outdoor_ftp(self, mock_credentials):
+        """If indoor_ftp isn't set, fall back to outdoor ftp for indoor events."""
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT") as mock_fit:
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 250}]  # no indoor_ftp
+            mock_post.return_value = {"id": 1, "name": "Zwift", "type": "VirtualRide"}
+            json.loads(create_planned_event.create_event(
+                "test-user-123", name="Zwift", date_iso="2026-08-20",
+                event_type="VirtualRide", indoor=True,
+                steps=[{"name": "on", "duration_sec": 600, "power_min": 200, "power_max": 220}]))
+        assert mock_fit.call_args[0][3] == 250  # falls back to outdoor

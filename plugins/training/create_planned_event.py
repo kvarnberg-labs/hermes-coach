@@ -355,6 +355,11 @@ def create_event(discord_id: str, **kw: Any) -> str:
                 timeout=10,
             )
             ftp = settings.get("ftp") or 0
+            if indoor:
+                # Zwift/trainer events use a separate FTP; fall back to outdoor
+                # ftp if indoor_ftp isn't set. max_hr is physiological (same
+                # indoors and out).
+                ftp = settings.get("indoor_ftp") or ftp
             max_hr = settings.get("max_hr") or 0
         except Exception:
             pass
