@@ -41,7 +41,7 @@ never converted to proper Garmin workout targets.
 import base64
 
 # Build a FIT workout file (use fit-tool or the embedded builder)
-fit_bytes = _build_fit_file(sport="Run", steps=[...], max_hr=193, ftp=286)
+fit_bytes = _build_fit_file(sport="Run", steps=[...], max_hr=185, ftp=286)
 
 payload = {
     "name": "Easy Run",
@@ -79,7 +79,7 @@ See `references/fit-workout-generation.md` for the full FIT encoding details.
 | `pace_min`, `pace_max` | string/number | Pace bounds: `"5:40"` (min:sec/km) or m/s |
 | `description` | string | Optional step description |
 
-⚠️ **ONE target type per step.** Auto-detection: HR > power > pace. Including both `hr_min/hr_max` and `pace_min/pace_max` on the same step silently drops pace. Use pace OR HR per step — pace for work intervals, HR for warmup/cooldown.
+⚠️ **ONE target type per step.** Auto-detection is sport-driven: PACE for runs, POWER for rides (the sport's primary), falling back to HR > POWER > PACE. A run step with both pace and HR keeps pace and drops HR. Use one target per step — pace for run work intervals, HR for warmup/cooldown.
 
 ### Easy runs should NOT have warmup/cooldown
 
@@ -128,13 +128,16 @@ Set based on sport:
 |-------|---------------------|
 | Run, TrailRun, VirtualRun | `"PACE"` |
 | Ride, VirtualRide, GravelRide, MountainBikeRide | `"POWER"` |
+| Swim, OpenWaterSwim, Walk, Hike, Rowing | none (no default target) |
 
 ### HR values: percentage of max HR in FIT
 
 The FIT format stores HR targets as absolute BPM, but intervals.icu's
 internal representation uses %max HR. The `create_planned_event` tool
 auto-converts BPM → %max by fetching the athlete's max HR from their
-profile. If the profile fetch fails, max HR defaults to 193.
+per-sport settings (`GET /athlete/{id}/sport-settings/{sport}` — the profile
+endpoint does NOT return max_hr). If the fetch fails or returns no max_hr,
+the tool refuses HR targets rather than guessing.
 
 ### Pace values: m/s in FIT — PACE TARGETS WORK, DO NOT TELL THE ATHLETE OTHERWISE
 
@@ -157,10 +160,11 @@ If an athlete asks "can you include pace targets?", the answer is YES.
 
 ⚠️ **ONE target type per step — FIT limitation.** The FIT file format allows
 only ONE target type per workout step (HR, power, OR pace — not multiple).
-The `create_planned_event` auto-detection prioritizes HR > power > pace when
-multiple target fields are present on the same step. **If you include both
-`hr_min/hr_max` AND `pace_min/pace_max` on the same step, pace is silently
-dropped** — the step gets an HR target only.
+The `create_planned_event` auto-detection is sport-driven: it prefers the
+sport's primary target (PACE for runs, POWER for rides) when the step supplies
+it, falling back to HR > POWER > PACE. **A run step with both
+`hr_min/hr_max` AND `pace_min/pace_max` keeps pace and drops HR** — the step
+gets a pace target only.
 
 **Rule: use pace OR HR per step, never both on the same step.**
 - Threshold/interval reps: use **pace** targets (the primary anchor for running)

@@ -22,6 +22,34 @@ from typing import Any
 from ._credentials import _load_credentials, _require_user_id
 from ._http import _delete_json, _post_json, _request
 
+# ── Sport metadata ──────────────────────────────────────────────────────────
+# Single source of truth mapping intervals.icu event_type -> (FIT Sport enum
+# name, event-level target). Both the FIT `sport` field and the calendar
+# event target derive from this, so they can never diverge (the old bug: runs
+# whose event target said PACE were written into the FIT as CYCLING).
+# The Sport name is resolved with getattr(..., GENERIC) so an unknown/typo'd
+# name degrades to a generic workout instead of raising.
+_SPORT_META: dict[str, tuple[str, str | None]] = {
+    "Run":              ("RUNNING", "PACE"),
+    "TrailRun":         ("RUNNING", "PACE"),
+    "VirtualRun":       ("RUNNING", "PACE"),
+    "Ride":             ("CYCLING", "POWER"),
+    "VirtualRide":      ("CYCLING", "POWER"),
+    "GravelRide":       ("CYCLING", "POWER"),
+    "MountainBikeRide": ("CYCLING", "POWER"),
+    "Swim":             ("SWIMMING", None),
+    "OpenWaterSwim":    ("SWIMMING", None),
+    "Walk":             ("WALKING", None),
+    "Hike":             ("HIKING", None),
+    "Rowing":           ("ROWING", None),
+}
+
+
+def _sport_target(event_type: str) -> str | None:
+    """Event-level target for a sport, or None if the sport has no default."""
+    return _SPORT_META.get(event_type, (None, None))[1]
+
+
 # ── Pace conversion ─────────────────────────────────────────────────────────
 
 
@@ -72,12 +100,14 @@ def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
             )
 
 
-def _step_message(s: dict, max_hr: int, ftp: int):
+def _step_message(s: dict, max_hr: int, ftp: int, primary: str | None = None):
     """Build one WorkoutStepMessage from a step dict.
 
-    Owns target auto-detection (precedence HR > POWER > PACE), the
-    watts->%FTP and BPM->%maxHR conversions, and pace parsing. FIT encodes
-    one target per step, so only the first detected target is written.
+    Owns target auto-detection, the watts->%FTP and BPM->%maxHR conversions,
+    and pace parsing. FIT encodes one target per step, so only one detected
+    target is written. When the sport has a primary target (`primary`, e.g.
+    PACE for runs, POWER for rides) and the step supplies it, that wins so the
+    step matches the event target; otherwise fall back to HR > POWER > PACE.
     """
     from fit_tool.profile.messages.workout_step_message import WorkoutStepMessage
     from fit_tool.profile.profile_type import (
@@ -100,18 +130,25 @@ def _step_message(s: dict, max_hr: int, ftp: int):
     pc_high = s.get("pace_max")
 
     if not target:
-        if hr_low is not None or hr_high is not None:
-            target = "HR"
-        elif pw_low is not None or pw_high is not None:
+        has_hr = hr_low is not None or hr_high is not None
+        has_pw = pw_low is not None or pw_high is not None
+        has_pc = pc_low is not None or pc_high is not None
+        if primary == "PACE" and has_pc:
+            target = "PACE"
+        elif primary == "POWER" and has_pw:
             target = "POWER"
-        elif pc_low is not None or pc_high is not None:
+        elif has_hr:
+            target = "HR"
+        elif has_pw:
+            target = "POWER"
+        elif has_pc:
             target = "PACE"
 
     msg = WorkoutStepMessage()
     msg.workout_step_name = name
     desc = s.get("description")
     if isinstance(desc, str) and desc.strip():
-        msg.notes = desc.strip()
+        msg.notes = desc.strip()[:255]  # cap notes; no FIT spec max, defensive
     msg.intensity = intensity_map.get(stype, Intensity.ACTIVE)
     msg.duration_type = WorkoutStepDuration.TIME
     msg.duration_time = dur
@@ -164,9 +201,8 @@ def _build_fit_file(
     from fit_tool.profile.messages.file_id_message import FileIdMessage
     from fit_tool.profile.profile_type import Sport, FileType
 
-    sport_map = {"Run": Sport.RUNNING, "Ride": Sport.CYCLING,
-                 "VirtualRide": Sport.CYCLING, "GravelRide": Sport.CYCLING,
-                 "MountainBikeRide": Sport.CYCLING}
+    sport_name = _SPORT_META.get(sport, ("GENERIC", None))[0]
+    primary = _sport_target(sport)
 
     builder = FitFileBuilder(auto_define=True)
 
@@ -175,12 +211,12 @@ def _build_fit_file(
     builder.add(fid)
 
     w = WorkoutMessage()
-    w.sport = sport_map.get(sport, Sport.CYCLING)
+    w.sport = getattr(Sport, sport_name, Sport.GENERIC)
     w.num_valid_steps = len(steps)
     builder.add(w)
 
     for s in steps:
-        builder.add(_step_message(s, max_hr, ftp))
+        builder.add(_step_message(s, max_hr, ftp, primary))
 
     return builder.build().to_bytes()
 
@@ -263,43 +299,44 @@ def create_event(discord_id: str, **kw: Any) -> str:
     if duration_min is not None:
         payload["moving_time"] = int(float(duration_min) * 60)
 
-    # Refuse a non-empty steps list whose steps have no real content (e.g. [{}]
-    # when the model couldn't fill the step schema). An empty step builds a
-    # 0-duration/no-target FIT that intervals.icu accepts, so the event lands
-    # with a broken workout and the model loops create→delete. Surface the gap.
-    if step_list and not any(
-        s.get("duration_sec")
-        or s.get("target")
-        or any(s.get(k) is not None for k in (
-            "hr_min", "hr_max", "power_min", "power_max",
-            "power_pct_min", "power_pct_max", "pace_min", "pace_max",
-        ))
-        for s in step_list
-    ):
-        return json.dumps({"error": (
-            "steps were provided but every step is empty. Each step needs at "
-            "least one of duration_sec or a target — pace_min/pace_max (running), "
-            "hr_min/hr_max (BPM), power_min/power_max (watts) or "
-            "power_pct_min/power_pct_max (% FTP)."
-        )})
+    # Refuse any step without a positive duration. The FIT builder always
+    # writes duration_type=TIME, so a step missing duration_sec encodes a
+    # 0-second block that intervals.icu accepts as a broken workout (the model
+    # then loops create→delete). This is per-step, not list-wide: one junk step
+    # ([{}], [{"target":"PACE"}] with no bounds, or a good step + a trailing {})
+    # is enough to reject, so a single empty step can't ride along on a
+    # partially-valid list.
+    if step_list:
+        empty = [i for i, s in enumerate(step_list) if not s.get("duration_sec")]
+        if empty:
+            return json.dumps({"error": (
+                f"steps {empty} are empty — no duration_sec. Every step needs a "
+                "positive duration_sec, plus a target: pace_min/pace_max "
+                "(running), hr_min/hr_max (BPM), power_min/power_max (watts) or "
+                "power_pct_min/power_pct_max (% FTP)."
+            )})
 
     # Set event-level target and generate FIT file for structured steps
     if step_list:
-        if event_type in ("Run", "TrailRun", "VirtualRun"):
-            payload["target"] = "PACE"
-        elif event_type in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide"):
-            payload["target"] = "POWER"
+        target = _sport_target(event_type)
+        if target:
+            payload["target"] = target
 
-        max_hr = 193
+        # Both FTP and max_hr come from the per-sport settings endpoint. The
+        # profile endpoint does NOT return max_hr (verified against the
+        # intervals.icu OpenAPI spec: max_hr is on SportSettings, not Athlete),
+        # so the old separate profile fetch always read max_hr=0. One call, one
+        # try: a guessed max_hr/FTP would convert real targets against the
+        # wrong reference, so default to 0 and let the guards below refuse.
         ftp = 0
+        max_hr = 0
         try:
-            profile = _request(athlete_id, api_key, f"/athlete/{athlete_id}", timeout=10)
-            max_hr = profile.get("max_hr") or max_hr
             settings = _request(
                 athlete_id, api_key,
                 f"/athlete/{athlete_id}/sport-settings/{event_type}", timeout=10,
             )
             ftp = settings.get("ftp") or 0
+            max_hr = settings.get("max_hr") or 0
         except Exception:
             pass
 
@@ -308,7 +345,8 @@ def create_event(discord_id: str, **kw: Any) -> str:
         # written verbatim and read as %FTP (e.g. 200W -> 200% FTP = a
         # dangerous target). Refuse rather than prescribe a dangerous workout.
         # %FTP steps (power_pct_*) are safe — they don't need the athlete's FTP.
-        if event_type in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide") and ftp <= 0:
+        # Not scoped to cycling: watt targets are dangerous for any sport.
+        if ftp <= 0:
             needs_ftp = any(
                 (s.get("power_min") is not None or s.get("power_max") is not None)
                 and not (s.get("power_pct_min") or s.get("power_pct_max"))
@@ -321,6 +359,24 @@ def create_event(discord_id: str, **kw: Any) -> str:
                         "so watt-based power targets cannot be safely converted to "
                         "%FTP for the FIT file. Retry, or specify targets as "
                         "power_pct_min/power_pct_max (% FTP) directly."
+                    ),
+                })
+
+        # Same safety stance for HR: FIT HR targets are read as %maxHR, so a
+        # BPM target with no known max_hr would be misread. Refuse instead of
+        # converting against a guess (mirrors the FTP guard above).
+        if max_hr <= 0:
+            needs_hr = any(
+                s.get("hr_min") is not None or s.get("hr_max") is not None
+                for s in step_list
+            )
+            if needs_hr:
+                return json.dumps({
+                    "error": (
+                        "Could not retrieve the athlete's max_hr from "
+                        "intervals.icu, so HR targets (BPM) cannot be safely "
+                        "converted to %maxHR for the FIT file. Retry, or specify "
+                        "targets as pace or power_pct instead."
                     ),
                 })
 

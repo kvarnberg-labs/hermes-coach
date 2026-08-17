@@ -75,7 +75,7 @@ class TestCreateEventMinimal:
         with patch.object(create_planned_event, "_post_json") as mock_post, \
              patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 250}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 250}]
             mock_post.return_value = {"id": 2, "name": "X", "type": "Ride"}
             json.loads(create_planned_event.create_event(
                 "test-user-123", name="X", date_iso="2026-08-20",
@@ -119,12 +119,42 @@ class TestEmptyStepsGuard:
         with patch.object(create_planned_event, "_post_json") as mock_post, \
              patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
             mock_post.return_value = {"id": 1, "name": "Run", "type": "Run"}
             r = json.loads(create_planned_event.create_event(
                 "test-user-123", name="Run", date_iso="2026-08-20",
                 event_type="Run", steps=[{"name": "easy", "duration_sec": 600}]))
         assert r.get("created") is True
+
+    def test_rejects_bare_target_string_without_duration(self, mock_credentials):
+        """A step with only a target string (no duration, no bounds) is empty —
+        it would build a 0-duration/0-target step. The old guard counted a
+        `target` string as content and let it through."""
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run", steps=[{"target": "PACE"}]))
+        assert "error" in r
+        assert "empty" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_rejects_empty_step_mixed_with_good_step(self, mock_credentials):
+        """A single junk step among valid ones must reject the whole request —
+        the old list-wide any() let a trailing {} ride along and become a
+        0-duration step in the FIT."""
+        with patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_request") as mock_req:
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "easy", "duration_sec": 600, "pace_min": "5:00"},
+                       {}]))
+        assert "error" in r
+        assert "empty" in r["error"]
+        # names the offending index so the model can fix just that step
+        assert "1" in r["error"]
+        mock_post.assert_not_called()
 
 
 class TestStepSchema:
@@ -148,14 +178,99 @@ class TestStepSchema:
             assert f in props, f"step schema missing field {f}"
 
 
+class TestSportMapping:
+    """FIT sport and event target come from one shared map, so a run can never
+    be written into the FIT as a ride (the old sport_map covered only Run +
+    the cycling family; TrailRun/VirtualRun fell through to CYCLING)."""
+
+    def test_run_variants_map_to_running_and_pace(self):
+        for et in ("Run", "TrailRun", "VirtualRun"):
+            assert create_planned_event._SPORT_META[et] == ("RUNNING", "PACE")
+
+    def test_ride_variants_map_to_cycling_and_power(self):
+        for et in ("Ride", "VirtualRide", "GravelRide", "MountainBikeRide"):
+            assert create_planned_event._SPORT_META[et] == ("CYCLING", "POWER")
+
+    def test_swim_walk_have_correct_sport_no_default_target(self):
+        assert create_planned_event._SPORT_META["Swim"] == ("SWIMMING", None)
+        assert create_planned_event._SPORT_META["Walk"] == ("WALKING", None)
+
+    def test_unknown_sport_has_no_default_target(self):
+        assert create_planned_event._sport_target("Yoga") is None
+
+    def test_event_target_set_for_trailrun(self, mock_credentials):
+        """Regression: TrailRun must get event-level PACE target (it used to be
+        recognized for the target but mislabeled CYCLING in the FIT)."""
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            mock_post.return_value = {"id": 1, "name": "Trail", "type": "TrailRun"}
+            create_planned_event.create_event(
+                "test-user-123", name="Trail", date_iso="2026-08-20",
+                event_type="TrailRun",
+                steps=[{"name": "climb", "duration_sec": 600, "pace_min": "6:00"}])
+        payload = mock_post.call_args[0][3]
+        assert payload["target"] == "PACE"
+
+    def test_trailrun_fit_sport_is_running(self):
+        """The FIT Sport enum resolved for TrailRun must be RUNNING, not the
+        old CYCLING default."""
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import Sport
+        b = create_planned_event._build_fit_file(
+            "TrailRun",
+            [{"duration_sec": 600, "pace_min": "6:00", "pace_max": "5:30"}],
+            max_hr=0, ftp=0)
+        assert isinstance(b, (bytes, bytearray)) and len(b) > 0
+        # Resolve the same way the builder does and confirm it's RUNNING.
+        assert getattr(Sport, create_planned_event._SPORT_META["TrailRun"][0]) == Sport.RUNNING
+
+
+class TestTargetPrecedence:
+    """When a step supplies more than one metric, the sport's primary target
+    wins so the step matches the event target (old code was always HR-first,
+    discarding the sport's own metric)."""
+
+    def test_run_prefers_pace_over_hr(self):
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import WorkoutStepTarget
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "hr_min": 150, "hr_max": 160,
+             "pace_min": "5:00", "pace_max": "4:50"},
+            max_hr=200, ftp=0, primary="PACE")
+        assert msg.target_type == WorkoutStepTarget.SPEED.value
+        assert msg.custom_target_speed_low == round(1000 / 300, 2)
+
+    def test_ride_prefers_power_over_hr(self):
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import WorkoutStepTarget
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "hr_min": 150, "hr_max": 160,
+             "power_pct_min": 90, "power_pct_max": 95},
+            max_hr=200, ftp=0, primary="POWER")
+        assert msg.target_type == WorkoutStepTarget.POWER.value
+        assert msg.custom_target_power_low == 90
+
+    def test_falls_back_to_hr_when_no_primary(self):
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import WorkoutStepTarget
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "hr_min": 150, "hr_max": 160,
+             "pace_min": "5:00", "pace_max": "4:50"},
+            max_hr=200, ftp=0)
+        assert msg.target_type == WorkoutStepTarget.HEART_RATE.value
+        assert msg.custom_target_heart_rate_low == 75  # 150/200*100
+
+
 class TestFtpGuard:
     """The safety-critical guard: refuse watt-based targets when FTP is unknown."""
 
     def test_blocks_watt_targets_when_ftp_missing(self, mock_credentials):
         with patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_post_json") as mock_post:
-            # profile then sport-settings; FTP comes back 0 (fetch failed/missing)
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            # sport-settings; FTP comes back 0 (fetch failed/missing)
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
             r = json.loads(create_planned_event.create_event(
                 "test-user-123", name="Threshold", date_iso="2026-08-20",
                 event_type="Ride",
@@ -183,7 +298,7 @@ class TestFtpGuard:
         with patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_post_json") as mock_post, \
              patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
             mock_post.return_value = {"id": 999, "name": "Sweet", "type": "Ride"}
             r = json.loads(create_planned_event.create_event(
                 "test-user-123", name="Sweet", date_iso="2026-08-20",
@@ -193,12 +308,14 @@ class TestFtpGuard:
         assert r.get("created") is True
         assert r["event_id"] == 999
 
-    def test_guard_skipped_for_run(self, mock_credentials):
-        """Runs use pace, not FTP — guard must not trigger for Ride-only FTP logic."""
+    def test_ftp_guard_skipped_for_pace_step(self, mock_credentials):
+        """The FTP guard is sport-agnostic (not Ride-only): it only triggers on
+        watt targets. A pace step has no watts, so it must not be blocked even
+        with ftp=0."""
         with patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_post_json") as mock_post, \
              patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
             mock_post.return_value = {"id": 888, "name": "Tempo", "type": "Run"}
             r = json.loads(create_planned_event.create_event(
                 "test-user-123", name="Tempo", date_iso="2026-08-20",
@@ -212,7 +329,7 @@ class TestFtpGuard:
         with patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_post_json") as mock_post, \
              patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT") as mock_fit:
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 250}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 250}]
             mock_post.return_value = {"id": 777, "name": "Sweet", "type": "Ride"}
             json.loads(create_planned_event.create_event(
                 "test-user-123", name="Sweet", date_iso="2026-08-20",
@@ -221,6 +338,66 @@ class TestFtpGuard:
                         "power_min": 200, "power_max": 220}]))
         # _build_fit_file(sport, steps, max_hr, ftp) — ftp is the 4th positional
         assert mock_fit.call_args[0][3] == 250
+
+    def test_blocks_watt_targets_on_non_cycling_sport(self, mock_credentials):
+        """The FTP guard is sport-agnostic (de-scoped from Ride-only): watt
+        targets are dangerous for any sport, so a Run with watts + unknown FTP
+        must be refused just like a Ride."""
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post:
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="X", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "on", "duration_sec": 600,
+                        "power_min": 250, "power_max": 270}]))
+        assert "error" in r
+        assert "FTP" in r["error"]
+        mock_post.assert_not_called()
+
+
+class TestHrGuard:
+    """Mirror of the FTP guard: refuse BPM targets when max_hr is unknown,
+    rather than converting against a guessed default (was 193)."""
+
+    def test_blocks_hr_targets_when_max_hr_missing(self, mock_credentials):
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post:
+            # sport-settings returns no max_hr (ftp known)
+            mock_req.side_effect = [{"ftp": 250}]
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Z2", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "z2", "duration_sec": 1800,
+                        "hr_min": 130, "hr_max": 145}]))
+        assert "error" in r
+        assert "max_hr" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_blocks_hr_targets_when_settings_fetch_raises(self, mock_credentials):
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post:
+            mock_req.side_effect = RuntimeError("boom")
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Z2", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "z2", "duration_sec": 1800, "hr_min": 130}]))
+        assert "error" in r
+        assert "max_hr" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_allows_hr_targets_when_max_hr_known(self, mock_credentials):
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            mock_post.return_value = {"id": 5, "name": "Z2", "type": "Run"}
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Z2", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "z2", "duration_sec": 1800,
+                        "hr_min": 130, "hr_max": 145}]))
+        assert r.get("created") is True
 
 
 class TestDeleteEvent:
@@ -328,11 +505,11 @@ class TestFitConversion:
             max_hr=190, ftp=250)
         assert isinstance(b, (bytes, bytearray)) and len(b) > 0
 
-    def test_create_event_attaches_fit_to_payload(self):
+    def test_create_event_attaches_fit_to_payload(self, mock_credentials):
         pytest.importorskip("fit_tool")
         with patch.object(create_planned_event, "_request") as mock_req, \
              patch.object(create_planned_event, "_post_json") as mock_post:
-            mock_req.side_effect = [{"max_hr": 190}, {"ftp": 0}]
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
             mock_post.return_value = {"id": 1, "name": "Run", "type": "Run",
                                       "start_date_local": "2026-08-20T09:00:00",
                                       "category": "WORKOUT"}
@@ -357,3 +534,12 @@ class TestFitConversion:
         msg2 = create_planned_event._step_message(
             {"duration_sec": 600, "pace_min": "5:00"}, max_hr=0, ftp=0)
         assert not msg2.notes
+
+    def test_step_description_truncated(self):
+        """Long descriptions are capped so they can't bloat the FIT or trip a
+        downstream limit (notes has no FIT spec max, unlike workout_step_name)."""
+        pytest.importorskip("fit_tool")
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "pace_min": "5:00", "description": "x" * 400},
+            max_hr=0, ftp=0)
+        assert len(msg.notes) == 255

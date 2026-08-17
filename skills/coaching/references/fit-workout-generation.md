@@ -38,13 +38,17 @@ A minimal FIT workout file has this layout:
 ### HR conversion: BPM → %max HR
 
 intervals.icu stores HR targets as percentage of max HR. The tool fetches
-`max_hr` from the athlete profile (`GET /athlete/{id}`) and converts:
+`max_hr` from the athlete's per-sport settings
+(`GET /athlete/{id}/sport-settings/{sport}`) — the profile endpoint does NOT
+return max_hr — and converts:
 
 ```python
 hr_pct = max(1, min(100, round(bpm / max_hr * 100)))
 ```
 
-If the profile fetch fails, `max_hr` defaults to 193.
+If the fetch fails or returns no `max_hr`, the tool refuses HR targets rather
+than guessing (the guard returns an error instead of converting against a
+default).
 
 ### Pace conversion: min:sec/km → m/s
 
@@ -77,16 +81,22 @@ of FTP = 457W).
 |--------------------|-----------|-------------|
 | Run, TrailRun, VirtualRun | Running (1) | SPEED (pace) |
 | Ride, VirtualRide, GravelRide, MountainBikeRide | Cycling (2) | POWER |
+| Swim, OpenWaterSwim | Swimming (5) | none |
+| Walk | Walking (11) | none |
+| Hike | Hiking (17) | none |
+| Rowing | Rowing (15) | none |
 
 ### One target type per step — FIT limitation
 
 ⚠️ **The FIT file format supports only ONE target type per workout step.**
 A step can have a HR target, a power target, OR a pace target — not multiple.
 
-The `create_planned_event` tool's auto-detection (in `_build_fit_file`)
-prioritizes targets in this order: **HR > power > pace**. When a step has
-both `hr_min/hr_max` and `pace_min/pace_max`, the tool selects HR and
-**silently drops pace**.
+The `create_planned_event` tool's auto-detection (in `_step_message`) is
+sport-driven: it prefers the sport's primary target — **PACE for runs,
+POWER for rides** — when the step supplies it, then falls back to
+**HR > POWER > PACE**. So a run step with both `pace_min/pace_max` and
+`hr_min/hr_max` selects pace (matching the event target) and drops HR; a
+ride step with both power and HR selects power.
 
 **Practical rule:**
 - **Running threshold/interval reps:** use `pace_min`/`pace_max` only (no HR fields)
