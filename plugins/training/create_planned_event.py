@@ -136,8 +136,10 @@ def _step_message(s: dict, max_hr: int, ftp: int):
         msg.custom_target_power_low = int(lo)
         msg.custom_target_power_high = int(hi)
     elif target == "PACE":
-        lo = _parse_pace_to_ms(pc_low or s.get("min", 0))
-        hi = _parse_pace_to_ms(pc_high or s.get("max", 0))
+        # Pace is inverse to speed; normalize converted bounds for FIT.
+        pace_a = _parse_pace_to_ms(pc_low or s.get("min", 0))
+        pace_b = _parse_pace_to_ms(pc_high or s.get("max", 0))
+        lo, hi = sorted((pace_a, pace_b))
         msg.target_type = WorkoutStepTarget.SPEED
         msg.custom_target_speed_low = float(lo)
         msg.custom_target_speed_high = float(hi)
