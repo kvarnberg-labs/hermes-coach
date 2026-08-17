@@ -226,6 +226,21 @@ class TestSportMapping:
         # Resolve the same way the builder does and confirm it's RUNNING.
         assert getattr(Sport, create_planned_event._SPORT_META["TrailRun"][0]) == Sport.RUNNING
 
+    def test_variant_event_uses_canonical_settings_sport(self, mock_credentials):
+        """TrailRun shares Run's FTP/max_hr — fetch sport-settings for the
+        canonical base sport (Run), not the variant (TrailRun), which can 404
+        (the athlete configures 'Run', not 'TrailRun')."""
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            mock_post.return_value = {"id": 1, "name": "Trail", "type": "TrailRun"}
+            create_planned_event.create_event(
+                "test-user-123", name="Trail", date_iso="2026-08-20",
+                event_type="TrailRun",
+                steps=[{"name": "climb", "duration_sec": 600, "pace_min": "6:00"}])
+        assert mock_req.call_args[0][2] == "/athlete/i12345/sport-settings/Run"
+
 
 class TestTargetPrecedence:
     """When a step supplies more than one metric, the sport's primary target
@@ -338,6 +353,9 @@ class TestFtpGuard:
                         "power_min": 200, "power_max": 220}]))
         # _build_fit_file(sport, steps, max_hr, ftp) — ftp is the 4th positional
         assert mock_fit.call_args[0][3] == 250
+        # B1 regression guard: ftp/max_hr come from sport-settings, not the
+        # profile endpoint (which never returns max_hr).
+        assert mock_req.call_args[0][2] == "/athlete/i12345/sport-settings/Ride"
 
     def test_blocks_watt_targets_on_non_cycling_sport(self, mock_credentials):
         """The FTP guard is sport-agnostic (de-scoped from Ride-only): watt
@@ -445,10 +463,12 @@ class TestFitValidation:
         create_planned_event._validate_fit_targets(
             [{"power_pct_min": 95, "power_pct_max": 100}], max_hr=0, ftp=0)
 
-    def test_allows_small_watts_without_ftp(self):
-        # values <= 20 are treated as % already, not dangerous
-        create_planned_event._validate_fit_targets(
-            [{"power_min": 10, "power_max": 15}], max_hr=0, ftp=0)
+    def test_rejects_any_watts_without_ftp(self):
+        # any watt value with no FTP would be read as %FTP by Garmin — refuse,
+        # regardless of magnitude (no <=20 guess; use power_pct_* for %)
+        with pytest.raises(ValueError, match="FTP"):
+            create_planned_event._validate_fit_targets(
+                [{"power_min": 10, "power_max": 15}], max_hr=0, ftp=0)
 
     def test_allows_pace_without_ftp_or_max_hr(self):
         create_planned_event._validate_fit_targets(

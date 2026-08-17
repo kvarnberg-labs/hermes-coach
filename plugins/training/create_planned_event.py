@@ -50,6 +50,23 @@ def _sport_target(event_type: str) -> str | None:
     return _SPORT_META.get(event_type, (None, None))[1]
 
 
+# intervals.icu sport-settings are keyed by base activity type (Run, Ride,
+# Swim, ...). Variant event types (TrailRun, VirtualRide, GravelRide) share
+# their base type's FTP/max_hr — the athlete configures "Run", not "TrailRun"
+# — so fetch settings for the canonical base type. Querying the variant
+# directly can 404 (no settings entry with that id), leaving max_hr/ftp=0.
+_FIT_TO_ICU_SPORT = {
+    "RUNNING": "Run", "CYCLING": "Ride", "SWIMMING": "Swim",
+    "WALKING": "Walk", "HIKING": "Hike", "ROWING": "Rowing",
+}
+
+
+def _settings_sport(event_type: str) -> str:
+    """Canonical intervals.icu sport for the sport-settings URL."""
+    fit_name = _SPORT_META.get(event_type, ("GENERIC", None))[0]
+    return _FIT_TO_ICU_SPORT.get(fit_name, event_type)
+
+
 # ── Pace conversion ─────────────────────────────────────────────────────────
 
 
@@ -86,12 +103,13 @@ def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
         is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
         has_watts = s.get("power_min") is not None or s.get("power_max") is not None
         if has_watts and not is_pct and ftp <= 0:
-            lo = s.get("power_min")
-            if isinstance(lo, (int, float)) and float(lo) > 20:
-                raise ValueError(
-                    "watt-based power target cannot be safely converted to %FTP "
-                    "without the athlete's FTP. Specify power_pct_min/power_pct_max."
-                )
+            # Any watt value with no FTP would be read as %FTP by Garmin
+            # (e.g. 10W -> 10%). Require FTP for watts; use power_pct_* for %.
+            # Matches the call-site guard in create_event (no <=20 guess).
+            raise ValueError(
+                "watt-based power target cannot be safely converted to %FTP "
+                "without the athlete's FTP. Specify power_pct_min/power_pct_max."
+            )
         has_hr = s.get("hr_min") is not None or s.get("hr_max") is not None
         if has_hr and max_hr <= 0:
             raise ValueError(
@@ -333,7 +351,8 @@ def create_event(discord_id: str, **kw: Any) -> str:
         try:
             settings = _request(
                 athlete_id, api_key,
-                f"/athlete/{athlete_id}/sport-settings/{event_type}", timeout=10,
+                f"/athlete/{athlete_id}/sport-settings/{_settings_sport(event_type)}",
+                timeout=10,
             )
             ftp = settings.get("ftp") or 0
             max_hr = settings.get("max_hr") or 0
