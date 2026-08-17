@@ -101,7 +101,8 @@ def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
     """
     for s in steps:
         is_pct = bool(s.get("power_pct_min") or s.get("power_pct_max"))
-        has_watts = s.get("power_min") is not None or s.get("power_max") is not None
+        # Treat 0 as absent — tool schemas serialize omitted numeric fields as 0.
+        has_watts = s.get("power_min") not in (None, 0) or s.get("power_max") not in (None, 0)
         if has_watts and not is_pct and ftp <= 0:
             # Any watt value with no FTP would be read as %FTP by Garmin
             # (e.g. 10W -> 10%). Require FTP for watts; use power_pct_* for %.
@@ -110,7 +111,8 @@ def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
                 "watt-based power target cannot be safely converted to %FTP "
                 "without the athlete's FTP. Specify power_pct_min/power_pct_max."
             )
-        has_hr = s.get("hr_min") is not None or s.get("hr_max") is not None
+        # Same 0-as-absent treatment for HR.
+        has_hr = s.get("hr_min") not in (None, 0) or s.get("hr_max") not in (None, 0)
         if has_hr and max_hr <= 0:
             raise ValueError(
                 "HR target cannot be safely converted to %maxHR without the "
