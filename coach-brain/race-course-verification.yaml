@@ -1,0 +1,41 @@
+---
+# Race-course verification
+# Prevents equipment and training prescriptions based on an unverified event description.
+
+race_course_verification:
+  purpose: >
+    Confirm the event's actual surface, elevation, distance, start logistics, and
+    prevailing conditions before prescribing equipment, pacing, terrain-specific
+    training, finish-time expectations, or race nutrition.
+  minimum_checks:
+    - "Identify the exact event and date; distinguish similarly named races."
+    - "Use the organiser's official course page or technical guide as the primary source."
+    - "Confirm surface: asphalt, gravel, dirt, trail, or mixed, including any mandatory sections."
+    - "Confirm elevation profile, meaningful gradients, exposed sections, and technical hazards."
+    - "Confirm distance, aid stations, cutoffs, start time, and transport/bag logistics."
+  prescription_implications:
+    surface:
+      asphalt: "Prioritise sustained pacing, rolling resistance, traffic-free or road-safety context, and appropriate slick tyres."
+      gravel: "Consider tyre width, pressure, handling, vibration, and the actual roughness rather than the label alone."
+      trail_or_mixed: "Prioritise footing/handling, braking, technical skill, and effort over fixed pace."
+    elevation: "Use climbs and descents to set effort caps and gearing; do not infer a hilly course from a generic race label."
+    nutrition: "Base carbohydrate and fluid planning on verified duration, intensity, weather, and aid-station access."
+  uncertainty_rule: >
+    If the official source is unavailable or conflicting, state the uncertainty,
+    ask the athlete for the race link or technical guide, and give only terrain-
+    independent guidance. Never convert an unverified surface assumption into a
+    definitive bike, tyre, pace, or finish-time recommendation.
+  evidence_base: >
+    Course-specific pacing and equipment choices follow the event's measured
+    demands; endurance-sport nutrition should be scaled to duration and intensity
+    (ACSM Position Stand, 2016; Jeukendrup, 2014). The official organiser course
+    information is the authoritative source for event logistics and surface.
+  safety: >
+    Treat weather, road closures, poor visibility, loose surfaces, and technical
+    descents as safety constraints. Recommend conservative handling and obey the
+    organiser's and local authorities' instructions.
+  follow_up: >
+    After the event, compare the verified course with the athlete's account and
+    recorded elevation/surface experience; correct the coaching record if they
+    differ.
+
