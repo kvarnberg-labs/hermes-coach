@@ -1,0 +1,18 @@
+goal_continuity_adaptive_planning:
+  purpose: "Keep recommendations aligned with the athlete's durable goal while adapting the next session to current evidence."
+  workflow:
+    - "State the athlete's goal, horizon, and current phase before changing the plan."
+    - "Separate the invariant target from adjustable levers: frequency, volume, intensity, exercise choice, and recovery days."
+    - "Verify recent activities, wellness, planned events, constraints, and relevant sport settings before prescribing."
+    - "Compare planned versus completed duration, load, intensity, and subjective response; explain meaningful deviations without overclaiming cause."
+    - "Make the smallest effective adjustment, state what evidence triggered it, and define the next reassessment point."
+  decision_rules:
+    overload: "If load, soreness, illness symptoms, sleep disruption, HRV trend, or resting-HR trend indicate poor recovery, reduce intensity or volume and preserve consistency; do not compensate for missed work."
+    underload: "If recovery is stable and training is repeatedly below the phase's intended stimulus, add only one progression lever at a time and hold it long enough to observe tolerance."
+    uncertainty: "If key data are missing or contradictory, label the recommendation conditional and use RPE, talk test, and warm-up response as safety checks rather than inventing precision."
+  communication:
+    - "Distinguish measured facts, reasonable inferences, and the coaching decision."
+    - "Explain how today's adjustment still serves the long-term goal; avoid presenting a flexible plan as a failure of the original plan."
+    - "Record stable goals and constraints in memory, but do not treat every temporary metric or prescription as a durable fact."
+  basis: "Progressive overload and supercompensation require a sufficient stimulus followed by recovery; autoregulation using internal load and readiness helps preserve training quality and reduce maladaptation (ACSM, 2009; Halson, 2014; Mujika et al., 2018)."
+  safety: "Pain, disease symptoms, disproportionate breathlessness, dizziness, or worsening recovery signals require stopping or downgrading the session and appropriate clinical follow-up rather than further progression."
