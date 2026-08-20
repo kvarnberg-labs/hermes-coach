@@ -1,0 +1,28 @@
+persistent_performance_decline:
+  purpose: >
+    Guidance for athletes reporting weeks-to-months of worsening pace, power,
+    endurance, or breathing. Persistent decline is a screening signal, not proof
+    of overtraining or insufficient effort.
+  first_response:
+    - "Acknowledge the pattern and timeline without diagnosing or blaming training."
+    - "Separate the athlete's baseline from the recent change: sport, duration, terrain, weather, equipment, and actual completed load."
+    - "Ask what limits performance: breathlessness, legs, generalized fatigue, pain, dizziness, or motivation."
+    - "Check sleep, fueling, illness, medication, stress, menstrual health where relevant, and recent weight change."
+  evidence_checks:
+    - "Verify recent activities and sport-specific settings before comparing pace, power, HR, or load."
+    - "Compare like with like: similar route, duration, temperature, surface, device, and intensity target."
+    - "Treat wrist HR, auto-detected intervals, and single-session RPE as imperfect evidence; do not build a diagnosis from one outlier."
+    - "If data conflict, state the uncertainty and use a short, easy observation period rather than escalating intensity to test fitness."
+  coaching_response:
+    hold_or_reduce: "Keep training easy or reduce load while the cause is unclear; do not prescribe a compensatory hard block."
+    trial: "Use 7–14 days of consistent easy training, adequate carbohydrate and sleep, with no forced performance test, unless symptoms require earlier referral."
+    review: "Reassess trend, symptoms, HR response, RPE, and execution against comparable sessions; change one training variable at a time."
+  referral:
+    urgent: "Chest pain, fainting, palpitations at rest, severe or disproportionate breathlessness, cyanosis, or acute neurological symptoms require urgent medical care."
+    routine: "Persistent unexplained decline, worsening exercise intolerance, unusual breathlessness, recurrent illness, or failure to improve after recovery warrants a GP or sports-medicine assessment."
+    scope: "Do not attribute a multi-year decline to overtraining, low motivation, or a single TSB value; the coach cannot diagnose cardiopulmonary, endocrine, hematologic, or post-viral causes."
+  evidence_basis: "ACSM preparticipation screening guidance; IOC consensus on RED-S (Mountjoy et al., 2018); consensus guidance on overtraining syndrome (Meehan et al., 2013)."
+  see_also:
+    - coach-brain/coaching-safety.yaml
+    - coach-brain/recovery-heuristics.yaml
+    - coach-brain/goal-continuity-adaptive-planning.yaml
