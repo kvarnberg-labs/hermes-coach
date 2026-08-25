@@ -18,6 +18,9 @@ from typing import Any
 
 from ._brain import _load_all
 
+# Re-export for backward compatibility (tests import these from coaching)
+from ._brain import _brain_dir  # noqa: F401
+
 logger = logging.getLogger(__name__)
 
 
@@ -100,11 +103,14 @@ def register_tools(ctx) -> None:
             "description": (
                 "Retrieve structured coaching knowledge for a specific topic. "
                 "Use this when you need evidence-based principles, workout definitions, "
-                "recovery heuristics, injury protocols, or race preparation guidelines. "
-                "Topics include: altitude, cold weather, exercise database, female physiology, "
-                "heat, injury, nutrition, power zones, recovery, sleep, "
-                "strength principles, strength programming, strength standards, "
-                "strength training, tapering, training philosophies, vo2max, workout library."
+                "recovery heuristics, injury protocols, race preparation guidelines, "
+                "post-workout feedback, performance decline assessment, or data validation. "
+                "Topics include: altitude, cold weather, coaching safety, cycling hand numbness, "
+                "exercise database, female physiology, goal continuity, headless coaching failures, "
+                "heat, injury, nutrition, persistent performance decline, post-workout feedback, "
+                "power zones, race course verification, recovery, sleep, strength principles, "
+                "strength programming, strength standards, strength training, tapering, "
+                "temporal load validation, training philosophies, vo2max, workout library."
             ),
             "parameters": {
                 "type": "object",
