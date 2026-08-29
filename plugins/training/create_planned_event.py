@@ -61,6 +61,15 @@ _FIT_TO_ICU_SPORT = {
 }
 
 
+# Valid intervals.icu event categories (from OpenAPI spec — no "REST" exists).
+# For a rest day, use category NOTE (rest-day note) or WORKOUT with no load/steps.
+_VALID_CATEGORIES = frozenset([
+    "WORKOUT", "RACE_A", "RACE_B", "RACE_C", "NOTE", "PLAN", "HOLIDAY",
+    "SICK", "INJURED", "SET_EFTP", "FITNESS_DAYS", "SEASON_START",
+    "TARGET", "SET_FITNESS",
+])
+
+
 def _settings_sport(event_type: str) -> str:
     """Canonical intervals.icu sport for the sport-settings URL."""
     fit_name = _SPORT_META.get(event_type, ("GENERIC", None))[0]
@@ -273,9 +282,18 @@ def create_event(discord_id: str, **kw: Any) -> str:
     planned_intensity = kw.get("planned_intensity")
     duration_min = kw.get("duration_min")
     indoor = kw.get("indoor", False)
-    category = str(kw.get("category", "WORKOUT")).strip()
+    category = str(kw.get("category", "WORKOUT")).strip().upper()
     start_time = str(kw.get("start_time", "")).strip()
     step_list: list[dict] = kw.get("steps") or []
+
+    if category not in _VALID_CATEGORIES:
+        return json.dumps({
+            "error": (
+                f"Invalid category '{category}'. Valid values: "
+                f"{', '.join(sorted(_VALID_CATEGORIES))}. "
+                "For a rest day use NOTE or WORKOUT (with no load/steps)."
+            ),
+        })
 
     if not name:
         return json.dumps({"error": "name is required"})
@@ -472,6 +490,7 @@ def register_tools(ctx) -> None:
 
     _D = {"discord_id": {"type": "string", "description": "Discord user ID."}}
 
+
     _tool(
         name="create_planned_event",
         description=(
@@ -491,7 +510,7 @@ def register_tools(ctx) -> None:
             "planned_intensity": {"type": "number", "description": "Planned IF %."},
             "duration_min": {"type": "integer", "description": "Planned duration minutes."},
             "indoor": {"type": "boolean", "description": "True for Zwift/indoor."},
-            "category": {"type": "string", "description": "Category, default WORKOUT."},
+            "category": {"type": "string", "enum": list(_VALID_CATEGORIES), "description": "Event category. Valid: WORKOUT, RACE_A, RACE_B, RACE_C, NOTE, PLAN, HOLIDAY, SICK, INJURED, SET_EFTP, FITNESS_DAYS, SEASON_START, TARGET, SET_FITNESS. For a rest day use NOTE or WORKOUT (no load/steps)."},
             "start_time": {"type": "string", "description": "ISO datetime override."},
             "steps": {
                 "type": "array",
