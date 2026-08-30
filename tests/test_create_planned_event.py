@@ -594,3 +594,105 @@ class TestIndoorFtp:
                 event_type="VirtualRide", indoor=True,
                 steps=[{"name": "on", "duration_sec": 600, "power_min": 200, "power_max": 220}]))
         assert mock_fit.call_args[0][3] == 250  # falls back to outdoor
+
+
+class TestStepTargetValidation:
+    """Regression: steps[].target was unvalidated. An invalid string (e.g.
+    "WATTS") silently fell through every branch of _step_message and built a
+    targetless FIT step; "AUTO" (a valid API event-level enum value) also
+    produced no target instead of triggering auto-detection; and a declared
+    target without matching bounds wrote a 0–0 target. Same bug class as the
+    unvalidated `category` (REST 400), one level deeper."""
+
+    def test_rejects_invalid_step_target_string(self, mock_credentials):
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Threshold", date_iso="2026-08-20",
+                event_type="Ride",
+                steps=[{"name": "on", "duration_sec": 600,
+                        "target": "WATTS", "power_min": 250, "power_max": 270}]))
+        assert "error" in r
+        assert "invalid target" in r["error"]
+        assert "POWER" in r["error"]  # error names the valid values
+        mock_post.assert_not_called()
+
+    def test_rejects_invalid_step_target_names_index(self, mock_credentials):
+        """The error must name the offending step index so the model can fix
+        just that step (mirrors the empty-step guard)."""
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="X", date_iso="2026-08-20",
+                event_type="Ride",
+                steps=[{"name": "warm", "duration_sec": 300,
+                        "power_pct_min": 50, "power_pct_max": 60},
+                       {"name": "on", "duration_sec": 600, "target": "SPEED"}]))
+        assert "error" in r
+        assert "steps[1]" in r["error"]
+        mock_post.assert_not_called()
+
+    def test_auto_target_normalized_to_autodetection(self, mock_credentials):
+        """"AUTO" is the API's "let the system decide" — the model may copy it
+        from the event-level enum. It must be treated as omission so the
+        supplied bounds drive auto-detection, not a targetless step."""
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import WorkoutStepTarget
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post:
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            mock_post.return_value = {"id": 5, "name": "Run", "type": "Run"}
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "on", "duration_sec": 600, "target": "AUTO",
+                        "pace_min": "5:00", "pace_max": "5:30"}]))
+        assert r.get("created") is True
+        # The uploaded FIT really carries a pace (SPEED) target
+        import base64
+        fit_bytes = base64.b64decode(mock_post.call_args[0][3]["file_contents_base64"])
+        assert len(fit_bytes) > 0
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "target": "AUTO",
+             "pace_min": "5:00", "pace_max": "5:30"},
+            max_hr=190, ftp=0, primary="PACE")
+        assert msg.target_type == WorkoutStepTarget.SPEED.value
+
+    def test_declared_target_without_bounds_falls_back(self):
+        """target="PACE" with no pace bounds must not write a 0–0 SPEED
+        target — fall back to auto-detection over the bounds that DO exist."""
+        pytest.importorskip("fit_tool")
+        from fit_tool.profile.profile_type import WorkoutStepTarget
+        msg = create_planned_event._step_message(
+            {"duration_sec": 600, "target": "PACE",
+             "hr_min": 150, "hr_max": 160},
+            max_hr=200, ftp=0)
+        assert msg.target_type == WorkoutStepTarget.HEART_RATE.value
+        assert msg.custom_target_heart_rate_low == 75  # 150/200*100, not 0
+
+    def test_lowercase_target_normalized(self, mock_credentials):
+        """Case-insensitive: 'pace' is as valid as 'PACE'."""
+        with patch.object(create_planned_event, "_request") as mock_req, \
+             patch.object(create_planned_event, "_post_json") as mock_post, \
+             patch.object(create_planned_event, "_build_fit_file", return_value=b"FIT"):
+            mock_req.side_effect = [{"max_hr": 190, "ftp": 0}]
+            mock_post.return_value = {"id": 6, "name": "Run", "type": "Run"}
+            r = json.loads(create_planned_event.create_event(
+                "test-user-123", name="Run", date_iso="2026-08-20",
+                event_type="Run",
+                steps=[{"name": "on", "duration_sec": 600, "target": "pace",
+                        "pace_min": "5:00", "pace_max": "5:30"}]))
+        assert r.get("created") is True
+
+    def test_step_schema_has_target_enum(self):
+        """The schema must constrain target to the valid values so the model
+        never proposes 'WATTS'/'AUTO' in the first place."""
+        registered = {}
+
+        class FakeCtx:
+            def register_tool(self, name, toolset, schema, handler):
+                registered[name] = schema
+
+        create_planned_event.register_tools(FakeCtx())
+        steps = registered["create_planned_event"]["parameters"]["properties"]["steps"]
+        target_prop = steps["items"]["properties"]["target"]
+        assert set(target_prop["enum"]) == {"POWER", "HR", "PACE"}
+        assert "AUTO" not in target_prop["enum"]

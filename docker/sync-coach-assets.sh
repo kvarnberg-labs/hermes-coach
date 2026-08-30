@@ -5,10 +5,28 @@ set -eu
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
 
-# Sync coach-brain knowledge files
+# Sync coach-brain knowledge files.
+# The image copy is the source of truth (built from main). The PVC copy can
+# drift ahead ONLY via runtime-state edits (e.g. a cron agent fixing a stale
+# YAML directly on the PVC). Mirror the image into the PVC so merged updates
+# to EXISTING files propagate: `cp -rn` (no-clobber) skipped files that
+# already existed, so a merged edit to a coach-brain YAML was never applied
+# to a long-lived PVC — the pod then served stale knowledge indefinitely
+# (live instance: training-philosophies.yaml served without norwegian_singles
+# for weeks after the update merged). Per-file copy makes the image win for
+# every file it ships; PVC-only files (runtime-added, not in the image) are
+# untouched by this loop and survive.
 if [ -d /opt/hermes/coach-brain ]; then
   mkdir -p "${HERMES_HOME}/coach-brain"
-  cp -rn /opt/hermes/coach-brain/. "${HERMES_HOME}/coach-brain/"
+  for f in /opt/hermes/coach-brain/*.yaml; do
+    [ -e "$f" ] || continue
+    name="$(basename "$f")"
+    dest="${HERMES_HOME}/coach-brain/${name}"
+    if [ -f "$dest" ] && ! cmp -s "$f" "$dest"; then
+      echo "Updating coach-brain/${name} (image newer than PVC copy)"
+    fi
+    cp "$f" "$dest"
+  done
 fi
 
 # Sync coaching skill (only if not already present, so user edits survive)
