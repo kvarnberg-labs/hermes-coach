@@ -69,6 +69,13 @@ _VALID_CATEGORIES = frozenset([
     "TARGET", "SET_FITNESS",
 ])
 
+# Valid explicit step-level targets. The API's event-level target enum is
+# AUTO/POWER/HR/PACE, but for a STEP, "AUTO" means "let the system decide" —
+# which here is expressed by omitting `target` and letting auto-detection pick
+# from the supplied bounds. Any other string (e.g. "WATTS", "SPEED") silently
+# fell through every branch of _step_message and built a targetless step.
+_VALID_STEP_TARGETS = frozenset({"POWER", "HR", "PACE"})
+
 
 def _settings_sport(event_type: str) -> str:
     """Canonical intervals.icu sport for the sport-settings URL."""
@@ -129,6 +136,24 @@ def _validate_fit_targets(steps: list[dict], max_hr: int, ftp: int) -> None:
             )
 
 
+def _valid_declared_target(target: str, hr_low, hr_high, pw_low, pw_high,
+                           pc_low, pc_high) -> bool:
+    """A declared step target is usable only if it names a known target type
+    AND the step supplies matching bounds. An unknown string (e.g. "WATTS")
+    or a known target with no bounds (e.g. target="PACE", no pace_min/max)
+    must not be trusted: _step_message would write a 0–0 target or skip the
+    branch entirely. Return False so auto-detection (or omission) applies."""
+    if target not in _VALID_STEP_TARGETS:
+        return False
+    if target == "HR" and hr_low is None and hr_high is None:
+        return False
+    if target == "POWER" and pw_low is None and pw_high is None:
+        return False
+    if target == "PACE" and pc_low is None and pc_high is None:
+        return False
+    return True
+
+
 def _step_message(s: dict, max_hr: int, ftp: int, primary: str | None = None):
     """Build one WorkoutStepMessage from a step dict.
 
@@ -157,6 +182,10 @@ def _step_message(s: dict, max_hr: int, ftp: int, primary: str | None = None):
     pw_high = s.get("power_pct_max") or s.get("power_max")
     pc_low = s.get("pace_min")
     pc_high = s.get("pace_max")
+
+    if not _valid_declared_target(target, hr_low, hr_high, pw_low, pw_high,
+                                  pc_low, pc_high):
+        target = ""
 
     if not target:
         has_hr = hr_low is not None or hr_high is not None
@@ -354,6 +383,26 @@ def create_event(discord_id: str, **kw: Any) -> str:
                 "power_pct_min/power_pct_max (% FTP)."
             )})
 
+        # Validate explicit step targets BEFORE building the FIT. An invalid
+        # string silently fell through every branch of _step_message and built
+        # a targetless step (Garmin shows it as a plain timed block). "AUTO"
+        # is the API's "let the system decide" — normalize to omission so
+        # auto-detection fills it from the supplied bounds.
+        for i, s in enumerate(step_list):
+            raw = str(s.get("target", "") or "").strip().upper()
+            if not raw or raw == "AUTO":
+                if raw == "AUTO":
+                    s["target"] = ""
+                continue
+            if raw not in _VALID_STEP_TARGETS:
+                return json.dumps({"error": (
+                    f"steps[{i}] has invalid target '{raw}'. Valid step "
+                    "targets: POWER, HR, PACE — or omit target and fill "
+                    "pace_min/pace_max, hr_min/hr_max, or power "
+                    "bounds so it is auto-detected."
+                )})
+            s["target"] = raw
+
     # Set event-level target and generate FIT file for structured steps
     if step_list:
         target = _sport_target(event_type)
@@ -528,7 +577,7 @@ def register_tools(ctx) -> None:
                         "name": {"type": "string", "description": "Short step label, e.g. 'Interval'."},
                         "duration_sec": {"type": "integer", "description": "Step duration in seconds."},
                         "type": {"type": "string", "enum": ["WARMUP", "ACTIVE", "REST", "COOLDOWN"], "description": "Step intensity."},
-                        "target": {"type": "string", "description": "Explicit target HR/POWER/PACE; auto-detected if omitted."},
+                        "target": {"type": "string", "enum": ["POWER", "HR", "PACE"], "description": "Explicit target type for this step; auto-detected from the bounds you fill if omitted (do not set AUTO — just omit it). Must match the bounds you supply."},
                         "description": {"type": "string", "description": "Optional step notes."},
                         "hr_min": {"type": "integer", "description": "HR target low (BPM)."},
                         "hr_max": {"type": "integer", "description": "HR target high (BPM)."},
