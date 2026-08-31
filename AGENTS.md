@@ -46,6 +46,12 @@ Dockerfile              image definition
 tests/                  pytest suite
 ```
 
+**Note:** `plugins/training/` is the only plugin tree — the Dockerfile ships exactly
+that directory. The old standalone plugin dirs (`plugins/create_planned_event/`,
+`plugins/get_athlete_stats/`) were removed in Aug 2026; their tools live in
+`plugins/training/create_planned_event.py` and `plugins/training/get_athlete_stats.py`.
+Do not recreate standalone copies — they drift and become revert traps.
+
 ## Key rules
 
 - **Knowledge changes**: edit `coach-brain/*.yaml` only.

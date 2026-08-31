@@ -34,17 +34,12 @@ Current toolset → API endpoint mapping and known gaps.
 ### 3. Event creation/deletion — `create_planned_event` / `delete_planned_event` ✅
 **Endpoint:** `/api/v1/athlete/{id}/events` (POST to create, DELETE `/events/{id}` to remove).
 **What it gives:** Ability to create new planned workouts with name, date, type, description, planned training load, intensity, duration, indoor flag, and start time. Delete removes events by numeric ID.
-**Created via:** `develop_tool` — lives as a standalone plugin at `/opt/data/plugins/create_planned_event/` with its own `tool.py` and `register_tools(ctx)` function. Follows the same credential-loading and auth-header patterns as `intervals_icu.py`.
+**Source of truth:** `plugins/training/create_planned_event.py` — registered by the `training` plugin alongside the other intervals.icu tools. The old standalone plugin directory (`plugins/create_planned_event/`) was removed from the repo (Aug 2026); do not recreate or deploy from standalone copies.
 **Fields accepted on POST:** `name`, `type`, `category`, `start_date_local`, `description`, `icu_training_load`, `icu_intensity`, `moving_time` (seconds), `indoor` (bool).
 **Pitfall:** DELETE requires a `User-Agent` header; Cloudflare may block requests without one.
 **Use case:** Programmatically populate an athlete's training calendar, deleting stale sessions and creating new ones in a single session.
 
 ## Remaining gaps
-
-### 4. Calendar (past) — same `/athlete/{id}/events` but with historical date range
-**What it gives:** Past events and planned workouts, not just future.
-**Why it matters:** Training plan adherence tracking, comparing planned vs actual execution.
-**Blocked by:** `get_planned_events` only queries forward from today. Trivial fix — just extend the date range backward.
 
 ### 4. Calendar (past) — same `/athlete/{id}/events` but with historical date range
 **What it gives:** Past events and planned workouts, not just future.
