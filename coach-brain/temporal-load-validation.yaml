@@ -1,0 +1,33 @@
+temporal_load_validation:
+  purpose: >
+    Prevent historical training load, stale wellness records, or mismatched
+    comparison windows from being presented as current fatigue or readiness.
+  timeline_workflow:
+    - "Anchor every assessment to an explicit as-of date and timezone."
+    - "Separate today's record, the recent 7–14 day load, and the longer baseline; do not substitute one window for another."
+    - "Before attributing symptoms to overload, verify the dates, sport, duration, and actual completed activities in the relevant window."
+    - "Compare the planned session with what was completed, including missed, shortened, or non-sport activities."
+  evidence_rules:
+    - "Use current wellness and recent activities for today's decision; use 28–42 day data to establish trend, not to label today's fatigue."
+    - "Treat CTL, ATL, and TSB as model outputs whose meaning depends on the selected date and load history."
+    - "When athlete recollection conflicts with a summary, acknowledge the discrepancy, inspect the underlying activities, and state which evidence is uncertain."
+    - "Never fill a missing current value with an older value or describe an old hard session as recent."
+  coaching_response:
+    - "State measured facts first, with dates and the comparison window."
+    - "Then state the inference and its confidence; do not claim causation from load alone."
+    - "If the timeline is unclear, choose a conservative conditional session and ask one focused clarification rather than escalating training."
+    - "Reassess after the correct window is verified, especially when persistent decline or breathlessness is reported."
+  safety: >
+    Persistent symptoms, unusual breathlessness, chest pain, fainting, neurological
+    symptoms, or decline unexplained by the verified training timeline require
+    appropriate medical referral rather than a load-based training explanation.
+  evidence_basis: >
+    Training-load metrics are exponentially weighted estimates and are sensitive
+    to the observation window; sound monitoring combines internal load, external
+    load, symptoms, and context rather than relying on a single aggregate metric
+    (Bourdon et al., 2017; Halson, 2014).
+  see_also:
+    - coach-brain/goal-continuity-adaptive-planning.yaml
+    - coach-brain/persistent-performance-decline.yaml
+    - coach-brain/recovery-heuristics.yaml
+    - coach-brain/post-workout-feedback.yaml
