@@ -87,11 +87,28 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           D="${IMG_DIGEST#sha256:}"
           GEN="main-${SHORT_SHA}-${D:0:12}"
-          sed -i "s|hermes.kvarnberg.io/config-generation:.*|hermes.kvarnberg.io/config-generation: \"${GEN}\"|" \
-            apps/hermes/deployment.yaml
-          git add apps/hermes/deployment.yaml
-          git diff --staged --quiet || git commit -m "chore: bump config-generation to ${GEN} [skip ci]"
-          git push
+          bump() {
+            sed -i "s|hermes.kvarnberg.io/config-generation:.*|hermes.kvarnberg.io/config-generation: \"${GEN}\"|" \
+              apps/hermes/deployment.yaml
+            git add apps/hermes/deployment.yaml
+            git diff --staged --quiet || git commit -m "chore: bump config-generation to ${GEN} [skip ci]"
+          }
+          bump
+          # Concurrent merges each push their own bump; on a rejected push, redo
+          # the sed on the fresh tip instead of rebasing (a rebase would conflict
+          # on the same annotation line).
+          n=0
+          until git push; do
+            n=$((n+1))
+            if [ "$n" -ge 5 ]; then
+              echo "::error::annotation bump could not be pushed after $n attempts"
+              exit 1
+            fi
+            git fetch origin main
+            git reset --hard origin/main
+            bump
+            sleep $((n * 5))
+          done
 
   build-sandbox:
     name: Build and push hermes-sandbox image
