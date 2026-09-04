@@ -1,0 +1,19 @@
+headless_coaching_failures:
+  purpose: "Prevent technically successful scheduled jobs from producing misleading coaching reports."
+  identity:
+    - "A cron session may lack gateway user context even when its origin and delivery are configured."
+    - "Resolve the athlete from the job's configured origin.user_id or explicit delivery identity; verify that identity before reading any training data."
+    - "Routing metadata is not credential proof. Never infer an athlete ID from a channel, cached result, historical conversation, or another user's directory."
+  failure_classes:
+    context_identity_missing: "Direct tool calls lack a Discord snowflake; use the configured per-athlete identity and the same identity for every call."
+    onboarding_missing_or_mismatch: "Per-user credentials are absent, unnamed, or linked to another athlete; stop and request /start without making training claims."
+    delivery_failure: "The report was generated but did not reach the intended destination; inspect delivery separately from credential validity."
+    semantic_failure: "The scheduler reports success but the response contains an error, placeholder, empty report, or identity-unavailable message. Treat the report as failed."
+  procedure:
+    - "Validate identity, then fetch profile, wellness, activities, planned events, and sport settings with the resolved identity. Stop immediately when verification fails."
+    - "State the actual failure class and next action; do not describe missing data as poor recovery or complete rest."
+    - "When overnight fields are absent, say they were unavailable and use dated historical records only as context."
+  evidence_basis: "Credential isolation and observability principles: authentication, routing, scheduler status, and semantic report validity are independent signals; conflating them can misattribute data or hide failed care."
+  safety: "Never fabricate a brief from unverified data. A missing report is safer than a confident report about the wrong athlete."
+  source_notes: "Derived from recurring cron identity failures and the coaching skill's headless execution and semantic-success requirements."
+
