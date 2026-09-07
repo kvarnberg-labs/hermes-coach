@@ -55,13 +55,44 @@ match the class to the day's goal:
 - Echelon also offers Zwift and Sufferfest sessions in their library
 - Booking: via website (studiolechelon.com) or app
 
+## Checking the Live Schedule Online
+
+When an athlete asks "kan du kolla Echelons pass?" or you need to see the
+actual weekly schedule:
+
+1. Navigate to `https://studiolechelon.com/schema` directly — the
+   homepage "BOKA KLASS | SCHEMA" button does NOT reliably navigate
+   to the schedule page.
+2. The schedule page has tabs: "KLASSER INOMHUS", "KLASSER UTOMHUS",
+   "PÅ DISTANS (ONLINE)". Default is indoors.
+3. The page shows a weekly grid with day headers (idag, imorgon,
+   lördag, etc.) and class entries containing: time, duration, class
+   name, instructor, booking status, and spots available.
+4. Use `browser_snapshot(full=true)` to extract the full schedule
+   content — the compact snapshot truncates after ~20 entries.
+5. Filter to the athlete's time windows BEFORE presenting options.
+   Do NOT list all classes with ❌ markers for unavailable times —
+   only show the classes that fit the athlete's schedule.
+6. Note any "Closed for Holidays" or "Closed for maintenance" slots
+   so you don't recommend a class that's actually cancelled.
+7. If no classes match the athlete's time windows, say so clearly
+   and recommend outdoor/self-directed training instead.
+
 ## Pitfalls
 
 - **Summer schedule is limited.** During weeks 28–31 many slots show
   "Closed for Holidays." Don't recommend Echelon classes in summer
   without checking the current schedule first.
-- **Athlete's time windows.** Millberg can ride at 07:00 and 18:00+.
-  Always filter class recommendations to these time windows.
+- **Athlete's time windows — filter BEFORE presenting.** Millberg can
+  ride at 07:00 and 18:00+ on weekdays. When checking the live
+  schedule, filter class recommendations to these windows and ONLY
+  present matching options. Do NOT show all classes with ❌ markers
+  for midday slots — that's noise the athlete has to scan through.
+  If nothing matches, say so and recommend alternatives.
+- **Class intensity must match the planned session.** Don't recommend
+  a threshold class (Thin Red Line) when the plan calls for Z2
+  endurance, or vice versa. Always cross-reference the day's planned
+  workout type against the class type before suggesting it.
 - **Echelon classes are complementary, not a replacement** for outdoor
   rides when weather is good. Use them for structured quality sessions
   (threshold, VO2max) or when weather forces indoor.

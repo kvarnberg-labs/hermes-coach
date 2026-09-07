@@ -185,6 +185,25 @@ render `workout_doc` steps from API-created events. This is a UI
 limitation — the steps ARE stored correctly (30-second push cycle, `push_errors: null`).
 The athlete must check their Garmin device for step-by-step guidance.
 
+## Valid event categories — `category` must match intervals.icu enum
+
+The `create_planned_event` tool validates the `category` parameter against the intervals.icu
+API enum. Passing an invalid value like `"REST"` returns a tool-level error (not an API call):
+
+```
+{"error": "Invalid category 'REST'. Valid values: FITNESS_DAYS, HOLIDAY, INJURED, NOTE, ..."}
+```
+
+**Valid categories** (14 total): `WORKOUT`, `RACE_A`, `RACE_B`, `RACE_C`, `NOTE`, `PLAN`,
+`HOLIDAY`, `SICK`, `INJURED`, `SET_EFTP`, `FITNESS_DAYS`, `SEASON_START`, `TARGET`,
+`SET_FITNESS`.
+
+There is no `REST` category. For a rest day:
+- Use `category="NOTE"` (rest-day note on the calendar)
+- Or omit `category` (defaults to `WORKOUT`) and use a clear name like `"🛌 Vilodag"`
+
+The tool schema includes an `enum` constraint, so the LLM should only propose valid values.
+
 ## Getting events by ID
 
 GET `/api/v1/athlete/{id}/events/{eventId}` returns a single event including its

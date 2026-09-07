@@ -48,6 +48,14 @@ The goal is not a clean repro but a **higher reproduction rate**. Loop the trigg
 
 Stop and say so explicitly. List what you tried. Ask the user for: (a) access to whatever environment reproduces it, (b) a captured artifact (HAR file, log dump, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. Do **not** proceed to hypothesise without a loop.
 
+### PR review and update discipline
+
+When a bug fix is being prepared for a PR, inspect the actual PR diff and compare it with current `main` before approving or updating it. Treat unrelated deletions, weakened schemas, removed safety checks, or behavior changes as blockers. If the branch drifted, restore the current main version and reapply only the minimal fix.
+
+Run tests before claiming verification. Report the exact command, pass/skip/fail counts, and unrelated failures. Compilation alone is not testing, and a successful PR upload is not proof that the patch is correct. After a remote update attempt, verify its HTTP/API result; never claim the PR was updated after a failed upload.
+
+For tool/schema bugs, regression coverage must exercise the registration boundary and serialized artifact. Preserve empty-step rejection and explicit nested step schemas: `{}` steps can create a superficially successful Garmin workout with no usable targets. A narrow numeric-placeholder fix should prove that `0` placeholders do not trigger the FTP safety gate while genuine watt targets still do.
+
 ### Completion criterion — a tight loop that goes red
 
 Phase 1 is done when the loop is **tight** and **red-capable**: you can name **one command** — a script path, a test invocation, a curl — that you have **already run at least once** (paste the invocation and its output), and that is:
@@ -104,6 +112,20 @@ Tool preference:
 **Tag every debug log** with a unique prefix, e.g. `[DEBUG-a4f2]`. Cleanup at the end becomes a single grep. Untagged logs survive; tagged logs die.
 
 **Perf branch.** For performance regressions, logs are usually wrong. Instead: establish a baseline measurement (timing harness, `performance.now()`, profiler, query plan), then bisect. Measure first, fix second.
+
+## Tool/API schema failures: validate the boundary, not just the implementation
+
+When a bug involves an agent/tool call producing empty or malformed structured arguments, inspect the **registered schema** and the actual runtime-loaded module before blaming the serializer or provider. A schema such as `items: {"type": "object"}` permits `{}`; the implementation may then silently generate a valid-looking artifact with no targets.
+
+For array-of-object inputs:
+
+1. Trace the complete path: model schema → tool handler arguments → payload/FIT/HTTP request → downstream consumer.
+2. Make nested `items` explicit: declare `properties`, meaningful `required` fields, enums/ranges where useful, and `additionalProperties: false` when the shape is closed.
+3. Add a focused smoke test that registers the tool, extracts the published schema, and asserts the target fields and required fields are present. Test the real registration boundary, not only a private helper.
+4. If the repository has duplicated/staged/runtime plugin copies, identify which copy is actually loaded and keep the fix in the source that ships.
+5. Verify the serialized artifact contains the expected target fields (for example HR/pace bounds), not merely that an artifact was created.
+
+A successful tool call is not proof of a correct workout: `{}` steps can produce a FIT file with `has_steps: true` while Garmin has no usable targets.
 
 ## Phase 5 — Fix + regression test
 
