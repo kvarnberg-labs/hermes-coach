@@ -30,6 +30,13 @@ Steg 2 (efter steg 1, parallellt):
 
 ## Analyskrav
 
+### Sömn SKA alltid kommenteras
+- Hämta `sleep_hours` från `get_wellness` (tillgängligt från Apple Watch → HealthFit → intervals.icu)
+- Jämför med 7-dagars snitt — notera om natten var bra/dålig
+- Vid morgonbrief: kommentera nattens sömn tillsammans med HRV och vilopuls
+- Om `sleep_hours` är null: säg "sömndata saknas" — påstå inte att sömnen var dålig
+- `sleep_quality`/`sleep_score` syns ännu inte — bara timmar
+
 ### Puls SKA alltid analyseras
 - Hämta HR-zoner från `get_sport_settings` och `hr_zone_times` från aktivitetsdetaljer
 - Visa fördelning i tabell: zon, tid, andel i %
