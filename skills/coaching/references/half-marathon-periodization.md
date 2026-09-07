@@ -1,6 +1,17 @@
 # Half Marathon Periodization (10-month plan)
 
 A phased approach for an athlete targeting a sub-1:40 half marathon (~4:44/km).
+
+## Session-derived planning notes
+
+- Keep the race goal and season horizon persistent across conversations; do not let a missing transcript detail turn the plan into generic running advice.
+- For an athlete currently around 35–37 km/week, CTL ~29, with a recent 10 km around 53 min and a 16 km long run, begin with a stable 3-run structure: two conversational easy runs, one controlled quality session, and a gradual long-run extension. Add a fourth run only after several stable weeks.
+- If easy running is comfortable but modestly faster running causes rapid breathlessness while legs remain relatively fresh, preserve one controlled quality stimulus, avoid forcing arbitrary pace targets, and follow up on symptoms if the pattern persists. Normal blood/iron tests and a strong exercise test should be treated as reassuring prior context, not repeatedly re-proposed as the explanation.
+- Calendar plans should be shown for approval before bulk creation. After approval, make rest/deload days explicit, use date+weekday labels, and explain the weekly adjustment loop.
+
+## Adjustment loop for future reviews
+
+Weekly review: compare actual vs planned run count, duration, distance, session-RPE/load, long-run duration, quality completion, CTL/ATL/TSB, ramp rate, HRV, sleep, resting HR, and breathing symptoms. Hold progression when subjective fatigue or breathlessness worsens, resting HR is persistently elevated, HRV is suppressed, or quality degrades. Reduce intensity/volume and add recovery when multiple signals agree; progress one variable at a time (usually duration before pace) when recovery is stable. Reassess the phase every 3–4 weeks rather than changing the whole plan after one difficult run.
 Assumes 5–6 training days/week including running + strength. Based on Norwegian
 Singles methodology for threshold work, combined with progressive long runs
 and concurrent strength training.
