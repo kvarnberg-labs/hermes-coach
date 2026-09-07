@@ -32,7 +32,9 @@ grep "user=<DiscordName>" /opt/data/logs/gateway.log | tail -1
 | Joey | 117694354092457986 | 1508816099540602970 | i344591 |
 | Aldrin | 1257567128349966388 | 1531542557677322342 | i627207 |
 | Millberg | 785756739492511774 | 1516523703649697792 | i494629 |
-| Wilma | 1530918526905487432 | (unverified) | i652874 |
+| Wilma | 1530918526905487432 | 1531148721339891774 | i652874 |
+
+## Verified Channel Registry (as of 2026-08-24)
 
 ## Correct Cronjob Creation Pattern
 
