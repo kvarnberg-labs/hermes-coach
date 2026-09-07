@@ -29,7 +29,7 @@ instead of sequential. All are independent reads.
 
 ### Phase 2: Monthly stat comparison
 
-Pull `get_athlete_stats` for each month in the period. This gives:
+Pull `get_athlete_stats` for each month in the period. For a **weekly** report, pull the current week AND the previous week and present a week-over-week delta table (distance, training load, % change) — the athlete wants the trend, not just totals. This gives:
 - Total activities, distance, duration, calories, training load
 - Per-sport breakdown (Ride, VirtualRide, Run, WeightTraining, etc.)
 
@@ -116,6 +116,17 @@ Attach the chart as MEDIA in the response for visual context.
 
 ### 🎯 Slutsats
 ```
+
+### Early delivery of a scheduled report ("Kan jag få min veckorapport nu?")
+
+When the athlete asks for a scheduled report (weekly plan, morning brief, etc.) interactively BEFORE its cron fire time, deliver it immediately and coordinate the cron job so they don't receive the same report twice:
+
+1. Deliver the report in this session (full data pull + narrative).
+2. Pause the recurring job: `cronjob(action='pause', job_id=...)` — prevents the near-term duplicate.
+3. Schedule a one-shot resume so the recurring job is not lost: `cronjob(action='create', schedule=<ISO timestamp after the skipped fire>, deliver='local', repeat=1, prompt="Resume job <job_id> via cronjob action='resume'; verify enabled=true and next_run_at; reply with a short confirmation; do nothing else.")`.
+4. Verify the paused state and the resume job's next_run_at from the responses before telling the athlete.
+
+Why the resume job: pausing is silent — without the one-shot, the recurring report stays disabled forever. Use `deliver='local'` on the resume job (internal housekeeping, no user-facing content). The resume must fire AFTER the skipped occurrence (e.g. job paused Sunday 17:16 UTC before an 18:00 UTC fire → resume Monday 07:30 UTC, so next recurring run lands on the following Sunday).
 
 ## Related References
 
