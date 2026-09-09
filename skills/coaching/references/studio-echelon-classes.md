@@ -96,3 +96,41 @@ actual weekly schedule:
 - **Echelon classes are complementary, not a replacement** for outdoor
   rides when weather is good. Use them for structured quality sessions
   (threshold, VO2max) or when weather forces indoor.
+
+## Headless schedule check (Zoezi API — no browser needed)
+
+The live schedule also has a plain-JSON API on the Zoezi platform that
+backs both studiolechelon.com/schema and echelon.zoezi.se/schema (both
+are JS apps that render nothing over plain HTTP — do not scrape them):
+
+```
+GET https://echelon.zoezi.se/api/public/workout/get/all?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD
+Headers: User-Agent + Accept (public endpoint, no auth)
+Response: {"workouts": [...]}
+```
+
+Verified live 2026-09-09 (25 workouts returned). Field mapping:
+
+| Field | Meaning |
+|-------|---------|
+| `startTime` / `endTime` | Local Stockholm time, `YYYY-MM-DD HH:MM:SS` — duration = end − start |
+| `workoutType.name` | Class name (e.g. "Thin Red Line (Lactate Threshold Training) 60min"); `name` on the workout object itself is null |
+| `numBooked` / `space` | Booking fill; `numQueue` exists for waitlists |
+| `bookable` / `bookableForCustomer` | Whether the slot can be booked |
+| `description` | HTML blob from the class type |
+
+Use this endpoint for cron/headless sessions and quick checks; keep the
+browser walkthrough above for interactive sessions. Verify classes and
+class types against the live response before recommending — the schedule
+rotates and evening classes fill fast.
+
+## Class-data logging note
+
+Coach-led classes run in resistance mode (not ERG) — watts are
+self-selected and the class forces nothing. Analyze a class session as
+self-selected power/capacity, not as the class "pushing" the athlete
+past prescription; remind the athlete to hold their own watt target
+regardless of the room. Class apps may display percentages against the
+bike's locally configured FTP, which can differ from intervals.icu FTP —
+class power data logs physical watts either way, so post-ride analysis
+is unaffected.
