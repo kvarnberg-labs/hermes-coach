@@ -476,6 +476,8 @@ For a recurring-fatigue athlete, default to a stable rebuild block: one key inte
 
 - **Planned events are create/delete only — the API cannot edit an existing event.** PATCH/PUT to `/athlete/{id}/events/{event_id}` returns `405 Method Not Allowed`. When an event must change: delete it and recreate with corrected fields via `create_planned_event`, re-verifying the resulting date range afterward — or have the athlete edit it in the intervals.icu web UI when the event carries athlete-added history or notes. Never attempt an API edit and never invent an "edit event" tool call. See `references/planned-event-editing-limits.md`.
 
+- **Derive every weekday name mechanically — never by recall.** Weekday mislabels ("tisdagens 58 min/10 km" written for the Monday 7/9 run, Sep 9 morning brief) recur because models derive weekday words by recall even when every value is correct. For each date you name in a brief or plan, derive the weekday in the terminal (e.g. `python3 -c "import datetime as d; print({0:'måndag',1:'tisdag',2:'onsdag',3:'torsdag',4:'fredag',5:'lördag',6:'söndag'}[d.date(2026,9,7).weekday()])"`); headless cron prompts embed this rule. Verify Studio Echelon's live schedule via its public no-auth Zoezi API (`echelon.zoezi.se/api/public/workout/get/all?fromDate=…&toDate=…`, verified 2026-09-09) in headless sessions — the schema pages are JS apps that render nothing over plain HTTP. See `references/studio-echelon-classes.md` → 'Headless schedule check'.
+
 ## Post-Ride Analysis Checklist
 
 When an athlete finishes a ride or run and asks for a post-ride brief, pull this
