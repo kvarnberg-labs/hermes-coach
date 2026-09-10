@@ -365,6 +365,7 @@ def get_activity_detail(
             "icu_training_load,icu_intensity,"
             "avg_heartrate,max_heartrate,lthr,"
             "pace,avg_pace,max_speed,"
+            "pace_zones,pace_zone_times,threshold_pace,"
             "total_elevation_gain,avg_cadence,"
             "icu_lap_count,laps,interval_summary,"
             "icu_hr_zones,icu_hr_zone_times,"
@@ -411,6 +412,9 @@ def get_activity_detail(
         "max_hr": act.get("max_heartrate"),
         "lthr": act.get("lthr"),
         "pace_mps": act.get("pace") or act.get("avg_pace"),
+        "pace_zones": act.get("pace_zones"),
+        "pace_zone_times": act.get("pace_zone_times"),
+        "threshold_pace_mps": act.get("threshold_pace"),
         "max_speed_mps": act.get("max_speed"),
         "elevation_gain_m": act.get("total_elevation_gain"),
         "avg_cadence": act.get("avg_cadence"),
