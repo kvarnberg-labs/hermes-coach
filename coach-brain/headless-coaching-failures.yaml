@@ -9,11 +9,12 @@ headless_coaching_failures:
     onboarding_missing_or_mismatch: "Per-user credentials are absent, unnamed, or linked to another athlete; stop and request /start without making training claims."
     delivery_failure: "The report was generated but did not reach the intended destination; inspect delivery separately from credential validity."
     semantic_failure: "The scheduler reports success but the response contains an error, placeholder, empty report, or identity-unavailable message. Treat the report as failed."
+    output_corruption: "The response contains glitched or garbled tokens (mixed unprompted language, fused words like 'PlanB', broken punctuation/hash fragments inside numbers). GLM-5.3-flash-class models have a known intermittent token-corruption mode. Treat any such brief as failed."
   procedure:
     - "Validate identity, then fetch profile, wellness, activities, planned events, and sport settings with the resolved identity. Stop immediately when verification fails."
     - "State the actual failure class and next action; do not describe missing data as poor recovery or complete rest."
     - "When overnight fields are absent, say they were unavailable and use dated historical records only as context."
-  evidence_basis: "Credential isolation and observability principles: authentication, routing, scheduler status, and semantic report validity are independent signals; conflating them can misattribute data or hide failed care."
-  safety: "Never fabricate a brief from unverified data. A missing report is safer than a confident report about the wrong athlete."
-  source_notes: "Derived from recurring cron identity failures and the coaching skill's headless execution and semantic-success requirements."
-
+    - "Before finalizing any headless brief, run a final integrity sweep over the output: read the assembled report once as text and fix or regenerate sections with corrupted tokens, fused words, or broken numeric values (watt/pace/HR numbers must parse as valid figures)."
+  evidence_basis: "Credential isolation and observability principles: authentication, routing, scheduler status, semantic report validity, and textual integrity are independent signals; conflating them can misattribute data or hide failed care."
+  safety: "Never fabricate a brief from unverified data. A missing report is safer than a confident report about the wrong athlete, and a corrupted brief is worse than a delayed clean one."
+  source_notes: "Derived from recurring cron identity failures and the coaching skill's headless execution and semantic-success requirements; output_corruption class added 2026-09-12 after Sep 12 Millberg brief glitched (e.g. 'RegnarPlan B', corrupted watt range) — known GLM-5.3-flash intermittent corruption."
