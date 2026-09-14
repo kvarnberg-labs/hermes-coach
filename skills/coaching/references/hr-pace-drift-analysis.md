@@ -54,7 +54,7 @@ is systemic, not just easy-day drift.
 
 ### Step 5 — Connect to CTL/ATL/TSB history
 
-Pull `get_fitness_chart(days=90)` and check:
+Pull `get_fitness_chart(days=60)` and check: (60 days, not 90 — the tool downsamples to weekly resolution above 60 days, which would hide the consecutive-day TSB check below; 60 days still covers the comparison window.)
 
 - **CTL ramp rate** — sustained >+8 CTL/week is a red flag; >+10 is dangerous
 - **TSB** — how many consecutive days negative? >4–6 weeks of negative TSB

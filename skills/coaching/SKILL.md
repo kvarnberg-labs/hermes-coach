@@ -124,7 +124,7 @@ The user-facing explanation must name the actual failure class and next action. 
 | Race prep | get_coaching_knowledge("tapering") | Check get_planned_events |
 | Workout analysis | get_activity_detail(id) | Analyze laps, pace zones, HR zones |
 | Raw power/HR data | get_activity_streams(id) | Compute max 20-min power, validate FTP |
-| Long-range fitness | get_fitness_chart(days=365) | CTL/eFTP trends over months |
+| Long-range fitness | get_fitness_chart(days=365) — weekly resolution when days>60, daily ≤60 | CTL/eFTP trends over months |
 | Calendar management | `create_planned_event` / `delete_planned_event` | See `references/event-creation-pitfalls.md`, `references/fit-workout-generation.md`, and `references/calendar-session-2026-08.md`; verify event types, targets, returned loads, and the resulting date range |
 | Activity detail parsing (running) | — | See references/activity-detail-analysis.md |
 | Activity detail parsing (cycling) | — | See references/cycling-activity-analysis.md |

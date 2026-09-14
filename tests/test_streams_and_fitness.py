@@ -104,14 +104,14 @@ def test_activity_streams_missing_credentials():
 # ---------------------------------------------------------------------------
 
 def test_fitness_chart_returns_long_range_data():
-    """Should return daily CTL/ATL/TSB records with sport-specific eFTP."""
+    """days>365 range: weekly downsample keeps one record per ISO week."""
 
     mock_response = [
-        {"id": "2026-01-01", "ctl": 30.0, "atl": 20.0, "rampRate": 1.5,
+        {"id": "2026-01-05", "ctl": 30.0, "atl": 20.0, "rampRate": 1.5,
          "sportInfo": [{"type": "Ride", "eftp": 250.0}]},
-        {"id": "2026-01-02", "ctl": 31.0, "atl": 22.0, "rampRate": 2.0,
+        {"id": "2026-01-12", "ctl": 31.0, "atl": 22.0, "rampRate": 2.0,
          "sportInfo": [{"type": "Ride", "eftp": 251.0}]},
-        {"id": "2026-01-03", "ctl": 32.0, "atl": 24.0, "rampRate": 2.5,
+        {"id": "2026-01-19", "ctl": 32.0, "atl": 24.0, "rampRate": 2.5,
          "sportInfo": [{"type": "Ride", "eftp": 252.0}]},
     ]
 
@@ -124,6 +124,7 @@ def test_fitness_chart_returns_long_range_data():
                     )
 
     assert result["source"] == "intervals.icu"
+    assert result["resolution"] == "weekly"
     assert result["record_count"] == 3
     assert len(result["records"]) == 3
 
@@ -193,3 +194,48 @@ def test_fitness_chart_handles_none_values():
     assert result["records"][0]["tsb"] is None  # ATL is None
     assert result["records"][1]["tsb"] is None  # CTL is None
     assert result["records"][2]["tsb"] == 10.0  # both present
+
+
+def test_fitness_chart_weekly_downsample_last_day_wins():
+    """days>60 keeps one record per ISO week — the last daily record of each."""
+
+    mock_response = [
+        {"id": "2026-01-05", "ctl": 30.0, "atl": 20.0, "rampRate": 1.5, "sportInfo": []},
+        {"id": "2026-01-07", "ctl": 33.0, "atl": 21.0, "rampRate": 1.5, "sportInfo": []},
+        {"id": "2026-01-12", "ctl": 35.0, "atl": 25.0, "rampRate": 2.0, "sportInfo": []},
+    ]
+
+    with patch("training.intervals_icu._load_credentials", return_value=("i494629", "test_key")):
+        with patch("training.intervals_icu._cache_get", return_value=None):
+            with patch("training.intervals_icu._cache_set"):
+                with patch("training.intervals_icu._request", return_value=mock_response):
+                    result = json.loads(
+                        get_fitness_chart("discord_dm", days=365)
+                    )
+
+    assert result["resolution"] == "weekly"
+    assert result["record_count"] == 2
+    # Last day of ISO week 2026-W02 wins over the first.
+    assert result["records"][0]["date"] == "2026-01-07"
+    assert result["records"][0]["tsb"] == 12.0
+    assert result["records"][1]["date"] == "2026-01-12"
+
+
+def test_fitness_chart_daily_resolution_short_range():
+    """days<=60 keeps every daily record, no downsampling."""
+
+    mock_response = [
+        {"id": "2026-01-01", "ctl": 30.0, "atl": 20.0, "rampRate": 1.0, "sportInfo": []},
+        {"id": "2026-01-02", "ctl": 31.0, "atl": 22.0, "rampRate": 1.0, "sportInfo": []},
+    ]
+
+    with patch("training.intervals_icu._load_credentials", return_value=("i494629", "test_key")):
+        with patch("training.intervals_icu._cache_get", return_value=None):
+            with patch("training.intervals_icu._cache_set"):
+                with patch("training.intervals_icu._request", return_value=mock_response):
+                    result = json.loads(
+                        get_fitness_chart("discord_dm", days=30)
+                    )
+
+    assert result["resolution"] == "daily"
+    assert result["record_count"] == 2

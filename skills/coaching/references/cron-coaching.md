@@ -79,7 +79,7 @@ show('FITNESS', intervals_icu.get_fitness_chart, 365)
 | `get_sport_settings(uid, sport="Ride")` | `sport` (str) | JSON string |
 | `get_recent_activities(uid, days=14, sport=None)` | `days`, `sport` | JSON string |
 | `get_power_curve(uid, sport="Ride", days=42)` | `sport`, `days` | JSON string |
-| `get_fitness_chart(uid, days=365)` | `days` | JSON string |
+| `get_fitness_chart(uid, days=365)` | `days` | JSON string (weekly resolution when days>60) |
 | `get_activity_detail(uid, activity_id)` | `activity_id` (str) | JSON string |
 | `get_activity_streams(uid, activity_id)` | `activity_id` (str) | JSON string |
 

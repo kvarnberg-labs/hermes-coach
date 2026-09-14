@@ -17,7 +17,7 @@ How to efficiently produce a comprehensive training period summary
 ```
 verify_athlete_identity()
 get_wellness(days=42)         # 6 weeks of daily CTL/ATL/TSB/HRV/sleep
-get_fitness_chart(days=90)    # long-range CTL/eFTP trends
+get_fitness_chart(days=90)    # long-range CTL/eFTP trends (weekly resolution: days>60 downsamples)
 get_recent_activities(days=N) # activities covering the period
 get_sport_settings()           # current FTP, zones, LTHR
 get_athlete_stats(start, end) # monthly totals per sport

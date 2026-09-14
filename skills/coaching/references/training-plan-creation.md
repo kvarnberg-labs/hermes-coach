@@ -9,7 +9,7 @@ Before proposing ANY program, pull the complete data set:
 
 ```
 verify_athlete_identity  →  get_athlete_profile  →  get_wellness(days=42)
-get_fitness_chart(days=365)  →  get_recent_activities(days=90)
+get_fitness_chart(days=365, weekly resolution)  →  get_recent_activities(days=90)
 get_sport_settings(sport="Ride")  [repeat for Run if multi-sport]
 get_planned_events(days_ahead=90)  →  get_power_curve(days=90)
 get_coaching_knowledge("training periodization")

@@ -20,7 +20,7 @@ Authentication:
   The athlete self-reference in URL paths is the string "i".
 
 User keys are stored per-Discord-user in:
-  $HERMES_HOME/users/<discord_id>/intervals_key   (age-encrypted)
+  $HERMES_HOME/users/<discord_id>/intervals_key   (plaintext, chmod 0600, PVC-local)
 
 Cache:
   Raw API responses are cached under:
@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import date
 from typing import Any, Optional
 
 from ._credentials import (
@@ -797,7 +798,9 @@ def get_fitness_chart(
     365 days vs wellness's 42-day cap).  Returns daily CTL (fitness),
     ATL (fatigue), TSB (form), ramp rate, and per-sport eFTP, W', Pmax
     so you can see season-long progression, identify peak fitness periods,
-    and track eFTP trends over time.
+    and track eFTP trends over time. Daily resolution for days <= 60;
+    weekly (last daily record per ISO week) for longer ranges, so season
+    queries stay compact in model context.
 
     Use this when you need to answer "how has my fitness evolved"
     questions — CTL trajectory, eFTP history, training load over months.
@@ -851,9 +854,27 @@ def get_fitness_chart(
             }
         )
 
+    # Season-range queries downsample to weekly (last daily record per ISO
+    # week) so ~365-day responses stay compact in model context. CTL/ATL/TSB
+    # are level metrics — the weekly close is representative, no averaging.
+    resolution = "daily"
+    if days > 60:
+        resolution = "weekly"
+        by_week: dict[tuple[int, int], dict] = {}
+        undated: list[dict] = []
+        for rec in records:
+            try:
+                rec_date = date.fromisoformat(str(rec.get("date") or ""))
+            except ValueError:
+                undated.append(rec)
+                continue
+            by_week[rec_date.isocalendar()[:2]] = rec
+        records = list(by_week.values()) + undated
+
     result = {
         "source": "intervals.icu",
         "days": days,
+        "resolution": resolution,
         "record_count": len(records),
         "records": records,
     }
@@ -942,11 +963,8 @@ def register_tools(ctx) -> None:
     _tool(
         name="get_recent_activities",
         description=(
-            "Fetch completed workouts from intervals.icu. "
-            "Returns per activity: id, name, date, type, duration, distance, training load, "
-            "CTL/ATL after, intensity factor, normalized power, FTP used, trimp, "
-            "hr_load, power_load, RPE, pace, avg/max HR, max speed, "
-            "elevation gain, and cadence. "
+            "Fetch completed workouts from intervals.icu: per-activity summaries "
+            "with training load, CTL/ATL, intensity, power/HR/pace aggregates, and RPE. "
             "Use this to assess recent training stress before making a recommendation. "
             "The 'id' field can be passed to get_activity_detail for deeper workout analysis."
         ),
@@ -970,10 +988,8 @@ def register_tools(ctx) -> None:
         name="get_wellness",
         description=(
             "Fetch wellness data from intervals.icu: CTL (fitness), ATL (fatigue), "
-            "TSB (form = CTL - ATL), ramp rate, HRV, HRV SDNN, sleep hours, "
-            "sleep quality, sleep score, resting HR, readiness, weight, "
-            "fatigue, soreness, motivation, mood, and per-sport info "
-            "(eFTP, W', Pmax). Always call this when evaluating readiness or recovery."
+            "TSB (form), ramp rate, HRV, sleep, resting HR, readiness, mood, and "
+            "per-sport eFTP/W'/Pmax. Always call this when evaluating readiness or recovery."
         ),
         properties={
             **_DISCORD_ID_PROP,
@@ -990,11 +1006,9 @@ def register_tools(ctx) -> None:
     _tool(
         name="get_planned_events",
         description=(
-            "Fetch the athlete's upcoming planned workouts and races from the intervals.icu calendar. "
-            "Returns per event: id, date, category, type, name, description, planned training load, "
-            "planned intensity, projected CTL/ATL, time target, and distance target. "
-            "Use this when checking for A-races, recovery weeks, or planned intensity sessions. "
-            "Provides TSB trajectory projections for taper planning."
+            "Fetch upcoming planned workouts and races from the intervals.icu calendar: "
+            "per-event date, category, name, planned load/intensity, projected CTL/ATL, "
+            "and time/distance targets. Use for A-races, recovery weeks, and taper planning."
         ),
         properties={
             **_DISCORD_ID_PROP,
@@ -1035,18 +1049,12 @@ def register_tools(ctx) -> None:
     _tool(
         name="get_activity_detail",
         description=(
-            "Fetch full detail for a single activity from intervals.icu: "
-            "name, date, type, duration, distance, training load, intensity "
-            "factor, average and max HR, LTHR, pace, max speed, elevation gain, "
-            "cadence, normalized and average power, FTP used, RPE, calories, "
-            "carbs used, coasting time, decoupling, variability index, "
-            "efficiency factor, power-HR ratio, power-HR Z2 minutes, sweet spot "
-            "range (min/max), joules above FTP, warmup and cooldown time, "
-            "cadence Z2, HR zones with zone times, power zones with zone times, "
-            "lap count, interval summary, and laps. "
-            "Use this after get_recent_activities when you need to analyze "
-            "a specific workout in depth (e.g. interval splits, zone distribution, "
-            "aerobic decoupling, fueling, pacing). "
+            "Fetch full detail for a single activity from intervals.icu: laps, "
+            "interval summary, HR/power/pace zone distributions, decoupling, "
+            "efficiency, fueling, and pacing metrics. "
+            "Use this after get_recent_activities to analyze a specific workout "
+            "in depth (interval splits, zone distribution, aerobic decoupling, "
+            "fueling, pacing). "
             "The activity_id comes from the 'id' field in get_recent_activities output."
         ),
         properties={
@@ -1081,19 +1089,14 @@ def register_tools(ctx) -> None:
     _tool(
         name="get_activity_streams",
         description=(
-            "Fetch raw second-by-second stream data for a single activity "
-            "from intervals.icu. "
-            "Returns per-stream data summaries (sample counts, first/last 5 data points) "
-            "for power (watts), heart rate (bpm), cadence (rpm), speed (m/s), "
-            "elevation (m), temperature (°C), and any other available channels. "
-            "Also returns computed peak power at standard durations "
-            "(5s, 1min, 5min, 20min, 60min) plus an eFTP estimate. "
-            "Use this when you need to validate FTP against raw data, "
-            "analyze pacing, or detect intervals from the actual power trace "
-            "rather than Garmin's auto-detection. "
+            "Fetch raw second-by-second stream data for a single activity. "
+            "Returns compact per-stream summaries (first/last samples) plus computed "
+            "peak power at 5s/1min/5min/20min/60min and an eFTP estimate — not the "
+            "raw arrays. Use to validate FTP against raw data, analyze pacing, or "
+            "detect intervals from the actual power trace. "
             "The activity_id comes from the 'id' field in get_recent_activities output. "
-            "CAUTION: processes large arrays (10K+ data points per stream) server-side. "
-            "Use only when you genuinely need raw-data-derived metrics for computation."
+            "CAUTION: processes large arrays server-side — use only when raw-data "
+            "metrics are genuinely needed."
         ),
         properties={
             **_DISCORD_ID_PROP,
@@ -1113,13 +1116,11 @@ def register_tools(ctx) -> None:
         name="get_fitness_chart",
         description=(
             "Fetch the full CTL/ATL/TSB fitness history from intervals.icu "
-            "(up to 365 days). "
-            "Returns daily CTL (fitness), ATL (fatigue), TSB (form), ramp rate, "
-            "and per-sport eFTP, W', Pmax for season-long trend analysis. "
-            "Like get_wellness but for long-range questions: CTL trajectory, "
-            "eFTP progression, peak fitness periods, training load over months. "
-            "Use this when you need to answer 'how has my fitness evolved' "
-            "rather than 'how recovered am I today'."
+            "(up to 365 days). Daily resolution for days <= 60; weekly "
+            "(last day per ISO week) for longer ranges, so season queries stay "
+            "compact. Use for 'how has my fitness evolved' questions: CTL "
+            "trajectory, eFTP progression, peak fitness periods. "
+            "For 'how recovered am I today' use get_wellness instead."
         ),
         properties={
             **_DISCORD_ID_PROP,
