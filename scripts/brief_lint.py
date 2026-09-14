@@ -140,6 +140,30 @@ def lint(text, words):
     return findings
 
 
+LEAK_PATTERNS = [
+    # Internal tool/platform noise must never reach a delivered brief.
+    # Found live 2026-09-14: three consecutive delivered briefs (Wilma veckoplan
+    # Sep 13, both Sep 14 morning briefs) ended with a verbatim Hermes
+    # "File-mutation verifier" block + write_file denial for /tmp/brief_draft.md
+    # — the lint's own SLUTKONTROLL workflow leaked internal errors to athletes.
+    (r"File-mutation verifier|HERMES_WRITE_SAFE_ROOT|Write denied\]|"
+     r"Traceback \(most recent call last\)|to confirm", "internal tool-error leak"),
+    (r"\u26a0\ufe0f", "internal warning-marker emoji in delivered body"),
+    (r"brief_draft", "internal draft-file reference in delivered body"),
+]
+
+
+def lint_delivery_noise(text):
+    """[HARD] findings for internal platform noise leaked into a delivered brief."""
+    out = []
+    for pattern, label in LEAK_PATTERNS:
+        m = re.search(pattern, text)
+        if m:
+            s = max(0, m.start() - 20)
+            out.append(("HARD", f"{label}: ...{text[s:m.end() + 30]}..."))
+    return out
+
+
 def main():
     if len(sys.argv) > 2:
         print("usage: brief_lint.py [<file>]  (or pipe text on stdin)", file=sys.stderr)
@@ -159,6 +183,7 @@ def main():
         return 1
 
     findings = lint(text, load_words())
+    findings.extend(lint_delivery_noise(text))
     if findings:
         n_hard = sum(1 for sev, _ in findings if sev == "HARD")
         print(f"CORRUPTION-LINT: {len(findings)} finding(s) "
