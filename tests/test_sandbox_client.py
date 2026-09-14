@@ -170,3 +170,68 @@ class TestRegisterGeneratedTool:
             )
             assert not result["success"]
             assert "no k8s" in result["error"]
+
+    def test_rejects_forbidden_import_os(self):
+        result = json.loads(
+            sandbox_client.develop_tool(
+                tool_name="my_tool",
+                description="d",
+                code="import os\n\ndef register_tools(ctx): pass",
+                test_code="def test(): pass",
+            )
+        )
+        assert not result["success"]
+        assert "forbidden" in result["error"].lower()
+        assert "import os" in result["error"]
+
+    def test_rejects_each_forbidden_pattern(self):
+        for bad in (
+            "x = eval('1')",
+            "exec('pass')",
+            "import subprocess",
+            "__import__('os')",
+            "from os import path",
+        ):
+            result = json.loads(
+                sandbox_client.develop_tool(
+                    tool_name="my_tool",
+                    description="d",
+                    code=f"{bad}\n\ndef register_tools(ctx): pass",
+                    test_code="def test(): pass",
+                )
+            )
+            assert not result["success"], bad
+            assert "forbidden" in result["error"].lower(), bad
+
+    def test_clean_code_passes_scan(self):
+        # Clean code passes the denylist and proceeds to the k8s stage,
+        # which is unavailable in tests — proving the scan did not reject it.
+        with patch(
+            "training.sandbox_client._k8s_client", side_effect=RuntimeError("no k8s")
+        ):
+            result = json.loads(
+                sandbox_client.develop_tool(
+                    tool_name="my_tool",
+                    description="d",
+                    code="def register_tools(ctx): pass",
+                    test_code="def test(): pass",
+                )
+            )
+        assert not result["success"]
+        assert "no k8s" in result["error"]
+
+    def test_test_code_is_not_scanned(self):
+        # Intentional asymmetry: test_code runs only inside the network-
+        # isolated sandbox Job and never reaches the gateway.
+        with patch(
+            "training.sandbox_client._k8s_client", side_effect=RuntimeError("no k8s")
+        ):
+            result = json.loads(
+                sandbox_client.develop_tool(
+                    tool_name="my_tool",
+                    description="d",
+                    code="def register_tools(ctx): pass",
+                    test_code="import os\n\ndef test(): assert True",
+                )
+            )
+        assert "no k8s" in result["error"]

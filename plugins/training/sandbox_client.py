@@ -30,6 +30,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -42,6 +43,15 @@ _SANDBOX_IMAGE = os.environ.get(
 _SANDBOX_NAMESPACE = "hermes-sandbox"
 _JOB_TIMEOUT_SECS = 90  # wall-clock wait before we give up
 _JOB_ACTIVE_DEADLINE = 60  # k8s hard-kills the pod after this many seconds
+
+# Mechanical guard for CONTRACT.md's tool-code bans (os, subprocess, eval,
+# exec, __import__). A denylist, not a capability boundary — it removes
+# reliance on the LLM's self-assessment; the k8s sandbox remains the real
+# isolation for test execution.
+_FORBIDDEN = re.compile(
+    r"(?:^|\W)(?:import\s+os\b|from\s+os\b|import\s+subprocess\b|from\s+subprocess\b"
+    r"|__import__\s*\(|\beval\s*\(|\bexec\s*\()"
+)
 
 
 def _plugins_dir() -> Path:
@@ -320,6 +330,23 @@ def develop_tool(
             {
                 "success": False,
                 "error": "tool_name must be snake_case alphanumeric.",
+            }
+        )
+
+    # Static guard: CONTRACT.md bans os/subprocess/eval/exec in tool code.
+    # Scan `code` only — test_code runs inside the network-isolated sandbox
+    # Job and never reaches the gateway.
+    forbidden = _FORBIDDEN.search(code)
+    if forbidden:
+        return json.dumps(
+            {
+                "success": False,
+                "error": (
+                    f"Tool code contains a forbidden construct: "
+                    f"{forbidden.group(0).strip()!r}. Per CONTRACT.md, generated "
+                    "tools must be pure Python with no os, subprocess, eval, "
+                    "exec, or __import__ usage (no env or file access)."
+                ),
             }
         )
 
