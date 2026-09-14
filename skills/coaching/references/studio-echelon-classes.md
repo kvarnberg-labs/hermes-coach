@@ -134,3 +134,9 @@ regardless of the room. Class apps may display percentages against the
 bike's locally configured FTP, which can differ from intervals.icu FTP —
 class power data logs physical watts either way, so post-ride analysis
 is unaffected.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Echelon class recommendations must match both time windows AND planned intensity.** When checking the live Echelon schedule for an athlete, filter to their available time slots (e.g. 07:00 and 18:00+ for Millberg) AND cross-reference against the day's planned workout type. Do NOT present a threshold class (Thin Red Line) when the plan calls for Z2, even if the time slot fits. If no class matches both constraints, say so and recommend outdoor or self-directed training.

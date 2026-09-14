@@ -7,7 +7,7 @@ When creating a cron job for a DIFFERENT athlete than the one you're currently t
 1. **NEVER use `deliver: "origin"`** — it resolves to YOUR chat, not the athlete's. The athlete will never see it; you'll get their briefings forever.
 2. **Always set `deliver: "discord:<channel_id>:<channel_id>"`** using the athlete's actual Discord DM channel ID.
 3. **Find the channel ID:** `grep "user=<Name>" /opt/data/logs/gateway.log | tail -1` — the `chat=<id>` field is the channel.
-4. **Verify before creating:** run `ls /opt/data/users/*/intervals_athlete_name` to confirm the athlete's snowflake and credential directory exist.
+4. **Verify before creating:** confirm the athlete's snowflake from the job's `origin.user_id` (or the explicitly configured delivery identity), then check `ls /opt/data/users/<snowflake>/intervals_athlete_name` to confirm the credential directory exists. Never enumerate other users' directories.
 5. **Coaching tools fail in cron** — there is no Discord gateway. Any cron prompt that says "Anropa `get_wellness(days=1)`" will fail silently and the model will fabricate data. Use the terminal workaround below instead.
 
 **Example — correct setup for Aldrin (snowflake 1257567128349966388, channel 1531542557677322342):**
@@ -43,15 +43,15 @@ argument and bypass the `_require_user_id` guard (it checks `kw`, not positional
 
 ### One-liner for all data at once
 
-**CRITICAL:** Use `PYTHONPATH=/opt/hermes` and import as `from plugins.training import
-intervals_icu`. The `sys.path.insert(0, 'plugins/training')` hack fails because
-`intervals_icu.py` uses package-relative imports (`from ._credentials import ...`) which
-require the parent package `plugins.training` to be importable.
+**CRITICAL:** Use `PYTHONPATH=/opt/data/plugins` and import as `from training
+import intervals_icu` — the plugin's package-relative imports (`from ._credentials
+import ...`) resolve inside the `training` package. The `/opt/hermes` live-plugin
+tree is read-only and must not be used.
 
 ```bash
-cd /opt/hermes && HERMES_HOME=/opt/data PYTHONPATH=/opt/hermes python3 -c "
+cd /opt/data && HERMES_HOME=/opt/data PYTHONPATH=/opt/data/plugins python3 -c "
 import sys, json
-from plugins.training import intervals_icu
+from training import intervals_icu
 uid = 'SNOWFLAKE_HERE'
 
 # Print each result as a labeled JSON block
@@ -85,17 +85,11 @@ show('FITNESS', intervals_icu.get_fitness_chart, 365)
 
 ### Finding the athlete's snowflake
 
-```bash
-# List all user directories with credential files
-ls -d /opt/data/users/*/intervals_athlete_name | while read f; do
-  dir=$(dirname "$f")
-  snowflake=$(basename "$dir")
-  name=$(cat "$f")
-  echo "$snowflake → $name"
-done
-```
-
-The snowflake is the 17-20 digit directory name under `/opt/data/users/`.
+Resolve the snowflake from the cron job itself: the job's `origin.user_id` (or
+the explicitly configured athlete delivery identity) IS the athlete's Discord
+snowflake. Do not enumerate user directories — cross-athlete enumeration is
+an ops-only procedure, documented in the repo's `docs/OPS-BREAKGLASS.md`
+(not shipped to athlete sessions).
 
 ### Weather (no user_id needed)
 
@@ -115,7 +109,7 @@ get_weather(latitude=58.238, longitude=11.93, location_name="Ljungskile")
   and field-name normalisation. Call them directly.
 - Do NOT use `sys.path.insert(0, 'plugins/training')` — the plugin uses package-relative
   imports (`from ._credentials import ...`) which fail without the parent package. Always
-  use `PYTHONPATH=/opt/hermes` + `from plugins.training import intervals_icu`.
+  use `cd /opt/data && PYTHONPATH=/opt/data/plugins` + `from training import intervals_icu`.
 
 ### Pitfall: Cron prompt hard-coded values may be stale
 
@@ -131,3 +125,9 @@ When the prompt's FTP conflicts with the API's configured FTP, **trust the API a
 recalculate all watt targets against the API's FTP.** A Z2 prescription of 148–170W at
 252W FTP becomes 146–196W at 261W FTP — use the live number for zone boundaries.
 Include the API-derived FTP in your briefing so the athlete sees which baseline you used.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **CRITICAL: Cronjob deliver must target the ATHLETE'S channel, never your own.** When creating or updating a cron job for another athlete, you MUST set `deliver` to the athlete's explicit Discord channel ID. Use `grep "user=<Name>" /opt/data/logs/gateway.log | tail -1` to find it. In cron sessions, coaching tools fail — use terminal workaround. 

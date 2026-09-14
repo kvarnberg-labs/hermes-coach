@@ -2,36 +2,13 @@
 
 How to fix or extend intervals.icu coaching tools and get changes merged.
 
-## Editing protected plugin files
+## Where the plugin files live
 
-The `patch` and `write_file` tools block writes to **any path matching
-`plugins/training/`** — this includes both the live `/opt/hermes/plugins/training/`
-and a cloned copy at `/tmp/hermes-coach/plugins/training/`.  Always use `terminal`
-with a Python heredoc for all plugin edits:
-
-```bash
-python3 << 'PYEOF'
-path = 'plugins/training/intervals_icu.py'  # relative to repo root
-with open(path) as f:
-    content = f.read()
-# ... string replacement ...
-with open(path, 'w') as f:
-    f.write(content)
-PYEOF
-```
-
-### File location mismatch
-
-The plugin files live at `/opt/hermes/plugins/training/` (the live pod path).
-However, the working directory for edits is `/opt/data/plugins/training/`.
-Not all files are present at both locations — e.g. `onboarding.py` exists at
-`/opt/hermes/plugins/training/onboarding.py` but NOT at
-`/opt/data/plugins/training/onboarding.py`. Before editing, check both paths
-and copy from the live path if needed:
-
-```bash
-cp /opt/hermes/plugins/training/onboarding.py /opt/data/plugins/training/onboarding.py
-```
+The plugin source lives in the repo — `github.com/kvarnberg-labs/hermes-coach`,
+path `plugins/training/`. All edits go through PRs (AGENTS.md rule): clone the
+repo and edit there. The pod's `/opt/hermes/plugins/training/` is a read-only
+baked-in copy — never edit it. Break-glass live-pod procedures are documented
+only in the repo's `docs/OPS-BREAKGLASS.md` (not shipped to athlete sessions).
 
 ## Verification steps
 
@@ -88,21 +65,14 @@ mock_store.assert_called_once_with("user123", "i99999", "mykey", "")
 
 ### Step 0: Verify the endpoint against real data FIRST
 
-Before writing any code, test the API endpoint directly with the athlete's credentials
-to confirm it exists and returns the expected shape. The intervals.icu API has
-non-obvious path structures — e.g. activity streams are at `/api/v1/activity/{id}/streams`
-(NOT `/api/v1/athlete/{id}/activities/{id}/streams`). Guessing the wrong path costs
-more time than a 2-minute curl test:
-
-```bash
-ATHLETE_ID=$(cat /opt/data/users/discord_dm/intervals_athlete_id)
-API_KEY=$(cat /opt/data/users/discord_dm/intervals_key)
-AUTH=$(echo -n "API_KEY:${API_KEY}" | base64)
-
-# Test the endpoint
-curl -s "https://intervals.icu/api/v1/activity/i163669391/streams" \
-  -H "Authorization: Basic ${AUTH}" | python3 -m json.tool | head -30
-```
+Before writing any code, confirm the endpoint exists and returns the expected
+shape — use the OpenAPI docs tools (`search_intervals_api_docs` +
+`get_intervals_api_endpoint`) or exercise the endpoint through the plugin's
+`_request()` wrapper in your clone. The intervals.icu API has non-obvious path
+structures — e.g. activity streams are at `/api/v1/activity/{id}/streams`
+(NOT `/api/v1/athlete/{id}/activities/{id}/streams`). Guessing the wrong path
+costs more time than a 2-minute check. Manual curl-with-credential testing is
+an ops-only break-glass procedure (repo `docs/OPS-BREAKGLASS.md`).
 
 Also try multiple URL patterns if the first one 404s — the intervals.icu API
 has inconsistent path conventions (some use `/athlete/{id}/...`, others use
@@ -111,8 +81,6 @@ bare `/activity/{id}/...`).
 **Pitfall:** The wellness endpoint already supports 365-day date ranges via
 `oldest`/`newest` params — there is no separate `/fitness` endpoint. What
 looks like a missing endpoint is often just an existing one with wider params.
-
-### Step 1: Add the function
 
 ## Example: Adding missing fields to existing tool
 
@@ -196,19 +164,24 @@ Files must exist at `$HERMES_HOME/<file-path>` (i.e. `/opt/data/<file-path>`).
 When `create-pr.sh` is unavailable:
 
 ```bash
-export GITHUB_TOKEN=$(cat /opt/data/.github_token)
-git clone "https://oauth2:${GITHUB_TOKEN}@github.com/kvarnberg-labs/hermes-coach.git"
+git clone "https://github.com/kvarnberg-labs/hermes-coach.git"
 cd hermes-coach
 git checkout -b fix/your-branch-name
 # ... make edits ...
 git add plugins/training/coaching.py
 git commit -m "fix: describe the change"
 git push -u origin HEAD
+```
 
+For the PR API calls below, token handling is documented in the repo's
+`docs/OPS-BREAKGLASS.md` (not shipped to the pod). If no token is available,
+present the unified diff and note that a human needs to apply it.
+
+```bash
 curl -s -X POST \
   -H "Authorization: token $GITHUB_TOKEN" \
   https://api.github.com/repos/kvarnberg-labs/hermes-coach/pulls \
-  -d '{\"title\":\"fix: ...\",\"body\":\"...\",\"head\":\"fix/your-branch-name\",\"base\":\"main\"}'
+  -d '{"title":"fix: ...","body":"...","head":"fix/your-branch-name","base":"main"}'
 ```
 
 If `GITHUB_TOKEN` is invalid or unavailable, present the unified diff and note

@@ -55,17 +55,12 @@ sec_per_km = 1000 / threshold_pace_mps
 pace_str = f"{int(sec_per_km // 60)}:{int(sec_per_km % 60):02d}"
 ```
 
-## Direct API access (when tool is unavailable)
+## When the tool is unavailable
 
-If `get_activity_detail` isn't registered as a tool, use curl directly:
-
-```bash
-curl -s -u "API_KEY:<key>" \
-  "https://intervals.icu/api/v1/athlete/<athlete_id>/activities/<activity_id>?fields=id,name,start_date_local,type,moving_time,distance,laps,pace,pace_zones,pace_zone_times,interval_summary,threshold_pace,heartrate_zones,heartrate_zone_times"
-```
-
-Credentials are stored at `$HERMES_HOME/users/discord_dm/intervals_key` and
-`$HERMES_HOME/users/discord_dm/intervals_athlete_id`.
+If `get_activity_detail` / `get_activity_streams` are not registered, fix the
+tool registration — do not fall back to raw API calls with the athlete's
+credentials. Direct-API recipes are ops-only and are documented in the repo's
+`docs/OPS-BREAKGLASS.md` (not shipped to athlete sessions).
 
 ## Example: July 1 threshold run analysis
 
@@ -88,3 +83,9 @@ for structured interval sessions with significant warm-up/cooldown volume.
 - **Never use session average pace for interval prescriptions.** Always
   pull `interval_summary` from the activity detail. The gap between average
   and interval pace grows with longer warm-ups and cooldowns.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Session average pace is NOT interval pace.** When analyzing a threshold/interval run, the `pace_mps` and `distance_km / duration_min` from `get_recent_activities` give the session average including warm-up, recovery jogs, and cool-down — which can be 20-30 sec/km slower than the actual work intervals. Always pull `get_activity_detail(activity_id)` and use `interval_summary` (Garmin auto-detection, e.g. "6x 4m43s 4:44") and `pace_zone_times` for the real work-interval paces. Never prescribe today's interval pace based on yesterday's session average.

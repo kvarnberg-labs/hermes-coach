@@ -96,3 +96,9 @@ Nästa vecka är redan återhämtning — perfekt tajming
 - Resting HR recovery is slower — don't trust a single normal reading
 - Never compress the return timeline to "catch up" — accept the lost session
 - If the athlete is 65+, consider extending the return by a full week
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Missed session due to illness — adjust the plan, don't just skip.** When an athlete reports missing a session because they were sick: (a) verify by checking `get_recent_activities` — the missing date confirms their report, (b) check `get_wellness(days=7)` for resting HR trend — a +10-15 bpm spike 2-3 days before the missed session is a common early-warning signal, (c) consult `get_coaching_knowledge("injury return to training")` → `illness` key for the return timeline (Day 1-2: light walk only, Day 3-4: Z1 if feeling well, Day 5-7: normal easy training, Day 8+: intensity with caution), (d) patch the training plan file to replace the missed session with "SJUK ❌" and adjust upcoming sessions per the return timeline — a 120-min long run 3 days after illness becomes 50-60 min Z2 low, (e) if a recovery week was already scheduled next, note that the timing is actually favorable — the forced rest lines up with the planned deload.

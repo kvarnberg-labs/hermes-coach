@@ -114,3 +114,24 @@ If none of these are available, prescribe by HR zones from LTHR:
 - **Strength isn't optional for runners.** It improves economy, prevents injury, and maintains bone density. Don't drop it entirely.
 - **10 months is plenty of time.** Don't rush the progression. The athlete benefits more from consistent 5–6 day weeks than from cramming volume.
 - **Female athlete considerations:** Cycle phase affects RPE and recovery. Late follicular (days 6–14) is the best window for key sessions and testing. Luteal phase may require 10–15% intensity reduction. Track ferritin — heavy menstrual bleeding increases iron deficiency risk.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Never invent, upgrade, or inflate an athlete's race goal.** The athlete's goal is a durable coaching anchor stored in memory, cron prompts, and conversation history. Do NOT infer a more ambitious target than what is recorded. For example, if the recorded goal is "halvmaraton under 1:40 (4:44/km)", do NOT write "sub-1:38 (4:39/km)" or "elit-aktigt halvmaramål" unless the athlete has explicitly stated a new goal in the current conversation. Goal inflation is a fabrication — the athlete did not say it, and it shifts all training prescriptions toward intensities the athlete has not targeted. If you are unsure of the exact goal, retrieve it from saved memory or the verified profile, and if still unclear, ask the athlete directly. When an athlete DOES state a new or revised goal, save it to memory immediately and update any cron prompts that reference the old goal.
+### Goal-anchored half-marathon planning
+For a runner targeting a spring 2027 half-marathon under 1:40 (4:44/km), keep the goal as the persistent anchor while adapting the current week. **Continuity requirement:** if the goal was already confirmed and saved, do not ask the athlete to repeat it. Retrieve/use saved memory and the verified profile, then acknowledge the goal briefly before planning. If the athlete says the same discussion has happened repeatedly or expresses frustration, stop the loop: state the known goal and constraints, give the concrete next-step plan, and do not ask another generic intake question unless a genuinely blocking detail is missing.
+
+**Plan quality requirement:** a practical plan must explain the causal hypothesis it is testing (for example, reducing accumulated fatigue while preserving one controlled quality stimulus), define a short initial block with exact weekly structure, and specify what observation will trigger progression or reduction. Do not present a generic multi-phase outline as if it were a sufficient answer when the athlete asks "what do you think?" Use current sport-specific data only as evidence: recent TSB/ATL can support current fatigue, but cannot explain a decline that began years earlier. Avoid overclaiming that a recent load spike is the root cause.
+
+Do not prescribe goal pace as everyday training pace when current data is substantially slower; use phases: aerobic consistency and easy-volume tolerance first, threshold/volume development next, race-specific pace later, then taper. A suitable early template is 3 runs/week (two easy, one controlled quality) plus 1–2 short strength sessions, with the long run on the weekend. Progress toward four runs and 40–50 km/week only when recovery and breathing tolerate it; build the long run gradually toward 18–22 km. Schedule a deload every 3rd–4th week, and use actual-vs-planned load, CTL/ATL/TSB, HRV, sleep, resting HR, RPE, and breathing—not pace alone—to decide whether to hold, progress, or reduce.
+
+### Time and cross-training constraints
+
+Treat a weekday availability of about 60 minutes as a hard practical constraint. Keep weekday runs, quality sessions, and combined sessions within that limit; place longer long runs on weekends. Strength is support work for the half-marathon: early phases may use two controlled sets at RPE 6–7 to limit DOMS and interference with running, progressing to three sets only after stable tolerance. A 15–25 minute easy crosstrainer block at RPE 3–4 may be added before or after short strength as low-intensity aerobic volume, but it is not a replacement for the key running stimulus and should not compromise the next run.
+
+### Trust and continuity
+
+If the athlete asks whether the plan has a purpose, explicitly connect every component to the race goal (easy running = aerobic base, quality = threshold/fart, long run = durability, strength = economy/resilience, recovery = adaptation). Never promise perfect recall of every conversation: state what is saved, use fresh intervals.icu data, and say when a detail is missing instead of guessing. If a goal is confirmed, save the goal and key constraints, but still re-check current data before each progression.
+

@@ -60,28 +60,19 @@ isolation design.
 3. Check which credential directory is in use:
    ```bash
    echo "HERMES_HOME=$HERMES_HOME"
-   ls /opt/data/users/  # per-user directories (snowflake-named)
+   ls /opt/data/users/<snowflake>/  # the athlete's own credential directory (never enumerate other users')
    cat /opt/data/users/<snowflake>/intervals_athlete_id
    ```
 4. If old `discord_dm` directory still exists with stale credentials, that means
    the athlete hasn't re-onboarded since the per-user isolation update.
 
-## Live-pod credential fix
+## Credential recovery
 
-```bash
-mkdir -p $HERMES_HOME/users/<snowflake>
-echo -n "<api_key>" > $HERMES_HOME/users/<snowflake>/intervals_key
-echo -n "<athlete_id>" > $HERMES_HOME/users/<snowflake>/intervals_athlete_id
-echo -n "<discord_name>" > $HERMES_HOME/users/<snowflake>/intervals_athlete_name
-chmod 600 $HERMES_HOME/users/<snowflake>/intervals_*
-rm -f $HERMES_HOME/users/<snowflake>/cache/*.json
-```
-
-After fix, re-verify:
-```python
-verify_athlete_identity()  # should return verified: true
-get_athlete_profile()       # should return correct name and athlete_id
-```
+The sanctioned fix for stale or wrong credentials is re-onboarding via `/start`
+(coach_onboard), which writes all three per-user files and verifies against
+the API in one step. Manual per-snowflake credential writes are a break-glass
+operation — documented only in the repo's `docs/OPS-BREAKGLASS.md` (not
+shipped to athlete sessions).
 
 ## Prevention
 
@@ -90,3 +81,9 @@ get_athlete_profile()       # should return correct name and athlete_id
 - After verification passes, call `get_athlete_profile` as secondary confirmation.
 - If the athlete says "you're looking at the wrong person" or questions the data,
   check identity immediately — do not argue or defend the data.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Credential path mismatch causes wrong-athlete data.** The plugin resolves credentials from `Path(HERMES_HOME) / "users" / discord_id`. With `HERMES_HOME=/opt/data`, it reads from `/opt/data/users/discord_dm/`. If wrong credentials are in that path, ALL tools silently return the wrong athlete's data. **Prevention:** `verify_athlete_identity` catches this — it returns `verified: false` when credentials lack a stored name (manually placed) or the API profile mismatches. The permanent fix (PR #15) adds identity verification. **Live fix:** copy correct credential files AND write `intervals_athlete_name` (Discord username), then call `verify_athlete_identity`. This reverts on pod restart. See `references/identity-verification.md`.

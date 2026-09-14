@@ -99,3 +99,9 @@ supercompensate — HR at given pace will drop back down.
   If the drift coincides with a heat wave, check temperature before
   concluding accumulated fatigue. Use `get_weather` if the athlete's
   location is known.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Pace at low HR declining — quantify before advising.** When an athlete reports "I'm getting slower at the same heart rate" or "my HR is creeping up at my usual easy pace," do NOT dismiss it as perception or tell them to just run slower. This is a real physiological signal: cardiovascular efficiency regression from accumulated fatigue. Pull 30 days of easy runs, tabulate pace vs max HR vs RPE (controlling for elevation), and compare early vs late periods. Connect to CTL ramp rate and consecutive negative-TSB days via `get_fitness_chart(90)`. If the data confirms drift (e.g., +5–10 bpm at same pace, +1 RPE, stagnant threshold pace with rising HR), prescribe a deload — typically two consecutive light weeks if the athlete has had >6–8 weeks of negative TSB. Do not confuse this with the ventilatory-threshold breathlessness plateau (`references/running-plateau-and-breathlessness.md`) — different cause, different fix.

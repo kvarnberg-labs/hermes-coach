@@ -124,3 +124,9 @@ A byte-level template substitution approach was attempted but proved too
 fragile — FIT file size varies with step name length and definition
 message field counts, making offset-based patching unreliable. The
 template code has been removed entirely.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Running pace targets in `create_planned_event` WORK — do NOT tell the athlete otherwise.** The `pace_min`/`pace_max` parameters produce correct pace targets in the generated FIT file and sync to Garmin. The old bug was in the `workout_doc` code path (pre-PR #53), NOT in the current FIT-based `file_contents_base64` approach. **CRITICAL: FIT format allows only ONE target type per step.** Auto-detection: the sport's primary target wins when the step supplies it (PACE for runs, POWER for rides); otherwise HR > POWER > PACE — a run step with both pace and HR keeps pace and drops HR. Use pace OR HR per step, never both: pace for threshold/interval reps, HR for warmup/cooldown/recovery. If you need both on a work interval, put pace as the target and include the HR range in the step `description`. Do not recall the old `workout_doc` pace bug and apply it to the current tool — they are different code paths. If you are unsure whether pace works, check `references/event-creation-pitfalls.md` BEFORE telling the athlete it can't be done.

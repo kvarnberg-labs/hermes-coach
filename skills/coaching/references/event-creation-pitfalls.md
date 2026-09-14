@@ -220,36 +220,22 @@ User-Agent: hermes-coach/1.0
 
 Cloudflare blocks requests without a `User-Agent` header.
 
-## Direct API call (fallback when create_planned_event tool unavailable)
+## When create_planned_event cannot do it
 
-```bash
-cd /opt/data && python3 -c "
-import urllib.request, json, base64
+Use `create_planned_event` / `delete_planned_event` for all calendar writes.
+If a capability is genuinely missing (an endpoint or field the tools do not
+cover), the gap goes through a PR or `develop_tool` — do not fall back to
+direct API calls with the athlete's key. (The historical raw-POST recipe is
+preserved in the repo's `docs/OPS-BREAKGLASS.md`, not shipped to athlete
+sessions.)
 
-base = '/opt/data/users/<snowflake>'
-with open(f'{base}/intervals_key') as f:
-    api_key = f.read().strip()
-with open(f'{base}/intervals_athlete_id') as f:
-    athlete_id = f.read().strip()
+---
 
-url = f'https://intervals.icu/api/v1/athlete/{athlete_id}/events'
-auth = base64.b64encode(f'API_KEY:{api_key}'.encode()).decode()
+## Moved from SKILL.md (2026-09-14)
 
-payload = {
-    'name': 'Workout Name',
-    'type': 'Ride',
-    'category': 'WORKOUT',
-    'start_date_local': '2026-07-31T09:00:00',
-    'description': 'Description text.',
-    'icu_training_load': 110,
-    'icu_intensity': 100
-}
+- **Configured FTP vs eFTP gap — flag it, but don't treat eFTP as gospel.** On every post-ride analysis, cross-reference `get_sport_settings` configured FTP with eFTP from `get_wellness` → `sport_info`. A gap >10W means zone times, IF, and sweet-spot ranges are all calculated against potentially the wrong baseline. Flag the gap first, then present both interpretations. An IF of 0.76 at 284W FTP is very different from an IF of 0.92 at 234W eFTP.
 
-req = urllib.request.Request(url, data=json.dumps(payload).encode(),
-    headers={'Authorization': f'Basic {auth}', 'Content-Type': 'application/json',
-             'User-Agent': 'hermes-coach/1.0'}, method='POST')
+**When creating planned events: `power_pct_min/max` uses configured FTP, not eFTP.** If you prescribe 88-94% of eFTP 274W (241-258W) but set `power_pct` to 88-94%, the trainer displays 252-269W (88-94% of configured 286W). Always compute percentages against configured FTP for the event payload, then verify the displayed watts match the intended physiological zone. Cross-reference after creation: ask "what does Zwift/Garmin show for the target?" — the athlete's device is the final arbiter.
 
-resp = urllib.request.urlopen(req)
-print(json.loads(resp.read()))
-"
-```
+**eFTP is a model estimate, not a measurement.** It derives from the power-duration curve across ALL rides and cannot distinguish maximal efforts from training rides. **Warning signs that eFTP is UNDERESTIMATING:** (1) eFTP is trending DOWN while CTL is trending UP — the athlete is getting fitter, not weaker; (2) no recent maximal efforts (FTP test, race, hill-climb PR, Zwift race) in the past 4–6 weeks; (3) the athlete reports feeling strong at power levels that eFTP says should be VO2max. In these cases: flag the discrepancy, present both interpretations, **explicitly ask the athlete which FTP feels right**, and if they push back on eFTP — trust them. Propose a structured FTP test (20-min all-out or ramp test) to resolve the question definitively. Do NOT insist on eFTP when the athlete disagrees and the data context supports their position.
+- **Pace window width — use 15–20 sec/km for outdoor running prescriptions.** Narrow pace windows (e.g. 4:44–4:52/km, an 8-second band) are unrealistic for outdoor GPS running where pacing granularity, terrain, and GPS drift make hitting a tight range frustrating. Use **15–20 second pace windows** for all running prescriptions: threshold (e.g. 4:40–4:55/km), easy (e.g. 5:20–5:40/km), and interval work. This applies to both `create_planned_event` step targets and verbal pace guidance in coaching messages. Indoor/treadmill running can use tighter windows (5–8 sec) since pace is machine-controlled. When an athlete corrects a pace window as too narrow, widen immediately and save the preference — do not re-prescribe narrow windows in future sessions.

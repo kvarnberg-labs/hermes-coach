@@ -52,3 +52,11 @@ hardcodes weekday names.
 verify with `date -d`, never trust intuition about which weekday a
 date falls on. This is especially error-prone across month boundaries
 and in plans created months in advance.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Date/weekday accuracy — always cross-reference.** When presenting dates alongside weekday names, verify the mapping against a calendar or the athlete's timezone before writing. A mismatch between date and weekday erodes trust and forces the athlete to correct you. If unsure, use the date alone or ask. Always use the athlete's configured timezone (from get_athlete_profile) when resolving "today" or planning future sessions. When fixing weekday mismatches across a multi-week training plan, follow the systematic workflow — patch weeks individually, then fix any cron rules that reference weekday names.
+- **Weekday labels must match the record's date, not the response day.** Derive weekday names ("onsdag", "i tisdags", "fredagen") from each activity/measurement's actual date — 2026-09-02 is a Wednesday — never from the day the brief or analysis is written. A Sep 5 brief cited a Wednesday Sep 2 threshold session as "tors 3/9" and Friday Sep 4 resting HR as "i tisdags" while every value was correct: correct values with mislabeled weekdays erode trust. Re-check every weekday label before sending.
+- **Derive every weekday name mechanically — never by recall.** Weekday mislabels ("tisdagens 58 min/10 km" written for the Monday 7/9 run, Sep 9 morning brief) recur because models derive weekday words by recall even when every value is correct. For each date you name in a brief or plan, derive the weekday in the terminal (e.g. `python3 -c "import datetime as d; print({0:'måndag',1:'tisdag',2:'onsdag',3:'torsdag',4:'fredag',5:'lördag',6:'söndag'}[d.date(2026,9,7).weekday()])"`); headless cron prompts embed this rule. Verify Studio Echelon's live schedule via its public no-auth Zoezi API (`echelon.zoezi.se/api/public/workout/get/all?fromDate=…&toDate=…`, verified 2026-09-09) in headless sessions — the schema pages are JS apps that render nothing over plain HTTP. See `references/studio-echelon-classes.md` → 'Headless schedule check'.

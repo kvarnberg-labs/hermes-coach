@@ -24,16 +24,19 @@ PR URL). Do not change the branch-slug between calls.
 
 ## Full workflow
 
-1. **Copy plugin to sandbox**: `cp /opt/hermes/plugins/training/<file>.py /opt/data/plugins/training/<file>.py`
-2. **Edit with `patch`**: use `patch(mode='replace', path='/opt/data/plugins/training/<file>.py', ...)`
-3. **Test end-to-end on real data** from the sandbox path (has credential access)
-4. **Write tests** directly to `/opt/data/tests/`
-5. **Run full suite**: `PYTHONPATH=plugins /opt/data/.test-venv/bin/python -m pytest tests/ -v --import-mode=importlib`
-6. **Push plugin + tests** via `create-pr.sh` with shared branch-slug
-7. **Verify from fresh clone**:
+1. **Work in a repo clone or the writable sandbox tree** — never the live
+   `/opt/hermes/plugins/` copy:
+   `git clone https://github.com/kvarnberg-labs/hermes-coach.git`
+2. **Edit the plugin file**: `patch(mode='replace', path='<clone>/plugins/training/<file>.py', ...)`
+3. **Write tests** alongside (`tests/`)
+4. **Run the full suite**: `PYTHONPATH=plugins python -m pytest tests/ -v --import-mode=importlib`
+5. **Push plugin + tests** via `create-pr.sh` with shared branch-slug (the
+   script reads files from `$HERMES_HOME/<file-path>`, so make sure your
+   edited files are at that path)
+6. **Verify from fresh clone**:
    ```bash
    cd /tmp && git clone -b improve/<slug> https://github.com/kvarnberg-labs/hermes-coach.git
-   cd hermes-coach && PYTHONPATH=plugins /opt/data/.test-venv/bin/python -m pytest tests/ -v --import-mode=importlib
+   cd hermes-coach && PYTHONPATH=plugins python -m pytest tests/ -v --import-mode=importlib
    ```
 
 ## Pitfalls

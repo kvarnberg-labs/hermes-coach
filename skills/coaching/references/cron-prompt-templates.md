@@ -28,9 +28,9 @@ Använd terminal-workaround:
 Kör detta i terminalen:
 
 ```bash
-cd /opt/hermes && HERMES_HOME=/opt/data PYTHONPATH=/opt/hermes python3 -c "
+cd /opt/data && HERMES_HOME=/opt/data PYTHONPATH=/opt/data/plugins python3 -c "
 import json
-from plugins.training import intervals_icu
+from training import intervals_icu
 uid = '<SNOWFLAKE>'
 print('PROFILE:', intervals_icu.get_athlete_profile(uid))
 print('WELLNESS:', intervals_icu.get_wellness(uid, 3))
@@ -62,14 +62,14 @@ activities, and a full week-by-week table output with:
 - Next week's plan as a day-by-day table (dag, datum, pass, detaljer, load)
 - Recovery week detection (every 3rd–4th week)
 - Calendar event creation via `create_planned_event` (import from
-  `plugins.training.create_planned_event`)
+  `training.create_planned_event`)
 
 ## Critical prompt elements
 
 | Element | Why it matters |
 |---------|---------------|
 | Snowflake hard-coded in terminal command | Without it, the agent cannot fetch any data |
-| `PYTHONPATH=/opt/hermes` + `from plugins.training import intervals_icu` | Package-relative imports fail without parent package |
+| `PYTHONPATH=/opt/data/plugins` + `from training import intervals_icu` | Package-relative imports resolve inside the `training` package |
 | `HERMES_HOME=/opt/data` | Credential directory resolution |
 | Analysis structure (STEG 1, STEG 2, REGELVERK) | Prevents the agent from free-form rambling |
 | Output format spec (max lines, language, sections) | Keeps the brief scannable for the athlete |
@@ -87,7 +87,7 @@ updating a scheduled coaching job. Then check:
    not "identity unavailable" or fabricated placeholder text
 
 If the test run fails, check:
-- Snowflake is correct: `ls /opt/data/users/*/intervals_athlete_name`
+- Snowflake is correct: `ls /opt/data/users/<snowflake>/intervals_athlete_name` (the snowflake comes from the job's `origin.user_id` — never enumerate other users' directories)
 - Channel ID matches: `grep "user=<Name>" /opt/data/logs/gateway.log | tail -1`
 - Terminal command works: run it manually before embedding in the prompt
 

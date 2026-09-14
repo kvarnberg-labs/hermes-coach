@@ -93,5 +93,12 @@ The `get_activity_detail` function in `intervals_icu.py` was patched:
   `decoupling_pct`, `variability_index`, `efficiency_factor`, `interval_summary`,
   `lthr`, `rpe`, `sweet_spot_min/max`, `joules_above_ftp`, `warmup/cooldown_time`
 
-Note: this fix is applied to the live pod filesystem. To make it permanent,
-create a PR via `/opt/data/scripts/create-pr.sh`.
+Note: permanent fixes go through a PR (`create-pr.sh`); live-pod edits are
+break-glass only and are documented in the repo's `docs/OPS-BREAKGLASS.md`,
+not in the shipped skill.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **intervals.icu API field names use `icu_` prefix, not Strava-style names.** If `get_activity_detail` returns null for `hr_zones`, `hr_zone_times`, `power_zones`, or `power_zone_times`, the plugin is likely using wrong field names. The intervals.icu API returns `icu_hr_zones`, `icu_hr_zone_times`, `icu_power_zones`, `icu_zone_times` — NOT `heartrate_zones`, `heartrate_zone_times`, `power_zones`, `power_zone_times`.

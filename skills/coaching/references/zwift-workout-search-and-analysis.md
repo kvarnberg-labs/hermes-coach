@@ -15,3 +15,9 @@
 6. Treat high decoupling as a contextual signal (heat, fatigue, pacing, hydration), not an FTP estimator.
 
 This reference captures the Zwift search and analysis lessons from the recent Threshold #1 session.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- Zwift workout recommendations must be verified before naming a workout. If an athlete asks for a suitable workout "from the Zwift store/library," distinguish the Zwift game workout library from the equipment/product store. Search the official Zwift workout/library source first; if it is unavailable or search results are inconclusive, say so and give the workout structure to recreate rather than inventing or asserting a named workout. Do not rely on a third-party page returning a 404, a blocked search page, or an unverified memory of a workout title. Before recommending a same-day hard session, still check recent load/wellness and ask how the athlete feels today; model readiness alone is insufficient. When a named workout is verified, state its exact interval structure, total duration, and FTP basis, and flag any configured-FTP versus eFTP discrepancy before translating watts.

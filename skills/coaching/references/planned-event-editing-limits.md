@@ -32,3 +32,9 @@ lacked it. General intervals.icu API behavior belongs in class-level
 references like this file, not in per-athlete memory. When a session
 discovers an API constraint, add it to the relevant reference (or
 `intervals-icu-api-coverage.md`) in the same improvement pass.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **Planned events are create/delete only — the API cannot edit an existing event.** PATCH/PUT to `/athlete/{id}/events/{event_id}` returns `405 Method Not Allowed`. When an event must change: delete it and recreate with corrected fields via `create_planned_event`, re-verifying the resulting date range afterward — or have the athlete edit it in the intervals.icu web UI when the event carries athlete-added history or notes. Never attempt an API edit and never invent an "edit event" tool call.

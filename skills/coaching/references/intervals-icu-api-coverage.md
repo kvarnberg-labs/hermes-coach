@@ -55,3 +55,9 @@ Current toolset → API endpoint mapping and known gaps.
 
 1. **Past events** — trivial fix, low effort for history.
 2. **Training plans** — uncertain if endpoint exists.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **MANDATORY: Consult the API docs before implementing ANY intervals.icu integration.** When debugging a tool, adding a new endpoint, or figuring out payload structure, call `search_intervals_api_docs` + `get_intervals_api_endpoint` FIRST. The OpenAPI spec is the authoritative reference. Guessing field names, schemas, or formats wastes sessions. For workout creation: the EventEx schema documents `file_contents_base64` (for FIT/ZWO/MRC/ERG files) and `workout_doc` (internal format). The endpoint description: "This endpoint accepts workouts in native Intervals.icu format as well as zwo, mrc, erg and fit files."

@@ -154,3 +154,9 @@ When a runner completes a cycling HIIT session and asks for analysis:
   cycling HR zones are unset or default, HR zone distribution from a
   VirtualRide may be misleading. Always check `get_sport_settings(sport="Ride")`
   for cycling-specific zones. If unavailable, note the limitation.
+
+---
+
+## Moved from SKILL.md (2026-09-14)
+
+- **VirtualRide ≠ Zwift.** Not all `VirtualRide` activities on intervals.icu are from Zwift. Indoor trainer sessions recorded via Garmin Edge (with Wahoo or other smart trainers) also classify as VirtualRide. When an athlete reports Zwift import issues, ask what device recorded each VirtualRide before assuming Zwift import is working. Zwift-imported activities typically have names prefixed with `Zwift -`. For analyzing cross-training HIIT cycling sessions (Les Mills Sprint, studio cycling) for runners — cycling HR runs ~5–10 bpm lower than running HR at equivalent intensity, gym bikes often lack power data, and IF/load are HR-based and less precise.
