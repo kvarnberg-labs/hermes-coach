@@ -16,11 +16,15 @@ USER root
 # auto-discovered at gateway startup.
 COPY --chown=hermes:hermes plugins/training/ /opt/hermes/plugins/training/
 
-# Copy coach-brain knowledge files and the coaching skill.
+# Copy coach-brain knowledge files and the bot-facing skills only.
 # These live on the image so they are versioned alongside the code.
 # At runtime they are also synced to /opt/data so Hermes can update them.
 COPY --chown=hermes:hermes coach-brain/ /opt/hermes/coach-brain/
-COPY --chown=hermes:hermes skills/ /opt/hermes/coach-skills/
+# Ship only bot-facing skills — dev-workflow skills stay in the repo for
+# local development and are never indexed in athlete sessions.
+COPY --chown=hermes:hermes skills/coaching/ /opt/hermes/coach-skills/coaching/
+COPY --chown=hermes:hermes skills/strength-coaching/ /opt/hermes/coach-skills/strength-coaching/
+COPY --chown=hermes:hermes skills/self-improvement/ /opt/hermes/coach-skills/self-improvement/
 
 # Copy sandbox runner script used by the Job containers
 COPY --chown=hermes:hermes sandbox/ /opt/hermes/sandbox/

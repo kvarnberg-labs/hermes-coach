@@ -29,15 +29,28 @@ if [ -d /opt/hermes/coach-brain ]; then
   done
 fi
 
-# Sync coaching skill (only if not already present, so user edits survive)
+# Sync bot-facing skills: the image is the source of truth (built from main).
+# - Mirror shipped skills into the PVC so merged updates propagate. The old
+#   install-only-if-absent skipped existing dirs, so a restructured SKILL.md
+#   never reached a long-lived PVC (same bug class the coach-brain sync fixed).
+# - Prune skill dirs the image no longer ships: stale rollout artifacts and
+#   runtime skills-hub installs (re-installable on demand). This is what
+#   keeps the athlete-session <available_skills> index lean.
 if [ -d /opt/hermes/coach-skills ]; then
   mkdir -p "${HERMES_HOME}/skills"
   for skill_dir in /opt/hermes/coach-skills/*/; do
     skill_name="$(basename "$skill_dir")"
     dest="${HERMES_HOME}/skills/${skill_name}"
-    if [ ! -d "$dest" ]; then
-      cp -r "$skill_dir" "$dest"
-      echo "Installed coach skill: ${skill_name}"
+    rm -rf "$dest"
+    cp -r "$skill_dir" "$dest"
+    echo "Synced coach skill: ${skill_name}"
+  done
+  for dest_dir in "${HERMES_HOME}/skills"/*/; do
+    [ -d "$dest_dir" ] || continue
+    skill_name="$(basename "$dest_dir")"
+    if [ ! -d "/opt/hermes/coach-skills/${skill_name}" ]; then
+      rm -rf "$dest_dir"
+      echo "Pruned skill not shipped by image: ${skill_name}"
     fi
   done
 fi
