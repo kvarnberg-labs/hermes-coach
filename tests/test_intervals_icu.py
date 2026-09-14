@@ -59,6 +59,37 @@ class TestCache:
         k2 = intervals_icu._cache_key("/activities", {"days": 14})
         assert k1 != k2
 
+    def test_cache_set_creates_file_mode_600(self, mock_credentials):
+        import os
+
+        intervals_icu._cache_set("test-user-123", "perm-key", {"v": 1})
+        cache_dir = (
+            Path(os.environ["HERMES_HOME"]) / "users" / "test-user-123" / "cache"
+        )
+        files = list(cache_dir.glob("*.json"))
+        assert files, "cache file should exist"
+        assert (files[0].stat().st_mode & 0o777) == 0o600
+
+    def test_sweep_removes_orphaned_files_only(self, mock_credentials):
+        import os
+        import time as _time
+        from training import _http
+
+        intervals_icu._cache_set("test-user-123", "fresh-key", {"v": 1})
+        cache_dir = (
+            Path(os.environ["HERMES_HOME"]) / "users" / "test-user-123" / "cache"
+        )
+        orphan = cache_dir / "orphan.json"
+        orphan.write_text("{}")
+        aged = _time.time() - 25 * 3600  # beyond the 24h sweep floor
+        os.utime(orphan, (aged, aged))
+
+        _http._last_sweep = 0.0  # force the next _cache_set to sweep
+        intervals_icu._cache_set("test-user-123", "another-key", {"v": 2})
+
+        assert not orphan.exists()
+        assert list(cache_dir.glob("*.json")), "fresh files must survive the sweep"
+
 
 class TestRequest:
     def test_raises_value_error_on_401(self, mock_credentials):

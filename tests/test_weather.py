@@ -14,6 +14,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "plugins"))
 from training.weather import get_weather, _coaching_notes, _WMO_CODES
 
 
+@pytest.fixture(autouse=True)
+def _reset_weather_cache():
+    """The module-level TTL cache must not leak between tests."""
+    from training import weather as _weather
+
+    _weather._weather_cache.clear()
+    yield
+    _weather._weather_cache.clear()
+
+
 class TestWmoCodes:
     def test_covers_all_standard_codes(self):
         expected = {0, 1, 2, 3, 45, 48, 51, 53, 55, 61, 63, 65,
@@ -160,3 +170,52 @@ class TestGetWeather:
         assert result["current"]["temp_c"] == 22
         assert result["current"]["conditions"] == "Partly cloudy"
         assert len(result["forecast_48h"]) == 16  # 48 hours / 3-hour buckets
+
+
+class TestWeatherCache:
+    """TTL payload cache: hits skip the Open-Meteo round-trip; display
+    fields are always rebuilt from the current call's arguments."""
+
+    PAYLOAD = {"current": {}, "hourly": {"time": []}, "timezone": "UTC"}
+
+    def _patched_urlopen(self):
+        m = MagicMock()
+        m.__enter__.return_value.read.return_value = json.dumps(self.PAYLOAD).encode()
+        return m
+
+    def test_second_call_within_ttl_skips_fetch(self):
+        with patch(
+            "urllib.request.urlopen", return_value=self._patched_urlopen()
+        ) as mock_urlopen:
+            get_weather(60.17, 24.94)
+            get_weather(60.17, 24.94)
+            assert mock_urlopen.call_count == 1
+
+    def test_nearby_coordinates_share_cache_entry(self):
+        with patch(
+            "urllib.request.urlopen", return_value=self._patched_urlopen()
+        ) as mock_urlopen:
+            get_weather(60.17, 24.94)
+            get_weather(60.174, 24.941)  # rounds to the same ~1.1 km cell
+            assert mock_urlopen.call_count == 1
+
+    def test_expired_entry_refetches(self):
+        import time as _time
+
+        from training import weather as _weather
+
+        with patch(
+            "urllib.request.urlopen", return_value=self._patched_urlopen()
+        ) as mock_urlopen:
+            get_weather(60.17, 24.94)
+            ts, payload = _weather._weather_cache[(60.17, 24.94)]
+            _weather._weather_cache[(60.17, 24.94)] = (_time.time() - 601, payload)
+            get_weather(60.17, 24.94)
+            assert mock_urlopen.call_count == 2
+
+    def test_display_fields_rebuilt_per_call(self):
+        with patch("urllib.request.urlopen", return_value=self._patched_urlopen()):
+            get_weather(60.17, 24.94, location_name="First")
+            second = json.loads(get_weather(60.17, 24.94, location_name="Second"))
+        # A cache hit must not echo the first caller's location label.
+        assert second["location"] == "Second"

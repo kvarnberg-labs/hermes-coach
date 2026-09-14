@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -33,6 +34,14 @@ _WMO_CODES: dict[int, str] = {
     85: "Slight snow showers", 86: "Heavy snow showers",
     95: "Thunderstorm", 96: "Thunderstorm with slight hail", 99: "Thunderstorm with heavy hail",
 }
+
+# TTL cache for Open-Meteo payloads, keyed by coordinates rounded to 2
+# decimals (~1.1 km). Only the fetched payload is cached — display fields
+# are rebuilt from the current call's arguments on every call, so a cache
+# hit never echoes another caller's location label.
+_WEATHER_CACHE_TTL = 600.0  # seconds
+_WEATHER_CACHE_MAX = 32  # entries; crude clear-on-overflow — sessions touch few locations
+_weather_cache: dict[tuple[float, float], tuple[float, dict]] = {}
 
 
 def get_weather(
@@ -73,16 +82,25 @@ def get_weather(
         "timezone": "auto",
     }
 
-    url = _API_BASE + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(
-        url,
-        headers={"User-Agent": "hermes-coach/1.0", "Accept": "application/json"},
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.URLError as exc:
-        return json.dumps({"error": f"Could not reach Open-Meteo: {exc.reason}"})
+    cache_key = (round(float(latitude), 2), round(float(longitude), 2))
+    now = time.time()
+    cached = _weather_cache.get(cache_key)
+    if cached is not None and now - cached[0] < _WEATHER_CACHE_TTL:
+        data = cached[1]
+    else:
+        url = _API_BASE + "?" + urllib.parse.urlencode(params)
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "hermes-coach/1.0", "Accept": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.URLError as exc:
+            return json.dumps({"error": f"Could not reach Open-Meteo: {exc.reason}"})
+        if len(_weather_cache) >= _WEATHER_CACHE_MAX:
+            _weather_cache.clear()
+        _weather_cache[cache_key] = (now, data)
 
     current = data.get("current", {})
     hourly = data.get("hourly", {})

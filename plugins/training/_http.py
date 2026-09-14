@@ -23,6 +23,7 @@ import base64
 import hashlib
 import json
 import logging
+import os
 import time
 import urllib.error
 import urllib.parse
@@ -90,9 +91,44 @@ def _cache_get(discord_id: str, cache_key: str, ttl: int) -> Optional[Any]:
         return None
 
 
+# Orphaned-entry sweep: _cache_get only unlinks a stale file when its exact
+# key is re-requested, but date-parameterized keys roll daily and are never
+# revisited — without this, the per-user cache dir grows unbounded.
+_SWEEP_INTERVAL = 3600.0  # min seconds between sweeps
+_SWEEP_MAX_AGE = 24 * 3600.0  # delete cache files older than this (max TTL is 6h)
+_last_sweep: float = 0.0
+
+
+def _maybe_sweep(discord_id: str) -> None:
+    """Best-effort hourly cleanup of orphaned cache files for one user.
+
+    # ponytail: sweeps only the requesting user's dir; orphaned files of
+    # departed athletes are never collected — add a global reaper if the
+    # user base grows.
+    """
+    global _last_sweep
+    now = time.time()
+    if now - _last_sweep < _SWEEP_INTERVAL:
+        return
+    _last_sweep = now
+    try:
+        for f in _cache_dir(discord_id).glob("*.json"):
+            try:
+                if now - f.stat().st_mtime > _SWEEP_MAX_AGE:
+                    f.unlink()
+            except OSError:
+                pass  # concurrently removed — fine
+    except OSError:
+        pass
+
+
 def _cache_set(discord_id: str, cache_key: str, data: Any) -> None:
     path = _cache_dir(discord_id) / f"{cache_key}.json"
-    path.write_text(json.dumps(data), encoding="utf-8")
+    # Create with 0o600 (athlete data): no default-umask exposure window.
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps(data))
+    _maybe_sweep(discord_id)
 
 
 def _auth_header(api_key: str) -> str:
