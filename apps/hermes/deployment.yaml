@@ -126,6 +126,15 @@ spec:
         - name: hermes
           image: ghcr.io/kvarnberg-labs/hermes-coach:main
           imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10000
+            runAsGroup: 10000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           args: ["gateway", "run"]
           ports:
             - name: api

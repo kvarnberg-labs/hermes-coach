@@ -38,14 +38,23 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # k8s API server — ClusterIP (10.43.0.1) and node public IP, port 6443
-    # k3s exposes the API server on 6443, not 443.
+    # k8s API server — ClusterIP of the default/kubernetes Service.
+    # Clients dial 10.43.0.1:443 (targetPort 6443); 443 covers the nominal
+    # dial path, 6443 covers post-DNAT matching.
     - to:
         - ipBlock:
             cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
+          port: 443
+        - protocol: TCP
           port: 6443
+    # k3s API server on the node. The control plane runs in-process (no
+    # labeled pod to select) and the node has no private IP, so this pin IS
+    # the operative in-cluster API path — enforcement matches post-DNAT at
+    # node:6443 (verified live 2026-09-14: the pod reaches the apiserver
+    # through this rule). ACCEPTED OPS CONSTRAINT: update if the Hetzner
+    # server is ever re-IPed.
     - to:
         - ipBlock:
             cidr: 167.233.152.107/32
