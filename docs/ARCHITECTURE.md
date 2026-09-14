@@ -105,7 +105,7 @@ Structured coaching knowledge in 19 YAML files (examples below). Loaded at runti
 | `injury-return.yaml` | Return-to-training protocols, red flags |
 | `nutrition.yaml` | Macros, hydration, intra-workout fueling |
 
-**Sync mechanism:** At container startup, `docker/sync-coach-assets.sh` (cont-init.d/05) copies YAML files from the baked image path (`/opt/hermes/coach-brain/`) to the PVC (`$HERMES_HOME/coach-brain/`). The `-n` flag on `cp` preserves user edits across deployments.
+**Sync mechanism:** At container startup, `docker/sync-coach-assets.sh` (cont-init.d/05) mirrors the baked image path (`/opt/hermes/coach-brain/`) into the PVC (`$HERMES_HOME/coach-brain/`) file-by-file. The image is the source of truth for every shipped file: merged updates always propagate, and runtime PVC edits to shipped files are overwritten at the next restart — changes go through PRs. PVC-only files (runtime-added, not in the image) are untouched.
 
 ### 4. Coaching Skill (`skills/coaching/SKILL.md`)
 

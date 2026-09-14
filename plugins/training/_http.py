@@ -125,7 +125,11 @@ def _maybe_sweep(discord_id: str) -> None:
 def _cache_set(discord_id: str, cache_key: str, data: Any) -> None:
     path = _cache_dir(discord_id) / f"{cache_key}.json"
     # Create with 0o600 (athlete data): no default-umask exposure window.
+    # fchmod on every rewrite: open() applies mode only at creation, so
+    # pre-existing 0644 files from the old write_text code would otherwise
+    # stay world-readable forever (hot keys never age past the sweep floor).
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.fchmod(fd, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(json.dumps(data))
     _maybe_sweep(discord_id)

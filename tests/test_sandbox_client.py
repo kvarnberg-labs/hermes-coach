@@ -191,6 +191,7 @@ class TestRegisterGeneratedTool:
             "import subprocess",
             "__import__('os')",
             "from os import path",
+            "open('/opt/data/users/i123/intervals_key')",
         ):
             result = json.loads(
                 sandbox_client.develop_tool(

@@ -102,7 +102,8 @@ the k8s Job manifest or RBAC.
 
 **Finds:** the `hermes` container has no `securityContext` at all (the sandbox
 Job has the full block — its spec is built in code at
-`plugins/training/sandbox_client.py:139–172`, not a YAML manifest under
+`plugins/training/sandbox_client.py` (`_build_job_manifest`), not a YAML
+manifest under
 `apps/hermes-sandbox/`); the egress NetworkPolicy pins the Hetzner node's public
 IP, which breaks silently if the node is ever re-IPed.
 
@@ -192,6 +193,9 @@ enumerate every response field (~600–800 always-on words across the toolset).
   `create_planned_event`'s schema text): keep purpose + "use when" + the
   `activity_id` provenance note; drop field enumerations (responses are
   self-describing JSON). Verified no test asserts description text.
+  *Deliberately skipped (as implemented):* `create_planned_event`'s schema
+  text was NOT trimmed — it is an input schema with functional enum/target
+  rules (the FIT one-target-per-step pitfalls), not a response enumeration.
 
 **⚠ Response-shape change — needs explicit Lead sign-off:** consumers of
 `get_fitness_chart` are (a) the model (reads `resolution` fine), and (b) the
@@ -313,7 +317,14 @@ either (a) prune to exactly the shipped allowlist — this also deletes the
 session wants them; the “exactly three skills” verification holds) — or
 (b) prune only the 19 repo-shipped dev skills and leave runtime installs
 alone (smaller context win; verification becomes “no repo dev skills
-remain”).
+remain").
+
+**As implemented (2026-09-14):** the sync-script change went beyond the prune
+step — it now MIRRORS shipped skills (`rm -rf` + `cp -r`) because the old
+install-only-if-absent never propagated image updates to a long-lived PVC
+(the same stale-asset bug class the coach-brain sync had already fixed). The
+prune policy decision was resolved as **option (a)** (strict allowlist;
+runtime skills-hub installs are re-installable on demand).
 
 **Accepted limitation:** the self-improve cron loop cannot load dev skills
 on-pod. Per CONTRACT.md it only edits `coach-brain/` and uses `develop_tool` —

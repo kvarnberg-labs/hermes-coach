@@ -240,24 +240,25 @@ git push origin main
 
 ## Sync Mechanism
 
-At container startup, `docker/sync-coach-assets.sh` (cont-init.d/05) runs:
+At container startup, `docker/sync-coach-assets.sh` (cont-init.d/05) **mirrors**
+the image into the PVC — the image is the source of truth for every file it ships:
 
 ```bash
-# Sync coach-brain (cp -n preserves existing files)
-mkdir -p "${HERMES_HOME}/coach-brain"
-cp -rn /opt/hermes/coach-brain/. "${HERMES_HOME}/coach-brain/"
+# Per file: the image copy overwrites the PVC copy
+cp "$f" "${HERMES_HOME}/coach-brain/${name}"
 ```
 
-The `-n` (no-clobber) flag means:
-- **First deployment:** All files are copied from image to PVC
-- **Subsequent deployments:** Only new files are copied; existing files on PVC are preserved
-- **User edits:** Survive across deployments
+The mirror means:
+- **Merged updates always propagate:** an edit to a `coach-brain/*.yaml` merged
+  to main reaches the PVC on the next rollout. (The old `cp -n` no-clobber
+  skipped existing files, so updates to a long-lived PVC were silently lost.)
+- **Runtime PVC edits to shipped files do NOT survive:** they are overwritten at
+  the next restart. Make changes through PRs (AGENTS.md rule) — live-pod edits
+  are temporary at best.
+- **PVC-only files survive:** files added at runtime that the image does not
+  ship are untouched by the sync.
 
-To force a refresh after user edits:
-```bash
-kubectl exec -it deployment/hermes -n hermes -- rm -rf /opt/data/coach-brain/*
-kubectl rollout restart deployment/hermes -n hermes
-```
+No manual refresh is needed: every restart re-mirrors shipped files.
 
 ## Best Practices
 

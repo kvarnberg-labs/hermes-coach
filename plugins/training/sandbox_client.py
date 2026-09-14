@@ -45,12 +45,13 @@ _JOB_TIMEOUT_SECS = 90  # wall-clock wait before we give up
 _JOB_ACTIVE_DEADLINE = 60  # k8s hard-kills the pod after this many seconds
 
 # Mechanical guard for CONTRACT.md's tool-code bans (os, subprocess, eval,
-# exec, __import__). A denylist, not a capability boundary — it removes
-# reliance on the LLM's self-assessment; the k8s sandbox remains the real
-# isolation for test execution.
+# exec, __import__) plus open( — the direct file-read primitive (the error
+# text promises "no env or file access"). A denylist, not a capability
+# boundary — it removes reliance on the LLM's self-assessment; the k8s
+# sandbox remains the real isolation for test execution.
 _FORBIDDEN = re.compile(
     r"(?:^|\W)(?:import\s+os\b|from\s+os\b|import\s+subprocess\b|from\s+subprocess\b"
-    r"|__import__\s*\(|\beval\s*\(|\bexec\s*\()"
+    r"|__import__\s*\(|\beval\s*\(|\bexec\s*\(|\bopen\s*\()"
 )
 
 

@@ -39,6 +39,7 @@ fi
 if [ -d /opt/hermes/coach-skills ]; then
   mkdir -p "${HERMES_HOME}/skills"
   for skill_dir in /opt/hermes/coach-skills/*/; do
+    [ -d "$skill_dir" ] || continue
     skill_name="$(basename "$skill_dir")"
     dest="${HERMES_HOME}/skills/${skill_name}"
     rm -rf "$dest"

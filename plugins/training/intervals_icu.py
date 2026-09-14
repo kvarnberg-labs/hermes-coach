@@ -860,14 +860,18 @@ def get_fitness_chart(
     resolution = "daily"
     if days > 60:
         resolution = "weekly"
-        by_week: dict[tuple[int, int], dict] = {}
+        # Sort by date first so "last record of the week" is well-defined
+        # regardless of the API's response order.
+        dated: list[tuple[date, dict]] = []
         undated: list[dict] = []
         for rec in records:
             try:
-                rec_date = date.fromisoformat(str(rec.get("date") or ""))
+                dated.append((date.fromisoformat(str(rec.get("date") or "")), rec))
             except ValueError:
                 undated.append(rec)
-                continue
+        dated.sort(key=lambda pair: pair[0])
+        by_week: dict[tuple[int, int], dict] = {}
+        for rec_date, rec in dated:
             by_week[rec_date.isocalendar()[:2]] = rec
         records = list(by_week.values()) + undated
 
