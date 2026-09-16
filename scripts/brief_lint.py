@@ -51,10 +51,13 @@ ALLOWLIST = {
     "grevgatan", "bokenäset", "kustvägen", "mellerud", "klarälvsloppet",
     # misc recurring terms
     "morgonbrief", "veckoplan", "hemkomstbacke", "öppningar", "lax",
+    # cross-training token (Sport type "VirtualRide" in references/SKILL text)
+    "virtualride", "healthfit", "trainerroad", "ehealthfit", "plyo", "plyometrics",
 }
 
 # Legit mixed-case tokens the CamelCase check must not flag.
-CAMELCASE_ALLOW = {"vo2max", "di2", "s2", "etube"}
+CAMELCASE_ALLOW = {"vo2max", "di2", "s2", "etube",
+                   "virtualride", "trainerroad", "healthfit", "ehealthfit"}
 
 # Swedish clitic/inflectional suffixes allowed when stripping before re-splitting.
 CLITICS = ("s", "ts", "en", "et", "na", "rna", "arn", "arnas", "ns", "ens", "ets")
@@ -117,9 +120,26 @@ def lint(text, words):
         hard(f"digit+glitch-punct+letter: ...{text[s:m.end() + 15]}...")
 
     for m in re.finditer(r"[a-zåäö]{3,}[A-ZÄÖÅ][a-zåäö]{2,}", text):
+        # Expand the raw regex match (which may anchor mid-word, e.g. matching
+        # "irtualRide" inside "VirtualRide") to the full mixed-case token, then
+        # allowlist on the FULL token. Mid-word anchoring is intentional — the
+        # Sep-13 corruption fused "RegnarPlan B" and only a mid-word start like
+        # "egnarPlan" hits the pattern — but legitimate CamelCase tokens such as
+        # VirtualRide/TrainerRoad (real intervals.icu sport names, used verbatim
+        # in coaching references and whole-file cron outputs) must be clearable.
+        cs, ce = m.start(), m.end()
+        extra = re.compile(r"[A-Za-zÅÄÖåäöéèüÉÈéèÜü]")
+        while cs > 0 and extra.match(text[cs - 1]):
+            cs -= 1
+        while ce < len(text) and extra.match(text[ce]):
+            ce += 1
         tok = m.group(0)
-        if tok.lower() not in CAMELCASE_ALLOW:
-            hard(f"CamelCase fused word: {tok}")
+        if tok.lower() in CAMELCASE_ALLOW:
+            continue
+        full = text[cs:ce]
+        if full.lower() in CAMELCASE_ALLOW:
+            continue
+        hard(f"CamelCase fused word: {full}")
 
     word_re = re.compile(r"[A-Za-zÅÄÖåäöÉÈéèÜü][A-Za-zÅÄÖåäöéèüÉÈéèÜü\-']+")
     unknown = []
