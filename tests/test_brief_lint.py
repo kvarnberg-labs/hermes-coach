@@ -74,3 +74,26 @@ def test_known_hard_glitches_still_caught():
     msgs = [m for _, m in _lint_full(body)]
     assert any("mismatched brackets" in m for m in msgs)
     assert any("CamelCase fused word" in m for m in msgs)
+
+
+def test_regnarplan_caught_with_full_span():
+    """2026-09-16: span-expansion landed so legit CamelCase (VirtualRide) is
+    clearable — regression-proof that the Sep 13 corruption token RegnarPlan is
+    still caught even though it keys off a partial mid-word regex match
+    ('egnarPlan')."""
+    msgs = [m for _, m in _lint_full(" och egnarplan i lax — RegnarPlan B:\n")]
+    assert any("RegnarPlan" in m for m in msgs), msgs
+
+
+def test_legit_camelcase_sport_tokens_not_flagged():
+    """2026-09-16 allowlist defect: CamelCase regex anchored mid-word, so the raw
+    match was 'irtualRide' and allowlisting the full token never cleared it.
+    Real VirtualRide text in a delivered body must pass clean."""
+    body = CLEAN_BRIEF + (
+        "\nCross-training handled: VirtualRide analysis per skill, "
+        "TrainerRoad och eHealthFit not relevant today.\n"
+    )
+    msgs = [m for _, m in _lint_full(body)]
+    assert not [m for _, m in _lint_full(body) if "CamelCase" in m], msgs
+    assert not [m for _, m in _lint_full(body) if m.startswith("unknown words")]
+    assert any("VirtualRide" in m for m in msgs) is False
