@@ -167,15 +167,33 @@ LEAK_PATTERNS = [
     # "File-mutation verifier" block + write_file denial for /tmp/brief_draft.md
     # — the lint's own SLUTKONTROLL workflow leaked internal errors to athletes.
     (r"File-mutation verifier|HERMES_WRITE_SAFE_ROOT|Write denied\]|"
-     r"Traceback \(most recent call last\)|to confirm", "internal tool-error leak"),
+     r"Traceback \(most recent call last\)|CORRUPTION-LINT:|to confirm",
+     "internal tool-error leak"),
     (r"\u26a0\ufe0f", "internal warning-marker emoji in delivered body"),
     (r"brief_draft", "internal draft-file reference in delivered body"),
 ]
+
+# Lines that belong to the lint's own tool output. SLUTKONTROLL appends the
+# lint verdict to the drafted text before the agent reads it; a naive find()
+# over the whole file would flag the process's own report as a leak. Found
+# live 2026-09-17 (Wilma brief): a HARD "TSBToolData" corruption finding was
+# prefixed with the lint's verdict line, and the generic "to confirm" fragment
+# in that verdict line produced a SECOND bogus "internal tool-error leak"
+# finding on the lint's own output — masked the real corruption.
+LINT_SELF_LINE_RE = re.compile(r"^\s*CORRUPTION-LINT:", re.MULTILINE)
+
+
+def _strip_lint_self_lines(text):
+    if not LINT_SELF_LINE_RE.search(text):
+        return text
+    return "\n".join(l for l in text.splitlines()
+                     if not LINT_SELF_LINE_RE.match(l)) + "\n"
 
 
 def lint_delivery_noise(text):
     """[HARD] findings for internal platform noise leaked into a delivered brief."""
     out = []
+    text = _strip_lint_self_lines(text)
     for pattern, label in LEAK_PATTERNS:
         m = re.search(pattern, text)
         if m:
