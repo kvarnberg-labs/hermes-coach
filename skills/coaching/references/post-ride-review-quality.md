@@ -5,8 +5,8 @@ Use this when an athlete challenges a short or generic post-ride analysis.
 ## Minimum evidence to collect
 
 1. `get_recent_activities` to identify the correct activity and basic load.
-2. `get_activity_detail` for duration, power/HR summaries, decoupling, VI, zone times, RPE, and intervals.
-3. `get_activity_streams` when the athlete asks about or supplies stream-level values such as average HR, cadence, pacing stability, or Garmin channels. The tool returns compact summaries plus computed peaks; it does not expose the full arrays.
+2. `get_activity_intervals` for the athlete's own detected intervals — the interval-by-interval source. `get_activity_detail` for duration, power/HR summaries, decoupling, VI, zone times, RPE, and `paired_event_id`.
+3. `get_activity_streams` when the athlete asks about or supplies stream-level values such as cadence or pacing stability. The tool returns compact summaries plus computed peaks; it does not expose the full arrays.
 4. `get_wellness` and recent activities to place the session in recovery context.
 5. `get_sport_settings` before interpreting FTP-based intensity; compare configured FTP with eFTP.
 

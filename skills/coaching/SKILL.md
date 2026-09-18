@@ -122,22 +122,23 @@ The user-facing explanation must name the actual failure class and next action. 
 | Illness return | get_coaching_knowledge("injury return to training") → see `illness` key | Check wellness for resting HR trend; see references/illness-plan-adjustment.md |
 | Nutrition | get_coaching_knowledge("nutrition during training") | Check activity duration |
 | Race prep | get_coaching_knowledge("tapering") | Check get_planned_events |
-| Workout analysis | get_activity_detail(id) | Analyze laps, pace zones, HR zones |
-| Raw power/HR data | get_activity_streams(id) | Compute max 20-min power, validate FTP |
+| Workout analysis | get_activity_intervals(id) | Interval splits, zone distribution, pacing |
+| Raw power/HR data | get_activity_streams(id) | Validate peak power against the official curve |
+| Best-effort curve | get_best_effort_curve(sport=…) | Power (Ride), pace (Run) or HR (other) |
 | Long-range fitness | get_fitness_chart(days=365) — weekly resolution when days>60, daily ≤60 | CTL/eFTP trends over months |
 | Activity detail parsing (running) | — | See references/activity-detail-analysis.md |
 | Activity detail parsing (cycling) | — | See references/cycling-activity-analysis.md |
 | Identity verification | `verify_athlete_identity` | Check `get_athlete_profile` if verified |
-| intervals.icu API field names | — | See `references/intervals-icu-api-fields.md` |
+| intervals.icu API lookup | `search_intervals_api_docs` + `get_intervals_api_endpoint` | See `references/intervals-icu-api.md` |
 | Missing activities diagnosis | — | See `references/activity-sync-troubleshooting.md` (Garmin/Zwift) and `references/apple-watch-sync.md` (Apple Watch) |
 | Studio Echelon class recommendations | — | See `references/studio-echelon-classes.md` |
 | Bike equipment / Di2 / Garmin setup | — | See `references/di2-setup.md` (Di2 Synchro Shift S2 activation + Bell mapping), `references/studio-echelon-classes.md` (Echelon bookings). Answer platform-setup questions directly before adding caveats. |
-| intervals.icu API coverage gaps | — | See `references/intervals-icu-api-coverage.md` |
 | FTP/eFTP gap resolution | `get_sport_settings` + `get_wellness` | See `references/ftp-testing.md` |
 | Sport transition DOMS | get_coaching_knowledge("recovery heuristics") | Check recent activities for sport mix change |
-| Calendar management | `create_planned_event` / `delete_planned_event` | See `references/event-creation-pitfalls.md`, `references/fit-workout-generation.md`, and `references/calendar-session-2026-08.md`; verify event types, targets, returned loads, and the resulting date range. Pass `steps` with `hr_min/hr_max` (BPM), `power_pct_min/power_pct_max` (%FTP), or `pace_min/pace_max` (`5:40` or m/s). Tool auto-generates Garmin-compatible FIT files. ⚠️ **ONE target type per step** — auto-detection: the sport's primary target wins when the step supplies it (PACE for runs, POWER for rides), otherwise HR > power > pace; mixing types silently drops the lower-priority one. Use pace for work intervals, HR for warmup/cooldown. |
+| Calendar management | `create_planned_event` / `create_planned_events_bulk` / `update_planned_event` / `delete_planned_event` | See `references/event-creation-pitfalls.md`, `references/fit-workout-generation.md`, `references/planned-event-editing-limits.md`, and `references/calendar-session-2026-08.md`; verify event types, targets, returned loads, and the resulting date range. Pass `steps` with `hr_min/hr_max` (BPM), `power_pct_min/power_pct_max` (%FTP), or `pace_min/pace_max` (`5:40` or m/s). Tool auto-generates Garmin-compatible FIT files. ⚠️ **ONE target type per step** — auto-detection: the sport's primary target wins when the step supplies it (PACE for runs, POWER for rides), otherwise HR > power > pace; mixing types silently drops the lower-priority one. Use pace for work intervals, HR for warmup/cooldown. ⚠️ `create_planned_events_bulk` does **not** generate FIT files — use `create_planned_event` for structured workouts. |
 | Cron / headless sessions | Direct terminal invocation | See `references/cron-coaching.md` — ⚠️ always verify `deliver` target for multi-user jobs. See `references/cron-prompt-templates.md` for ready-to-adapt prompt templates with embedded terminal commands, snowflakes, and output structure. |
-| Long-range data queries (YTD totals) | `get_athlete_stats` | Aggregates activities, distance, duration, calories, TL over a date range. Replaces raw API calls. |
+| Long-range data queries (YTD totals) | `get_athlete_stats` | Aggregates activities, distance, duration, calories, TL over a date range. |
+| Plan adherence review | `get_planned_events(days_back=14)` + `get_recent_activities` | Match event `id` against the activity's `paired_event_id`. |
 | Cross-athlete tool gap discovery | session_search across athletes | See `references/gap-discovery-pattern.md` |
 | Half marathon planning | `get_coaching_knowledge("half marathon")` + athlete data | See `references/half-marathon-periodization.md` |
 | HR-vs-pace drift analysis | `get_recent_activities(30)` + `get_fitness_chart(60)` | See `references/hr-pace-drift-analysis.md` — quantify HR creep at fixed pace, connect to CTL ramp / chronic negative TSB, prescribe deload (60 days: daily resolution needed for the consecutive-day TSB check) |
@@ -252,7 +253,8 @@ In test mocks, `mock_post.call_args[0][3]` is the payload dict, not `[2]`.
 header. Always include `"User-Agent": "hermes-coach/1.0"` in all HTTP methods,
 not just GET/POST.
 
-See `references/intervals-icu-api-coverage.md` for endpoint → tool mapping.
+See `references/intervals-icu-api.md` for how to look up the API (the spec is
+in the tool surface; do not guess field names or URL paths).
 
 ## Longitudinal fatigue and sustainable planning
 
@@ -305,8 +307,8 @@ see `references/sustainable-plan-design.md`.
 - **Masters athletes (60+) need fundamentally different program design** — apply masters adjustments before planning. See `references/masters-training.md`.
 - **Configured FTP vs eFTP gap — flag it, but don't treat eFTP as gospel** — `power_pct` uses configured FTP; eFTP can underestimate. See `references/event-creation-pitfalls.md`.
 - **Lactate testing data > generic estimates.** See `references/pitfalls-training-judgment.md`.
-- **Session average pace is NOT interval pace** — use `interval_summary` / `pace_zone_times`. See `references/activity-detail-analysis.md`.
-- **intervals.icu API field names use the `icu_` prefix**, not Strava-style names. See `references/intervals-icu-api-fields.md`.
+- **Session average pace is NOT interval pace** — use `get_activity_intervals` (interval objects), not the session average. See `references/activity-detail-analysis.md`.
+- **intervals.icu field names are the published model names** — Strava-style aliases (`avg_heartrate`, `avg_cadence`, `avg_pace`) are silently dropped by `fields=` and the projection reads null. See `references/intervals-icu-api.md`.
 - **Module-level caches break test isolation** — key caches by input identity, not just TTL. See `references/pitfalls-tool-contracts.md`.
 - **Verify athlete identity every session — use `verify_athlete_identity` first** — the #1 recurring bug. See `references/identity-verification.md`.
 - **VirtualRide ≠ Zwift** — ask what device recorded each VirtualRide. See `references/cross-training-for-runners.md`.
@@ -320,7 +322,7 @@ see `references/sustainable-plan-design.md`.
 - **"Allt fallerar" panic — always lead with the TSB trend table.** See `references/pitfalls-training-judgment.md`.
 - **Same-day recovery → adapt the calendar immediately.** See `references/pitfalls-calendar.md`.
 - **CRITICAL: Cronjob deliver must target the ATHLETE'S channel, never your own.** See `references/cron-coaching.md`.
-- **MANDATORY: Consult the API docs before implementing ANY intervals.icu integration** — the OpenAPI spec is authoritative. See `references/intervals-icu-api-coverage.md`.
+- **MANDATORY: Consult the API docs before implementing ANY intervals.icu integration** — the OpenAPI spec is authoritative; use `search_intervals_api_docs` / `get_intervals_api_endpoint`. See `references/intervals-icu-api.md`.
 - **Check the Dockerfile before declaring missing dependencies.** See `references/pitfalls-tool-contracts.md`.
 - **Easy runs don't need warmup/cooldown steps.** See `references/pitfalls-calendar.md`.
 - **Event duration must match the prescription** — midpoint, not arbitrary 60 min. See `references/pitfalls-calendar.md`.
@@ -339,7 +341,7 @@ see `references/sustainable-plan-design.md`.
 - **Address the athlete by the name given in the current session** — never a similar athlete's name. See `references/pitfalls-communication.md`.
 - **Never anchor watt prescriptions to an FTP value stored in memory** — re-pull from `get_sport_settings` and cite the verification date. See `references/ftp-testing.md`.
 - **Keep each athlete's memory store writable — consolidate before it fills.** See `references/pitfalls-communication.md`.
-- **Planned events are create/delete only — the API cannot edit an event.** See `references/planned-event-editing-limits.md`.
+- **Planned events CAN be edited — `PUT`, not `PATCH`.** `update_planned_event` fetches the event and writes the complete object back (`PUT` is a full replace, so omitted fields are preserved). `PATCH` is not mapped and returns `405`. See `references/planned-event-editing-limits.md`.
 - **Derive every weekday name mechanically — never by recall.** See `references/weekday-verification.md`.
 
 ## Post-Ride Analysis Checklist

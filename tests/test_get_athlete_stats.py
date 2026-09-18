@@ -125,7 +125,14 @@ class TestGetAthleteStats:
             get_athlete_stats.get_athlete_stats(
                 "test-user-123", start_date="2026-08-01", end_date="2026-08-31")
         params = mock_req.call_args.kwargs.get("params") or mock_req.call_args[1].get("params")
-        assert params == {"oldest": "2026-08-01", "newest": "2026-08-31"}
+        assert params["oldest"] == "2026-08-01"
+        assert params["newest"] == "2026-08-31"
+        # Project only the five aggregated fields (the endpoint default is all
+        # 183, which downloads 100-356 KB per 90-day query).
+        assert params["fields"] == (
+            "distance,moving_time,calories,icu_training_load,type"
+        )
+        assert params["limit"] == 500
 
     def test_caches_repeated_calls(self, mock_credentials):
         """Second call with identical params is served from cache (one API hit)."""

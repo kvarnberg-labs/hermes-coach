@@ -1,7 +1,7 @@
 """Training plugin for Hermes Coach.
 
 Registers all coaching tools via the Hermes plugin ctx interface:
-  - intervals_icu    : intervals.icu API integration (10 tools)
+  - intervals_icu    : intervals.icu API integration (12 tools)
   - _credentials     : per-user credential storage (shared by intervals_icu + onboarding)
   - _http            : intervals.icu HTTP transport + cache layer
   - _brain           : shared coach-brain YAML loader (used by coaching + strength_coach)
@@ -11,7 +11,7 @@ Registers all coaching tools via the Hermes plugin ctx interface:
   - onboarding       : /start slash command handler (1 tool)
   - sandbox_client   : autonomous tool development via k8s Jobs (1 tool)
   - render_chart     : dark-mode PNG charts for Discord (3 tools)
-  - create_planned_event : interval.icu calendar events (2 tools)
+  - create_planned_event : interval.icu calendar events (4 tools)
   - get_athlete_stats    : aggregate training statistics (1 tool)
   - intervals_docs   : search and inspect the intervals.icu OpenAPI spec (2 tools)
 """

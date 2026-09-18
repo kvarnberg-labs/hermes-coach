@@ -801,15 +801,16 @@ class TestGetPowerCurveParser:
         (user_dir / "intervals_athlete_id").write_text("i6")
 
     def test_standard_durations_extracted(self):
-        # Simulate a power curve with the 5 standard duration points
-        raw = [
-            {"secs": 5, "watts": 850.0},
-            {"secs": 60, "watts": 520.0},
-            {"secs": 300, "watts": 380.0},
-            {"secs": 1200, "watts": 290.0},
-            {"secs": 3600, "watts": 255.0},
-            {"secs": 10, "watts": 780.0},  # non-standard point — ignored in peaks
-        ]
+        # Live API shape (verified 2026-09-18): {"list": [{"secs": [...],
+        # "watts": [...]}]} — two parallel arrays, NOT a list of points.
+        raw = {
+            "list": [
+                {
+                    "secs": [5, 10, 60, 300, 1200, 3600],
+                    "watts": [850.0, 780.0, 520.0, 380.0, 290.0, 255.0],
+                }
+            ]
+        }
         with patch.object(intervals_icu, "_request", return_value=raw):
             result = json.loads(
                 intervals_icu.get_power_curve("u666", sport="Ride", days=42)
@@ -824,7 +825,7 @@ class TestGetPowerCurveParser:
         assert result["full_curve_points"] == 6
 
     def test_missing_durations_return_none(self):
-        raw = [{"secs": 5, "watts": 850.0}]  # only 5s present
+        raw = {"list": [{"secs": [5, 30], "watts": [850.0, 700.0]}]}
         with patch.object(intervals_icu, "_request", return_value=raw):
             result = json.loads(intervals_icu.get_power_curve("u666"))
         peaks = result["peak_power"]
@@ -833,6 +834,336 @@ class TestGetPowerCurveParser:
         assert peaks["20min"] is None
 
     def test_empty_curve_returns_all_none_peaks(self):
-        with patch.object(intervals_icu, "_request", return_value=[]):
+        with patch.object(intervals_icu, "_request", return_value={"list": []}):
             result = json.loads(intervals_icu.get_power_curve("u666"))
         assert all(v is None for v in result["peak_power"].values())
+
+
+# ---------------------------------------------------------------------------
+# Data-interface fixes (2026-09-18 live verification)
+# ---------------------------------------------------------------------------
+
+class TestCoachingDataInterface:
+    """Field-name contract and extended projections.
+
+    Every name asserted here was verified against the live API on 2026-09-18.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _creds(self, tmp_path, monkeypatch):
+        hermes_home = tmp_path / ".hermes"
+        hermes_home.mkdir()
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        user_dir = hermes_home / "users" / "u777"
+        user_dir.mkdir(parents=True)
+        (user_dir / "intervals_key").write_text("key")
+        (user_dir / "intervals_athlete_id").write_text("i7")
+
+    # -- P0: published field names -----------------------------------------
+
+    def test_recent_activities_maps_average_heartrate(self):
+        raw = [{"id": "a1", "average_heartrate": 142, "average_cadence": 88}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_recent_activities("u777"))
+        act = result["activities"][0]
+        assert act["avg_hr"] == 142
+        assert act["avg_cadence"] == 88
+
+    def test_recent_activities_does_not_read_the_alias(self):
+        # The alias is not a published field; only the published name is read.
+        raw = [{"id": "a1", "avg_heartrate": 142, "avg_cadence": 88}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_recent_activities("u777"))
+        act = result["activities"][0]
+        assert act["avg_hr"] is None
+        assert act["avg_cadence"] is None
+
+    def test_recent_activities_maps_paired_event_id(self):
+        raw = [{"id": "a1", "paired_event_id": 4242}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_recent_activities("u777"))
+        assert result["activities"][0]["paired_event_id"] == 4242
+
+    def test_recent_activities_requests_published_field_names(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_recent_activities("u777")
+        params = mock_req.call_args[0][3]
+        requested = set(params["fields"].split(","))
+        assert {"average_heartrate", "average_cadence", "pace"} <= requested
+        assert not ({"avg_heartrate", "avg_cadence", "avg_pace"} & requested)
+
+    def test_activity_detail_maps_average_heartrate(self):
+        raw = {"id": "a1", "average_heartrate": 138, "average_cadence": 91}
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(
+                intervals_icu.get_activity_detail("u777", activity_id="a1")
+            )
+        assert result["avg_hr"] == 138
+        assert result["avg_cadence"] == 91
+
+    # -- P1: wellness + sport settings ------------------------------------
+
+    def test_wellness_maps_extended_fields(self):
+        raw = [{
+            "id": "2026-09-18", "ctl": 60.0, "atl": 55.0,
+            "ctlLoad": 72, "atlLoad": 61,
+            "menstrualPhase": "LUTEAL", "injury": 1, "stress": 2,
+            "hydration": 2, "hydrationVolume": 2.5,
+            "spO2": 97, "respiration": 14, "vo2max": 52,
+            "avgSleepingHR": 48, "steps": 8123, "comments": "sore legs",
+            "systolic": 120, "diastolic": 78, "bodyFat": 12.5,
+            "baevskySI": 55, "lactate": 1.2, "bloodGlucose": 5.1,
+            "carbohydrates": 320, "protein": 130, "fatTotal": 70,
+            "kcalConsumed": 2400,
+        }]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_wellness("u777", days=1))
+        rec = result["records"][0]
+        assert rec["ctl_load"] == 72
+        assert rec["atl_load"] == 61
+        assert rec["menstrual_phase"] == "LUTEAL"
+        assert rec["injury"] == 1
+        assert rec["stress"] == 2
+        assert rec["hydration"] == 2
+        assert rec["sp_o2"] == 97
+        assert rec["respiration"] == 14
+        assert rec["vo2max"] == 52
+        assert rec["avg_sleeping_hr"] == 48
+        assert rec["steps"] == 8123
+        assert rec["comments"] == "sore legs"
+        assert rec["systolic"] == 120
+        assert rec["diastolic"] == 78
+        assert rec["body_fat_pct"] == 12.5
+        assert rec["baevsky_si"] == 55
+        assert rec["lactate"] == 1.2
+        assert rec["blood_glucose"] == 5.1
+        assert rec["carbohydrates_g"] == 320
+        assert rec["protein_g"] == 130
+        assert rec["fat_total_g"] == 70
+        assert rec["kcal_consumed"] == 2400
+
+    def test_wellness_requests_the_extended_fields(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_wellness("u777", days=42)
+        requested = set(mock_req.call_args[0][3]["fields"].split(","))
+        assert {"ctlLoad", "atlLoad", "menstrualPhase", "injury",
+                "stress", "spO2", "steps", "vo2max"} <= requested
+
+    def test_wellness_unlogged_fields_are_none(self):
+        raw = [{"id": "2026-09-18", "ctl": 60.0, "atl": 55.0}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_wellness("u777", days=1))
+        rec = result["records"][0]
+        assert rec["menstrual_phase"] is None
+        assert rec["injury"] is None
+        assert rec["ctl_load"] is None
+
+    def test_fitness_chart_carries_daily_load(self):
+        raw = [{"id": "2026-09-18", "ctl": 60.0, "atl": 55.0,
+                "ctlLoad": 72, "atlLoad": 61, "vo2max": 52}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_fitness_chart("u777", days=7))
+        rec = result["records"][0]
+        assert rec["ctl_load"] == 72
+        assert rec["atl_load"] == 61
+        assert rec["vo2max"] == 52
+
+    def test_sport_settings_returns_anchors_and_order(self):
+        raw = {
+            "ftp": 260, "indoor_ftp": 250, "lthr": 165, "max_hr": 190,
+            "w_prime": 20000, "threshold_pace": 3.6, "p_max": 900,
+            "sweet_spot_min": 84, "sweet_spot_max": 97,
+            "power_zones": [55, 75, 90], "hr_zones": [131, 146, 153],
+            "pace_zones": [60, 70, 80],
+            "power_zone_names": ["Z1", "Z2", "Z3"],
+            "hr_zone_names": ["Z1", "Z2", "Z3"],
+            "pace_zone_names": ["Z1", "Z2", "Z3"],
+            "load_order": "POWER_HR_PACE", "tiz_order": "POWER_HR_PACE",
+            "gap_model": "STRAVA_RUN", "use_gap_zone_times": True,
+            "best_effort_distances": [1000, 5000, 10000],
+            "pace_curve_start": 0, "default_workout_time": "1h",
+            "hr_load_type": "HR_LOAD", "pace_load_type": "PACE_LOAD",
+            "types": ["Ride"],
+        }
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            with patch.object(intervals_icu, "_profile_result",
+                              return_value={"weight_kg": 80}):
+                result = json.loads(intervals_icu.get_sport_settings("u777"))
+        assert result["threshold_pace_mps"] == 3.6
+        assert result["sweet_spot_min_pct"] == 84
+        assert result["sweet_spot_max_pct"] == 97
+        assert result["p_max"] == 900
+        assert result["power_zone_names"] == ["Z1", "Z2", "Z3"]
+        assert result["load_order"] == "POWER_HR_PACE"
+        assert result["tiz_order"] == "POWER_HR_PACE"
+        assert result["best_effort_distances_m"] == [1000, 5000, 10000]
+
+    # -- P2: activity intervals -------------------------------------------
+
+    def test_activity_intervals_returns_work_and_recovery(self):
+        raw = {
+            "analyzed": "2026-09-18T10:00:00",
+            "icu_intervals": [
+                {"id": 1, "type": "WORK", "zone": 4, "intensity": 105,
+                 "average_watts": 285, "average_heartrate": 165,
+                 "average_cadence": 88, "moving_time": 300,
+                 "training_load": 42, "label": "5x5"},
+                {"id": 2, "type": "RECOVERY", "zone": 1, "intensity": 55,
+                 "average_watts": 140, "moving_time": 120},
+            ],
+            "icu_groups": [
+                {"zone": 4, "count": 5, "average_watts": 285,
+                 "moving_time": 1500, "intensity": 105},
+            ],
+        }
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(
+                intervals_icu.get_activity_intervals("u777", activity_id="a1")
+            )
+        assert result["interval_count"] == 2
+        assert result["group_count"] == 1
+        work = result["intervals"][0]
+        assert work["type"] == "WORK"
+        assert work["zone"] == 4
+        assert work["intensity_pct"] == 105
+        assert work["average_watts"] == 285
+        assert work["average_hr"] == 165
+        assert work["average_cadence"] == 88
+        assert result["groups"][0]["count"] == 5
+
+    def test_activity_intervals_uses_the_dedicated_endpoint(self):
+        with patch.object(intervals_icu, "_request",
+                          return_value={}) as mock_req:
+            intervals_icu.get_activity_intervals("u777", activity_id="i161875412")
+        assert mock_req.call_args[0][2] == "/activity/i161875412/intervals"
+
+    def test_activity_intervals_empty_returns_zero_counts(self):
+        with patch.object(intervals_icu, "_request",
+                          return_value={"icu_intervals": None}):
+            result = json.loads(
+                intervals_icu.get_activity_intervals("u777", activity_id="a1")
+            )
+        assert result["interval_count"] == 0
+        assert result["intervals"] == []
+
+    # -- P3: sport-neutral best-effort curve ---------------------------------
+
+    def test_best_effort_curve_run_uses_pace_endpoint(self):
+        raw = {"list": [{"label": "1 year",
+                         "distance": [1000.0, 5000.0, 10000.0],
+                         "values": [279.0, 1526.0, 3173.0]}]}
+        with patch.object(intervals_icu, "_request", return_value=raw) as mock_req:
+            result = json.loads(
+                intervals_icu.get_best_effort_curve("u777", sport="Run", days=42)
+            )
+        assert mock_req.call_args[0][2] == "/athlete/i7/pace-curves"
+        assert result["curve_type"] == "pace"
+        assert result["axis"] == "distance"
+        assert result["best_effort"]["1km"] == 279.0
+        assert result["best_effort"]["5km"] == 1526.0
+        assert result["best_effort"]["10km"] == 3173.0
+
+    def test_best_effort_curve_ride_uses_power_endpoint(self):
+        raw = {"list": [{"label": "1 year",
+                         "secs": [5, 60, 300, 1200, 3600],
+                         "watts": [850.0, 520.0, 380.0, 290.0, 255.0]}]}
+        with patch.object(intervals_icu, "_request", return_value=raw) as mock_req:
+            result = json.loads(
+                intervals_icu.get_best_effort_curve("u777", sport="Ride")
+            )
+        assert mock_req.call_args[0][2] == "/athlete/i7/power-curves"
+        assert result["curve_type"] == "power"
+        assert result["best_effort"]["5min"] == 380.0
+        assert result["best_effort"]["60min"] == 255.0
+
+    def test_best_effort_curve_other_sport_uses_hr_endpoint(self):
+        raw = {"list": [{"label": "1 year",
+                         "secs": [60, 300, 1200],
+                         "values": [180, 175, 168]}]}
+        with patch.object(intervals_icu, "_request", return_value=raw) as mock_req:
+            result = json.loads(
+                intervals_icu.get_best_effort_curve("u777", sport="Hike")
+            )
+        assert mock_req.call_args[0][2] == "/athlete/i7/hr-curves"
+        assert result["curve_type"] == "hr"
+        assert result["best_effort"]["5min"] == 175
+
+    def test_best_effort_curve_ignores_uncovered_targets(self):
+        raw = {"list": [{"label": "1 year", "secs": [5],
+                         "watts": [850.0]}]}
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_best_effort_curve("u777"))
+        assert result["best_effort"]["5s"] == 850.0
+        assert result["best_effort"]["60min"] is None
+
+    # -- P4: availability, event history, pairing ----------------------------
+
+    def test_athlete_profile_returns_training_availability(self):
+        raw = {"name": "A", "timezone": "Europe/Stockholm",
+               "height": 1.73,
+               "training_availability": [
+                   {"day_of_week": 1, "max_training_time": 60,
+                    "training_availability": "LIMITED"}]}
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_athlete_profile("u777"))
+        assert result["height_m"] == 1.73
+        assert result["training_availability"][0]["max_training_time"] == 60
+
+    def test_planned_events_days_back_extends_oldest(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_planned_events("u777", days_ahead=7, days_back=14)
+        params = mock_req.call_args[0][3]
+        assert params["newest"] > params["oldest"]
+
+    def test_planned_events_default_days_back_is_forward_only(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_planned_events("u777")
+        params = mock_req.call_args[0][3]
+        assert params["oldest"] <= params["newest"]
+        assert params["oldest"] == intervals_icu._today_iso(None)
+
+    def test_planned_events_days_back_is_capped(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_planned_events("u777", days_ahead=999, days_back=999)
+        params = mock_req.call_args[0][3]
+        oldest = intervals_icu._n_days_ago_iso(90, None)
+        assert params["oldest"] == oldest
+
+    def test_profile_cache_key_is_projection_versioned(self):
+        """A projection change must not serve the previous shape from cache.
+
+        The key must encode the projection version, so bumping the version makes
+        a warm cache entry from the old shape unreachable.
+        """
+        with patch.object(intervals_icu, "_PROJECTION_VERSION", 2):
+            key_v2 = intervals_icu._profile_cache_key("i7")
+        with patch.object(intervals_icu, "_PROJECTION_VERSION", 3):
+            key_v3 = intervals_icu._profile_cache_key("i7")
+        assert key_v2 != key_v3
+
+    def test_stale_profile_cache_is_not_served_after_version_bump(self):
+        """A cached entry written by the previous projection must be ignored."""
+        raw = {"name": "A", "height": 1.8}
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            first = json.loads(intervals_icu.get_athlete_profile("u777"))
+        assert first["height_m"] == 1.8
+        # Simulate the previous version's entry: same athlete, old shape, keyed
+        # without the projection version.
+        old_key = intervals_icu._cache_key("/athlete/i7", {})
+        intervals_icu._cache_set("u777", old_key, {"height_m": None})
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            second = json.loads(intervals_icu.get_athlete_profile("u777"))
+        assert second["height_m"] == 1.8  # not the stale None
+
+    def test_sport_settings_cache_key_is_projection_versioned(self):
+        """A stale sport-settings entry must not be served after a bump."""
+        raw = {"ftp": 260}
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            first = json.loads(intervals_icu.get_sport_settings("u777", "Ride"))
+        assert first["ftp"] == 260
+        # Previous version's entry: same endpoint, old shape, unversioned key.
+        old_key = intervals_icu._cache_key("/athlete/i7/sport-settings/Ride", {})
+        intervals_icu._cache_set("u777", old_key, {"ftp": None})
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            second = json.loads(intervals_icu.get_sport_settings("u777", "Ride"))
+        assert second["ftp"] == 260  # not the stale None

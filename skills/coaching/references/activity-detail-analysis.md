@@ -5,8 +5,13 @@ only reliable way to get work-interval pace from recorded data.
 
 ## Critical fields
 
-When you call `get_activity_detail(activity_id)` (or curl the equivalent
-API endpoint), three fields are essential for interval analysis:
+For interval-by-interval analysis call `get_activity_intervals(activity_id)` — it
+returns the athlete's own detected intervals (`icu_intervals`) with per-interval power,
+heart rate, cadence, intensity (% FTP), zone and duration, plus grouped aggregates.
+These are **not** returned by `get_activity_detail`.
+
+When you call `get_activity_detail(activity_id)` for the summary view, three fields
+are essential for interval analysis:
 
 ### `interval_summary`
 
@@ -88,4 +93,4 @@ for structured interval sessions with significant warm-up/cooldown volume.
 
 ## Moved from SKILL.md (2026-09-14)
 
-- **Session average pace is NOT interval pace.** When analyzing a threshold/interval run, the `pace_mps` and `distance_km / duration_min` from `get_recent_activities` give the session average including warm-up, recovery jogs, and cool-down — which can be 20-30 sec/km slower than the actual work intervals. Always pull `get_activity_detail(activity_id)` and use `interval_summary` (Garmin auto-detection, e.g. "6x 4m43s 4:44") and `pace_zone_times` for the real work-interval paces. Never prescribe today's interval pace based on yesterday's session average.
+- **Session average pace is NOT interval pace.** When analyzing a threshold/interval run, the `pace_mps` and `distance_km / duration_min` from `get_recent_activities` give the session average including warm-up, recovery jogs, and cool-down — which can be 20-30 sec/km slower than the actual work intervals. Always pull `get_activity_intervals(activity_id)` and use the `WORK` intervals' pace and `intensity_pct` for the real work-interval paces (or `interval_summary` / `pace_zone_times` from `get_activity_detail` as a fallback). Never prescribe today's interval pace based on yesterday's session average.

@@ -27,7 +27,8 @@ Four sources, in priority order:
    session average and actual interval pace can easily be 20-30 sec/km, not the
    5-10 one might assume. Always follow up with source #4 for real interval data.
 
-4. **`get_activity_detail(activity_id)`** — **the authoritative source** for actual
+4. **`get_activity_intervals(activity_id)`** — the authoritative source for actual
+   work-interval paces (`WORK` intervals, with `average_speed` / `intensity_pct`)
    interval paces from activity data. Returns three critical fields:
    - **`interval_summary`**: Garmin's auto-detected effort segments. Format is
      `"Nx XmXs X:XX"` (e.g. `"6x 4m43s 4:44"` = 6 segments averaging 4:43 at
@@ -73,8 +74,8 @@ If run LTHR is available from `get_sport_settings(sport="Run").lthr`:
 - **Session average pace ≠ threshold pace.** Warmup and cooldown pull the average
   down significantly. A 3×10 min session with 15 min warmup/cooldown at easy pace
   can have an average 20-30 sec/km slower than the work intervals. NEVER estimate
-  interval pace from session average — always pull `interval_summary` from
-  `get_activity_detail` for the actual work-interval paces.
+  interval pace from session average — always pull `get_activity_intervals` (or
+  `interval_summary` from `get_activity_detail`) for the actual work-interval paces.
 - **IF is cycling-biased.** intervals.icu's intensity factor for running is derived
   from pace relative to configured threshold, which may differ from the athlete's
   true lactate threshold. Trust HR + RPE over IF alone.

@@ -20,7 +20,7 @@ from datetime import date
 from typing import Any
 
 from ._credentials import _load_credentials, _require_user_id
-from ._http import _delete_json, _post_json, _request
+from ._http import _delete_json, _post_json, _put_json, _request
 
 # ── Sport metadata ──────────────────────────────────────────────────────────
 # Single source of truth mapping intervals.icu event_type -> (FIT Sport enum
@@ -516,6 +516,177 @@ def delete_event(discord_id: str, **kw: Any) -> str:
         return json.dumps({"error": str(exc)})
 
 
+def _event_payload(kw: dict) -> tuple[dict, str | None]:
+    """Build an EventEx payload from one event's fields.
+
+    Returns (payload, error). Shared by the bulk create path so the field
+    validation and payload shape live in one place.
+    """
+    name = str(kw.get("name", "")).strip()
+    date_iso = str(kw.get("date_iso", "")).strip()
+    category = str(kw.get("category", "WORKOUT")).strip().upper()
+    if category not in _VALID_CATEGORIES:
+        return {}, f"Invalid category '{category}'"
+    if not name:
+        return {}, "name is required"
+    if not date_iso:
+        return {}, "date_iso is required (YYYY-MM-DD format)"
+    try:
+        date.fromisoformat(date_iso)
+    except ValueError:
+        return {}, f"Invalid date: {date_iso}. Use YYYY-MM-DD format."
+
+    payload: dict[str, Any] = {
+        "name": name,
+        "type": str(kw.get("event_type", "Ride")).strip(),
+        "category": category,
+        "start_date_local": str(kw.get("start_time") or f"{date_iso}T09:00:00"),
+    }
+    if kw.get("description"):
+        payload["description"] = str(kw["description"]).strip()
+    if kw.get("planned_load") is not None:
+        payload["icu_training_load"] = int(kw["planned_load"])
+    if kw.get("planned_intensity") is not None:
+        payload["icu_intensity"] = float(kw["planned_intensity"])
+    if kw.get("indoor"):
+        payload["indoor"] = True
+    if kw.get("duration_min") is not None:
+        payload["moving_time"] = int(float(kw["duration_min"]) * 60)
+    return payload, None
+
+
+def create_events_bulk(discord_id: str, **kw: Any) -> str:
+    """Create several planned events on the athlete's calendar in one call.
+
+    Uses POST /athlete/{id}/events/bulk, which replaces N single creates.
+    Use this for a multi-week plan after the athlete has approved the table.
+
+    Args:
+        events: List of event dicts. Each accepts the same fields as
+                create_planned_event: name, date_iso, event_type, description,
+                planned_load, planned_intensity, duration_min, indoor, category,
+                start_time.
+
+    Returns JSON with created_count and the created event ids, or an error naming
+    the first invalid event. Structured `steps` are not supported here — create
+    those individually with create_planned_event.
+
+    # ponytail: no FIT step generation in the bulk path; add it if a plan needs
+    # Garmin-pushable structured workouts for many sessions at once.
+    """
+    events = kw.get("events") or []
+    if not isinstance(events, list) or not events:
+        return json.dumps({"error": "events must be a non-empty list"})
+
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    payloads = []
+    for i, ev in enumerate(events):
+        if not isinstance(ev, dict):
+            return json.dumps({"error": f"events[{i}] must be an object"})
+        payload, error = _event_payload(ev)
+        if error:
+            return json.dumps({"error": f"events[{i}]: {error}"})
+        payloads.append(payload)
+
+    try:
+        result = _post_json(
+            athlete_id, api_key, f"/athlete/{athlete_id}/events/bulk", payloads
+        )
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+
+    created = result if isinstance(result, list) else []
+    return json.dumps({
+        "created": True,
+        "created_count": len(created),
+        "event_ids": [e.get("id") for e in created if isinstance(e, dict)],
+    })
+
+
+def update_event(discord_id: str, **kw: Any) -> str:
+    """Update an existing planned event on the intervals.icu calendar.
+
+    PUT /athlete/{id}/events/{eventId} replaces the whole event, so this
+    fetches the event first, applies only the supplied fields, and writes the
+    complete object back. Fields you do not supply are preserved.
+
+    Args:
+        event_id: Numeric event ID to update (required).
+        name, date_iso, event_type, description, planned_load,
+        planned_intensity, duration_min, indoor, category, start_time:
+            Same meaning as create_planned_event; only the ones supplied change.
+
+    Returns JSON with the updated event, or an error.
+    """
+    event_id = kw.get("event_id")
+    if event_id is None:
+        return json.dumps({"error": "event_id is required"})
+    try:
+        athlete_id, api_key = _load_credentials(discord_id)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
+
+    path = f"/athlete/{athlete_id}/events/{int(event_id)}"
+    try:
+        current = _request(athlete_id, api_key, path)
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+    if not isinstance(current, dict) or not current:
+        return json.dumps({"error": f"event {event_id} not found"})
+
+    category = kw.get("category")
+    if category is not None and str(category).strip().upper() not in _VALID_CATEGORIES:
+        return json.dumps({"error": f"Invalid category '{category}'"})
+
+    if kw.get("name") is not None:
+        current["name"] = str(kw["name"]).strip()
+    if kw.get("event_type") is not None:
+        current["type"] = str(kw["event_type"]).strip()
+    if kw.get("description") is not None:
+        current["description"] = str(kw["description"]).strip()
+    if kw.get("category") is not None:
+        current["category"] = str(kw["category"]).strip().upper()
+    if kw.get("planned_load") is not None:
+        current["icu_training_load"] = int(kw["planned_load"])
+    if kw.get("planned_intensity") is not None:
+        current["icu_intensity"] = float(kw["planned_intensity"])
+    if kw.get("duration_min") is not None:
+        current["moving_time"] = int(float(kw["duration_min"]) * 60)
+    if kw.get("indoor") is not None:
+        current["indoor"] = bool(kw["indoor"])
+    if kw.get("date_iso") is not None:
+        date_iso = str(kw["date_iso"]).strip()
+        try:
+            date.fromisoformat(date_iso)
+        except ValueError:
+            return json.dumps({"error": f"Invalid date: {date_iso}"})
+        # Moving the date must not silently change the time-of-day: keep the
+        # existing time component and only replace the date part.
+        original = str(current.get("start_date_local") or "")
+        time_part = original[10:] if len(original) > 10 else "T09:00:00"
+        current["start_date_local"] = f"{date_iso}{time_part}"
+    elif kw.get("start_time") is not None:
+        current["start_date_local"] = str(kw["start_time"]).strip()
+
+    try:
+        result = _put_json(athlete_id, api_key, path, current)
+    except (ValueError, RuntimeError) as exc:
+        return json.dumps({"error": str(exc)})
+
+    return json.dumps({
+        "updated": True,
+        "event_id": result.get("id", event_id),
+        "name": result.get("name"),
+        "date": (result.get("start_date_local") or "")[:10],
+        "category": result.get("category"),
+        "planned_load": result.get("icu_training_load"),
+    })
+
+
 def register_tools(ctx) -> None:
     """Register create_event and delete_event as Hermes tools."""
 
@@ -601,4 +772,68 @@ def register_tools(ctx) -> None:
         properties={**_D, "event_id": {"type": "integer", "description": "Numeric event ID to delete."}},
         required=["discord_id", "event_id"],
         fn=delete_event,
+    )
+
+    _tool(
+        name="create_planned_events_bulk",
+        description=(
+            "Create several planned events on the intervals.icu calendar in one "
+            "call. Use this for an approved multi-week plan instead of one call "
+            "per session. Each event accepts the same fields as "
+            "create_planned_event (no structured steps)."
+        ),
+        properties={
+            **_D,
+            "events": {
+                "type": "array",
+                "description": (
+                    "List of events to create. Each: name, date_iso (YYYY-MM-DD), "
+                    "event_type, description, planned_load, planned_intensity, "
+                    "duration_min, indoor, category, start_time."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "date_iso": {"type": "string", "description": "Date YYYY-MM-DD."},
+                        "event_type": {"type": "string", "description": "Sport type, default Ride."},
+                        "description": {"type": "string"},
+                        "planned_load": {"type": "integer", "description": "Planned TSS/load."},
+                        "planned_intensity": {"type": "number", "description": "Planned IF %."},
+                        "duration_min": {"type": "integer"},
+                        "indoor": {"type": "boolean"},
+                        "category": {"type": "string", "description": "Event category, default WORKOUT."},
+                        "start_time": {"type": "string", "description": "ISO datetime override."},
+                    },
+                },
+            },
+        },
+        required=["discord_id", "events"],
+        fn=create_events_bulk,
+    )
+
+    _tool(
+        name="update_planned_event",
+        description=(
+            "Update an existing planned event on the intervals.icu calendar. "
+            "Fetches the event, applies only the fields you supply, and writes "
+            "the complete event back (PUT is a full replace). Use this instead "
+            "of delete+recreate. Fields you omit are preserved."
+        ),
+        properties={
+            **_D,
+            "event_id": {"type": "integer", "description": "Numeric event ID to update."},
+            "name": {"type": "string"},
+            "date_iso": {"type": "string", "description": "New date YYYY-MM-DD."},
+            "event_type": {"type": "string"},
+            "description": {"type": "string"},
+            "planned_load": {"type": "integer", "description": "Planned TSS/load."},
+            "planned_intensity": {"type": "number", "description": "Planned IF %."},
+            "duration_min": {"type": "integer"},
+            "indoor": {"type": "boolean"},
+            "category": {"type": "string", "enum": list(_VALID_CATEGORIES)},
+            "start_time": {"type": "string", "description": "ISO datetime override."},
+        },
+        required=["discord_id", "event_id"],
+        fn=update_event,
     )

@@ -11,7 +11,7 @@ Before proposing ANY program, pull the complete data set:
 verify_athlete_identity  →  get_athlete_profile  →  get_wellness(days=42)
 get_fitness_chart(days=365, weekly resolution)  →  get_recent_activities(days=90)
 get_sport_settings(sport="Ride")  [repeat for Run if multi-sport]
-get_planned_events(days_ahead=90)  →  get_power_curve(days=90)
+get_planned_events(days_ahead=90)  →  get_best_effort_curve(days=90)
 get_coaching_knowledge("training periodization")
 get_coaching_knowledge("tapering")
 get_coaching_knowledge("nutrition during training")
@@ -162,9 +162,13 @@ on intervals.icu and they auto-sync to Garmin Connect → Garmin Edge.
 
 ### Bulk creation workflow
 
-The `create_planned_event` tool creates one event per call. For a full program
-(~25-30 events), batch them in groups of 3-4 per turn. Never use general-purpose
-tools (curl, execute_code) — `create_planned_event` is the only supported path.
+The `create_planned_events_bulk` tool creates a whole approved plan in one call.
+Use `create_planned_event` for any session that needs structured `steps` (FIT
+files) — the bulk path does not generate them. Never use general-purpose tools
+(curl, execute_code) — these tools are the only supported path.
+
+To change an existing event use `update_planned_event` — it fetches the event and
+writes the complete object back, so omitted fields are preserved.
 
 **Per-event parameters:**
 - `name`: Short, descriptive (e.g. "Distans Z2", "Tröskel 2×12'")

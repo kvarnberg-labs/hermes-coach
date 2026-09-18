@@ -101,7 +101,7 @@ Before prescribing specific paces, determine the athlete's threshold pace:
 1. **Lactate testing data** (lactrace, lab) — authoritative if available
 2. **`get_sport_settings(sport="Run")`** — running FTP/threshold pace from intervals.icu
 3. **Recent race result** — use a 10K time to estimate threshold via Jack Daniels VDOT
-4. **`get_activity_detail(id)`** — `interval_summary` field for actual threshold session paces
+4. **`get_activity_intervals(id)`** — the `WORK` intervals for actual threshold session paces
 
 If none of these are available, prescribe by HR zones from LTHR:
 - Threshold HR: 95–100% LTHR

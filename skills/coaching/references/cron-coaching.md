@@ -64,7 +64,7 @@ show('WELLNESS', intervals_icu.get_wellness, 3)
 show('EVENTS', intervals_icu.get_planned_events, 1)
 show('SPORT_SETTINGS', intervals_icu.get_sport_settings, 'Ride')
 show('RECENT_ACTIVITIES', intervals_icu.get_recent_activities, 14)
-show('POWER_CURVE', intervals_icu.get_power_curve, 'Ride', 42)
+show('BEST_EFFORT_CURVE', intervals_icu.get_best_effort_curve, 'Ride', 42)
 show('FITNESS', intervals_icu.get_fitness_chart, 365)
 " 2>&1
 ```
@@ -75,12 +75,14 @@ show('FITNESS', intervals_icu.get_fitness_chart, 365)
 |---|---|---|
 | `get_athlete_profile(uid)` | — | JSON string |
 | `get_wellness(uid, days=7)` | `days` (int) | JSON string |
-| `get_planned_events(uid, days_ahead=14)` | `days_ahead` (int) | JSON string |
+| `get_planned_events(uid, days_ahead=14, days_back=0)` | `days_ahead`, `days_back` (int) | JSON string |
 | `get_sport_settings(uid, sport="Ride")` | `sport` (str) | JSON string |
 | `get_recent_activities(uid, days=14, sport=None)` | `days`, `sport` | JSON string |
-| `get_power_curve(uid, sport="Ride", days=42)` | `sport`, `days` | JSON string |
+| `get_best_effort_curve(uid, sport="Ride", days=42)` | `sport`, `days` | JSON string |
+| `get_power_curve(uid, sport="Ride", days=42)` | deprecated alias | JSON string |
 | `get_fitness_chart(uid, days=365)` | `days` | JSON string (weekly resolution when days>60) |
 | `get_activity_detail(uid, activity_id)` | `activity_id` (str) | JSON string |
+| `get_activity_intervals(uid, activity_id)` | `activity_id` (str) | JSON string |
 | `get_activity_streams(uid, activity_id)` | `activity_id` (str) | JSON string |
 
 ### Finding the athlete's snowflake
