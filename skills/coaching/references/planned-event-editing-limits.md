@@ -1,40 +1,52 @@
-# Planned-event editing limits — create/delete only, no API edit
+# Planned-event editing — PUT works, PATCH does not
 
 ## The constraint
 
-The intervals.icu planned-events API supports exactly two write operations:
+The intervals.icu planned-events API supports these write operations:
 
 | Operation | Endpoint | Works |
 |---|---|---|
-| Create | `POST /athlete/{id}/events` | ✓ (via `create_planned_event`) |
-| Delete | `DELETE /athlete/{id}/events/{id}` | ✓ (via `delete_planned_event`) |
-| Edit | `PATCH`/`PUT /athlete/{id}/events/{event_id}` | ✗ — returns `405 Method Not Allowed` |
+| Create | `POST /athlete/{id}/events` | ✓ — also `upsertOnUid` to update a matching `uid` |
+| Create batch | `POST /athlete/{id}/events/bulk` | ✓ — `upsert` / `upsertOnUid` / `updatePlanApplied` |
+| Edit one | `PUT /athlete/{id}/events/{eventId}` | ✓ — `EventEx` body, returns the updated event |
+| Edit a range | `PUT /athlete/{id}/events` | ✓ — **only** `hide_from_athlete` and `athlete_cannot_edit` |
+| Delete one | `DELETE /athlete/{id}/events/{eventId}` | ✓ |
+| Delete a range | `DELETE /athlete/{id}/events` | ✓ — optional `category`, `createdById` |
+| Delete batch | `PUT /athlete/{id}/events/bulk-delete` | ✓ — by `id` or `external_id` |
+| Mark done | `POST /athlete/{id}/events/{eventId}/mark-done` | ✓ — creates a manual activity to match |
 
-There is NO API endpoint for editing an existing planned event. Attempting
-PATCH/PUT (directly or by inventing an "edit" tool call) fails with 405 and
-wastes turns; worse, a failed attempt can tempt fabricated workarounds.
+`PATCH` on `/athlete/{id}/events/{eventId}` is **not mapped** and returns
+`405 Method Not Allowed`. A `405` means the path exists but the method is not
+allowed — so a `PATCH` result is not evidence that `PUT` is unavailable.
 
-## Correct workflows when an event must change
+**Source:** OpenAPI spec at `https://intervals.icu/api/v1/docs` (generated from the
+server source), and the maintainer's own API reference in the
+"API access to Intervals.icu" forum thread, post 4.
 
-1. **Delete + recreate (preferred for coach-created events):** delete the
-   event by ID, then `create_planned_event` with the corrected fields.
-   Always re-verify the resulting date range afterward — a recreate that
-   lands on the wrong date recreates the weekday-label class of errors.
-2. **Manual edit in the intervals.icu web UI (preferred when the event has
-   athlete-added history, notes, or completed-workout attachment):** ask the
-   athlete to edit the event themselves and confirm the change.
+## Editing an event
+
+`PUT` is a **full replace**, not a patch: fetch the event first with
+`GET /athlete/{id}/events/{eventId}`, change the fields you want, and send the
+complete `EventEx` object back. A partial body can drop fields you did not resend —
+in particular athlete-added notes and structure. Read the event, then write it back.
+
+`PUT /events` (the range form) is **not** a general bulk edit — it only changes
+`hide_from_athlete` and `athlete_cannot_edit`. To change load, duration or
+structure across a range, edit the events one at a time.
+
+## Pairing a completed activity to a planned workout
+
+`Activity.paired_event_id` is the ID of the planned event an activity completed.
+Read it to check adherence; it is set automatically when the workout matches the
+activity closely enough (sport and load/time), or manually by drag-and-drop in the
+UI. **Setting it is not exposed on the event endpoint** — the maintainer confirms
+pairing is done client-side (forum thread, post 164). `POST
+/athlete/{id}/activities` accepts a `paired_event_id` form parameter, but only when
+uploading the activity file.
 
 ## Class-level rule: migrate reusable API facts out of athlete memory
 
-This fact was discovered in a live session (2026-08) and stored only in one
-athlete's private memory store — every other session (and main-side agents)
-lacked it. General intervals.icu API behavior belongs in class-level
-references like this file, not in per-athlete memory. When a session
-discovers an API constraint, add it to the relevant reference (or
-`intervals-icu-api-coverage.md`) in the same improvement pass.
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Planned events are create/delete only — the API cannot edit an existing event.** PATCH/PUT to `/athlete/{id}/events/{event_id}` returns `405 Method Not Allowed`. When an event must change: delete it and recreate with corrected fields via `create_planned_event`, re-verifying the resulting date range afterward — or have the athlete edit it in the intervals.icu web UI when the event carries athlete-added history or notes. Never attempt an API edit and never invent an "edit event" tool call.
+API behaviour discovered in a session belongs in class-level references like this
+file, not in one athlete's private memory store — otherwise every other session (and
+main-side agent) lacks it. When a session discovers an API constraint, add it to the
+relevant reference (or `intervals-icu-api.md`) in the same improvement pass.

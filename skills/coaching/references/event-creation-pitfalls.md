@@ -220,14 +220,18 @@ User-Agent: hermes-coach/1.0
 
 Cloudflare blocks requests without a `User-Agent` header.
 
-## When create_planned_event cannot do it
+## When the calendar tools cannot do it
 
-Use `create_planned_event` / `delete_planned_event` for all calendar writes.
+Use `create_planned_event` / `create_planned_events_bulk` /
+`update_planned_event` / `delete_planned_event` for all calendar writes.
 If a capability is genuinely missing (an endpoint or field the tools do not
 cover), the gap goes through a PR or `develop_tool` — do not fall back to
 direct API calls with the athlete's key. (The historical raw-POST recipe is
 preserved in the repo's `docs/OPS-BREAKGLASS.md`, not shipped to athlete
 sessions.)
+
+Editing an existing event uses `update_planned_event` (a `PUT`); `PATCH` is not
+supported. See `references/planned-event-editing-limits.md`.
 
 ---
 

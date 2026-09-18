@@ -71,13 +71,13 @@ Ten modules, each registering tools with the Hermes plugin context:
 
 | Module | Tools | Purpose |
 |--------|-------|---------|
-| `intervals_icu.py` | 10 tools | Fetch athlete data from intervals.icu API |
+| `intervals_icu.py` | 12 tools | Fetch athlete data from intervals.icu API |
 | `weather.py` | 1 tool | Open-Meteo forecast (free, no key) |
 | `coaching.py` | 1 tool | Retrieve coach-brain knowledge by topic |
 | `onboarding.py` | 1 tool | `/start` flow for connecting intervals.icu |
 | `sandbox_client.py` | 1 tool | Autonomous tool development via k8s Jobs (toolset: `self-improve`) |
 | `render_chart.py` | 3 tools | Render power-curve, wellness, zone-distribution charts |
-| `create_planned_event.py` | 2 tools | Create/delete planned events + FIT workout generation |
+| `create_planned_event.py` | 4 tools | Create/update/delete planned events + FIT workout generation |
 | `get_athlete_stats.py` | 1 tool | Aggregated activity statistics for a date range |
 | `strength_coach.py` | 4 tools | Strength assessment, exercise lookup, workout/program design |
 | `intervals_docs.py` | 2 tools | intervals.icu API endpoint lookup + docs search |

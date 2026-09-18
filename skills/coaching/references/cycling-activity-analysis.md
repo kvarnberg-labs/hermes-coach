@@ -28,7 +28,7 @@ Call `get_activity_detail(activity_id)` and extract these fields:
 | `coasting_time_s` | Seconds not pedalling — high on descents |
 | `calories` | Total kcal |
 | `carbs_used_g` | Grams carbohydrate oxidised |
-| `interval_summary` | Garmin auto-detected efforts |
+| `interval_summary` | Garmin auto-detected efforts (also see `get_activity_intervals`) |
 | `avg_cadence` | Average cadence (rpm) — includes coasting (cadence=0) |
 | `cadence_z2_rpm` | Cadence when power was in Z2 — excludes coasting/Z1 |
 
@@ -100,6 +100,8 @@ Estimate pedaling-only cadence:
 pedaling_time = recording_time - coasting_time
 pedaling_cadence = avg_cadence * recording_time / pedaling_time
 ```
+
+(`avg_cadence` is the tool's name for the published `average_cadence` field.)
 
 Example: avg_cadence 70.5 rpm, coasting 1607s (27 min) of 11772s (196 min):
 → pedaling-only cadence ≈ 82 rpm (significantly higher than the raw 70.5).

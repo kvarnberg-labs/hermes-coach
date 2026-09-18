@@ -90,9 +90,17 @@ def get_athlete_stats(
     except ValueError as exc:
         return json.dumps({"error": str(exc)})
 
-    params = {"oldest": start_date, "newest": end_date}
-    # Distinct cache key from get_recent_activities (different projection):
-    # both hit /activities but return different shapes, so they must not share.
+    # Project only the five fields this tool aggregates. The endpoint default is
+    # all 183 documented fields, so an unprojected 90-day query downloads
+    # 100-356 KB to add five numbers (live-verified 2026-09-18; the projected
+    # query returns 2-7 KB). Distinct cache key from get_recent_activities
+    # (different projection) — both hit /activities but return different shapes.
+    params = {
+        "oldest": start_date,
+        "newest": end_date,
+        "fields": "distance,moving_time,calories,icu_training_load,type",
+        "limit": 500,
+    }
     ck = _cache_key(f"/athlete/{athlete_id}/activities:stats", params)
     cached = _cache_get(discord_id, ck, _TTL_ACTIVITIES)
     if cached is not None:

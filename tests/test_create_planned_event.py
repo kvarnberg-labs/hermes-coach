@@ -696,3 +696,115 @@ class TestStepTargetValidation:
         target_prop = steps["items"]["properties"]["target"]
         assert set(target_prop["enum"]) == {"POWER", "HR", "PACE"}
         assert "AUTO" not in target_prop["enum"]
+
+
+class TestBulkCreate:
+    def test_bulk_posts_all_events_in_one_call(self, mock_credentials):
+        events = [
+            {"name": "A", "date_iso": "2026-09-21"},
+            {"name": "B", "date_iso": "2026-09-22", "planned_load": 60},
+        ]
+        with patch.object(create_planned_event, "_post_json",
+                          return_value=[{"id": 1}, {"id": 2}]) as mock_post:
+            r = json.loads(create_planned_event.create_events_bulk(
+                "test-user-123", events=events))
+        assert mock_post.call_count == 1
+        assert mock_post.call_args[0][2] == "/athlete/i12345/events/bulk"
+        payloads = mock_post.call_args[0][3]
+        assert len(payloads) == 2
+        assert payloads[0]["name"] == "A"
+        assert payloads[1]["icu_training_load"] == 60
+        assert r["created"] is True
+        assert r["created_count"] == 2
+
+    def test_bulk_rejects_empty_list(self, mock_credentials):
+        r = json.loads(create_planned_event.create_events_bulk(
+            "test-user-123", events=[]))
+        assert "non-empty list" in r["error"]
+
+    def test_bulk_names_the_invalid_event(self, mock_credentials):
+        events = [
+            {"name": "A", "date_iso": "2026-09-21"},
+            {"name": "B", "date_iso": "21-09-2026"},
+        ]
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_events_bulk(
+                "test-user-123", events=events))
+        assert mock_post.call_count == 0  # nothing posted
+        assert "events[1]" in r["error"]
+
+    def test_bulk_rejects_bad_category(self, mock_credentials):
+        events = [{"name": "A", "date_iso": "2026-09-21", "category": "NOPE"}]
+        with patch.object(create_planned_event, "_post_json") as mock_post:
+            r = json.loads(create_planned_event.create_events_bulk(
+                "test-user-123", events=events))
+        assert mock_post.call_count == 0
+        assert "Invalid category" in r["error"]
+
+
+class TestUpdateEvent:
+    def test_update_fetches_then_puts_the_full_event(self, mock_credentials):
+        current = {"id": 77, "name": "Old", "type": "Ride",
+                   "category": "WORKOUT", "start_date_local": "2026-09-21T09:00:00",
+                   "description": "keep me", "icu_training_load": 50}
+        with patch.object(create_planned_event, "_request",
+                          return_value=current) as mock_get:
+            with patch.object(create_planned_event, "_put_json",
+                              return_value={"id": 77, "name": "New"}) as mock_put:
+                r = json.loads(create_planned_event.update_event(
+                    "test-user-123", event_id=77, name="New"))
+        # GET first (full replace), then PUT the complete object
+        assert mock_get.call_args[0][2] == "/athlete/i12345/events/77"
+        assert mock_put.call_args[0][2] == "/athlete/i12345/events/77"
+        body = mock_put.call_args[0][3]
+        assert body["name"] == "New"
+        assert body["description"] == "keep me"  # omitted field preserved
+        assert body["icu_training_load"] == 50
+        assert r["updated"] is True
+        assert r["event_id"] == 77
+
+    def test_update_requires_event_id(self, mock_credentials):
+        r = json.loads(create_planned_event.update_event(
+            "test-user-123", name="X"))
+        assert "event_id is required" in r["error"]
+
+    def test_update_missing_event_returns_error(self, mock_credentials):
+        with patch.object(create_planned_event, "_request", return_value={}):
+            r = json.loads(create_planned_event.update_event(
+                "test-user-123", event_id=999, name="X"))
+        assert "not found" in r["error"]
+
+    def test_update_rejects_bad_date_without_writing(self, mock_credentials):
+        current = {"id": 77, "name": "Old", "start_date_local": "2026-09-21T09:00:00"}
+        with patch.object(create_planned_event, "_request", return_value=current):
+            with patch.object(create_planned_event, "_put_json") as mock_put:
+                r = json.loads(create_planned_event.update_event(
+                    "test-user-123", event_id=77, date_iso="21-09-2026"))
+        assert mock_put.call_count == 0
+        assert "Invalid date" in r["error"]
+
+    def test_update_moves_the_date_and_keeps_the_time(self, mock_credentials):
+        current = {"id": 77, "name": "Old", "start_date_local": "2026-09-21T07:30:00"}
+        with patch.object(create_planned_event, "_request", return_value=current):
+            with patch.object(create_planned_event, "_put_json",
+                              return_value={"id": 77}) as mock_put:
+                create_planned_event.update_event(
+                    "test-user-123", event_id=77, date_iso="2026-09-28")
+        body = mock_put.call_args[0][3]
+        assert body["start_date_local"] == "2026-09-28T07:30:00"
+
+
+class TestNewToolsRegistered:
+    def test_bulk_and_update_tools_are_registered(self):
+        registered = {}
+
+        class FakeCtx:
+            def register_tool(self, name, toolset, schema, handler):
+                registered[name] = schema
+
+        create_planned_event.register_tools(FakeCtx())
+        assert "create_planned_events_bulk" in registered
+        assert "update_planned_event" in registered
+        assert registered["update_planned_event"]["parameters"]["required"] == [
+            "event_id"
+        ]

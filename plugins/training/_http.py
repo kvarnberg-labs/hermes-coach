@@ -12,6 +12,7 @@ Interface:
     _auth_header(api_key) -> str
     _request(athlete_id, api_key, path, params?, timeout?) -> Any   (GET; retries 429/503)
     _post_json(athlete_id, api_key, path, payload, timeout?) -> Any
+    _put_json(athlete_id, api_key, path, payload, timeout?) -> Any
     _delete_json(athlete_id, api_key, path, timeout?) -> bool
     _today_iso() -> str
     _n_days_ago_iso(n: int) -> str
@@ -215,6 +216,46 @@ def _post_json(
         headers={"Authorization": _auth_header(api_key), "Accept": "application/json",
                  "Content-Type": "application/json", "User-Agent": "hermes-coach/1.0"},
         method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = ""
+        try:
+            body = exc.read().decode("utf-8")[:500]
+        except Exception:
+            pass
+        if exc.code == 401:
+            raise ValueError(
+                "intervals.icu 401. API key may have expired — run /start."
+            ) from exc
+        raise RuntimeError(
+            f"intervals.icu error {exc.code}: {exc.reason}. Body: {body}"
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Could not reach intervals.icu: {exc.reason}") from exc
+
+
+def _put_json(
+    athlete_id: str,
+    api_key: str,
+    path: str,
+    payload: dict,
+    timeout: int = 20,
+) -> Any:
+    """PUT JSON to intervals.icu and return the parsed response.
+
+    Used for PUT /athlete/{id}/events/{eventId} (full-replace event update).
+    """
+    del athlete_id  # path already contains the athlete_id; kept for call symmetry
+    url = f"{_API_BASE}{path}"
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=data,
+        headers={"Authorization": _auth_header(api_key), "Accept": "application/json",
+                 "Content-Type": "application/json", "User-Agent": "hermes-coach/1.0"},
+        method="PUT",
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:

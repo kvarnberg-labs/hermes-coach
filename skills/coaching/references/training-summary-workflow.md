@@ -21,7 +21,7 @@ get_fitness_chart(days=90)    # long-range CTL/eFTP trends (weekly resolution: d
 get_recent_activities(days=N) # activities covering the period
 get_sport_settings()           # current FTP, zones, LTHR
 get_athlete_stats(start, end) # monthly totals per sport
-get_power_curve(days=90)      # peak power, strengths/weaknesses
+get_best_effort_curve(days=90)  # best effort, strengths/weaknesses
 ```
 
 The parallel pull is the key optimization — 6+ calls in one turn
