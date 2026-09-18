@@ -4,6 +4,9 @@
 set -eu
 
 HERMES_HOME="${HERMES_HOME:-/opt/data}"
+# Image root holding the baked coach assets. Overridable so tests can run
+# the sync against a temp tree instead of the real /opt/hermes.
+IMAGE_ROOT="${COACH_IMAGE_ROOT:-/opt/hermes}"
 
 # Sync coach-brain knowledge files.
 # The image copy is the source of truth (built from main). The PVC copy can
@@ -16,9 +19,9 @@ HERMES_HOME="${HERMES_HOME:-/opt/data}"
 # for weeks after the update merged). Per-file copy makes the image win for
 # every file it ships; PVC-only files (runtime-added, not in the image) are
 # untouched by this loop and survive.
-if [ -d /opt/hermes/coach-brain ]; then
+if [ -d ${IMAGE_ROOT}/coach-brain ]; then
   mkdir -p "${HERMES_HOME}/coach-brain"
-  for f in /opt/hermes/coach-brain/*.yaml; do
+  for f in ${IMAGE_ROOT}/coach-brain/*.yaml; do
     [ -e "$f" ] || continue
     name="$(basename "$f")"
     dest="${HERMES_HOME}/coach-brain/${name}"
@@ -36,9 +39,9 @@ fi
 # - Prune skill dirs the image no longer ships: stale rollout artifacts and
 #   runtime skills-hub installs (re-installable on demand). This is what
 #   keeps the athlete-session <available_skills> index lean.
-if [ -d /opt/hermes/coach-skills ]; then
+if [ -d ${IMAGE_ROOT}/coach-skills ]; then
   mkdir -p "${HERMES_HOME}/skills"
-  for skill_dir in /opt/hermes/coach-skills/*/; do
+  for skill_dir in ${IMAGE_ROOT}/coach-skills/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name="$(basename "$skill_dir")"
     dest="${HERMES_HOME}/skills/${skill_name}"
@@ -49,7 +52,7 @@ if [ -d /opt/hermes/coach-skills ]; then
   for dest_dir in "${HERMES_HOME}/skills"/*/; do
     [ -d "$dest_dir" ] || continue
     skill_name="$(basename "$dest_dir")"
-    if [ ! -d "/opt/hermes/coach-skills/${skill_name}" ]; then
+    if [ ! -d "${IMAGE_ROOT}/coach-skills/${skill_name}" ]; then
       rm -rf "$dest_dir"
       echo "Pruned skill not shipped by image: ${skill_name}"
     fi
@@ -58,20 +61,48 @@ fi
 
 # Sync AGENTS.md for the self-improvement cron loop workdir.
 # Always overwrite so changes committed to the image are picked up.
-if [ -f /opt/hermes/AGENTS.md ]; then
-  cp /opt/hermes/AGENTS.md "${HERMES_HOME}/AGENTS.md"
+if [ -f ${IMAGE_ROOT}/AGENTS.md ]; then
+  cp ${IMAGE_ROOT}/AGENTS.md "${HERMES_HOME}/AGENTS.md"
 fi
 
 # Sync self-improvement loop files — CONTRACT.md is read by the cron agent every run.
 # Worklog and signals are runtime-written; only seed them if absent.
-if [ -f /opt/hermes/loops/self-improve/CONTRACT.md ]; then
+if [ -f ${IMAGE_ROOT}/loops/self-improve/CONTRACT.md ]; then
   mkdir -p "${HERMES_HOME}/loops/self-improve" "${HERMES_HOME}/loops/signals"
-  cp /opt/hermes/loops/self-improve/CONTRACT.md \
+  cp ${IMAGE_ROOT}/loops/self-improve/CONTRACT.md \
      "${HERMES_HOME}/loops/self-improve/CONTRACT.md"
   echo "Synced loops/self-improve/CONTRACT.md"
   if [ ! -f "${HERMES_HOME}/loops/worklog.md" ]; then
     printf '# Self-Improvement Worklog\n\n' > "${HERMES_HOME}/loops/worklog.md"
   fi
+fi
+
+# Sync the training plugin: the image is the source of truth (built from main).
+# Hermes discovers plugins from BOTH the bundled dir (<image root>/plugins) and
+# ${HERMES_HOME}/plugins (user), and the user copy wins on a name collision
+# (`hermes plugins list` reports training as Source: user). Nothing synced the
+# plugin to the PVC, so a stale copy from an older deploy shadowed the image and
+# a merged fix never reached the running gateway (live instance: the PVC copy was
+# 3 days older than the image copy and the gateway loaded the stale one). Mirror
+# the shipped files so the image wins for every file it ships; PVC-only dirs
+# (generated/) are untouched.
+if [ -d ${IMAGE_ROOT}/plugins/training ]; then
+  mkdir -p "${HERMES_HOME}/plugins/training"
+  for f in ${IMAGE_ROOT}/plugins/training/*; do
+    [ -e "$f" ] || continue
+    name="$(basename "$f")"
+    [ "$name" = "__pycache__" ] && continue
+    dest="${HERMES_HOME}/plugins/training/${name}"
+    if [ -d "$f" ]; then
+      rm -rf "$dest"
+      cp -r "$f" "$dest"
+      continue
+    fi
+    if [ -f "$dest" ] && ! cmp -s "$f" "$dest"; then
+      echo "Updating plugins/training/${name} (image newer than PVC copy)"
+    fi
+    cp "$f" "$dest"
+  done
 fi
 
 # Ensure user plugins directory exists (Hermes discovers plugins from here)
