@@ -942,6 +942,27 @@ class TestCoachingDataInterface:
         assert rec["fat_total_g"] == 70
         assert rec["kcal_consumed"] == 2400
 
+    def test_wellness_requests_the_date_id(self):
+        # `id` is the ISO date; without it in `fields` every record's date is
+        # None and the wellness/fitness date axis breaks.
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_wellness("u777", days=7)
+        requested = set(mock_req.call_args[0][3]["fields"].split(","))
+        assert "id" in requested
+
+    def test_wellness_date_comes_from_id(self):
+        raw = [{"id": "2026-09-18", "ctl": 60.0, "atl": 55.0}]
+        with patch.object(intervals_icu, "_request", return_value=raw):
+            result = json.loads(intervals_icu.get_wellness("u777", days=1))
+        assert result["records"][0]["date"] == "2026-09-18"
+        assert result["today"]["date"] == "2026-09-18"
+
+    def test_fitness_chart_requests_the_date_id(self):
+        with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
+            intervals_icu.get_fitness_chart("u777", days=7)
+        requested = set(mock_req.call_args[0][3]["fields"].split(","))
+        assert "id" in requested
+
     def test_wellness_requests_the_extended_fields(self):
         with patch.object(intervals_icu, "_request", return_value=[]) as mock_req:
             intervals_icu.get_wellness("u777", days=42)

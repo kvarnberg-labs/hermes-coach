@@ -80,7 +80,9 @@ _PROJECTION_VERSION = 2
 # athletes tested.
 # ---------------------------------------------------------------------------
 _WELLNESS_FIELDS = (
-    "ctl,atl,rampRate,ctlLoad,atlLoad,"
+    # `id` is the ISO date and is the record's date key — it must be in the
+    # projection, because `fields` excludes every field it does not list.
+    "id,ctl,atl,rampRate,ctlLoad,atlLoad,"
     "hrv,hrvSDNN,restingHR,avgSleepingHR,"
     "sleepSecs,sleepScore,sleepQuality,readiness,"
     "weight,bodyFat,vo2max,respiration,spO2,"
