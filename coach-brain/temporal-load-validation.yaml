@@ -6,6 +6,9 @@ temporal_load_validation:
     - "Anchor every assessment to an explicit as-of date and timezone."
     - "Separate today's record, the recent 7–14 day load, and the longer baseline; do not substitute one window for another."
     - "Before attributing symptoms to overload, verify the dates, sport, duration, and actual completed activities in the relevant window."
+    - "For every human-readable weekday paired with a date, derive the weekday from that exact ISO date in the athlete's configured timezone; never infer it from the response day or memory."
+    - "Check each dated label after drafting, including historical activity dates, wellness dates, planned-event dates, and relative phrases rewritten as dates."
+    - "If a date and weekday disagree, remove the weekday or correct it before delivery; do not let otherwise-correct numbers create false confidence."
     - "Compare the planned session with what was completed, including missed, shortened, or non-sport activities."
   evidence_rules:
     - "Use current wellness and recent activities for today's decision; use 28–42 day data to establish trend, not to label today's fatigue."
