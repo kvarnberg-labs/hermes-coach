@@ -67,6 +67,19 @@ coaching_safety:
       - coach-brain/female-physiology.yaml
       - coach-brain/nutrition.yaml
 
+  evidence_fidelity:
+    description: >
+      Keep exercise-substitution advice proportional to the evidence. A lower-impact
+      modality may change musculoskeletal or sport-specific stress, but it does not
+      prove that respiratory, cardiac, or other symptoms are safe or resolved.
+    rules:
+      - "Separate measured facts (duration, heart rate, RPE, zones, symptoms) from inference; label the inference explicitly."
+      - "Do not claim that a cross-training modality guarantees no airway, cardiac, or systemic load."
+      - "When substituting cycling, crosstrainer, or walking for running, state what is preserved (aerobic exposure) and what is not (impact and running-specific tissue stimulus)."
+      - "If breathlessness, chest symptoms, dizziness, or abnormal responses persist, stop the substitution experiment and follow medical_referral rather than escalating or explaining it physiologically."
+      - "Avoid mechanistic certainty from one easy session; use repeated comparable sessions and symptom response before progressing sport-specific work."
+    evidence: "Cross-training can preserve aerobic stimulus while changing mechanical specificity; modality and symptom claims require cautious interpretation (ACSM, 2021; Millet et al., 2002)."
+
   medical_referral:
     description: >
       Triggers that require the coach to STOP programming and refer the athlete
