@@ -9,9 +9,12 @@ headless_coaching_failures:
     onboarding_missing_or_mismatch: "Per-user credentials are absent, unnamed, or linked to another athlete; stop and request /start without making training claims."
     delivery_failure: "The report was generated but did not reach the intended destination; inspect delivery separately from credential validity."
     semantic_failure: "The scheduler reports success but the response contains an error, placeholder, empty report, or identity-unavailable message. Treat the report as failed."
+    data_provenance_failure: "A response uses values, calculations, account claims, or platform behavior not present in the verified tool results, or uses raw terminal/network workarounds instead of the coaching tools. Treat unsupported values as unverified, not as facts."
     output_corruption: "Any coaching response—not only a scheduled brief—containing glitched or garbled tokens (mixed unprompted language, fused words like 'PlanB', broken punctuation/hash fragments inside numbers, or nonsense inserted into otherwise valid prose) is failed output. GLM-5.3-flash-class models have a known intermittent token-corruption mode."
   procedure:
     - "Validate identity, then fetch profile, wellness, activities, planned events, and sport settings with the resolved identity. Stop immediately when verification fails."
+    - "Use the registered coaching tools as the sole source for athlete data; never replace a missing or failed tool result with terminal, curl, urllib, cached, or guessed values."
+    - "For derived metrics or platform behavior, show the source fields and label calculations or estimates; if the source fields are absent, say the value is unavailable."
     - "State the actual failure class and next action; do not describe missing data as poor recovery or complete rest."
     - "When overnight fields are absent, say they were unavailable and use dated historical records only as context."
     - "Before sending any coaching response, run a final integrity sweep over the assembled text—not only cron briefs. Read it once as text and fix or regenerate sections with garbled tokens, mixed languages, fused words, or broken numeric values."
