@@ -13,6 +13,7 @@ temporal_load_validation:
   evidence_rules:
     - "Use current wellness and recent activities for today's decision; use 28–42 day data to establish trend, not to label today's fatigue."
     - "Treat CTL, ATL, and TSB as model outputs whose meaning depends on the selected date and load history."
+    - "Recompute simple derived labels from the source fields before delivery (for example, TSB sign and arithmetic from CTL/ATL); correct drafts that contradict the verified values."
     - "When athlete recollection conflicts with a summary, acknowledge the discrepancy, inspect the underlying activities, and state which evidence is uncertain."
     - "Never fill a missing current value with an older value or describe an old hard session as recent."
   coaching_response:
