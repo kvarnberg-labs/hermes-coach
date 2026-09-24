@@ -78,7 +78,9 @@ coaching_safety:
       - "When substituting cycling, crosstrainer, or walking for running, state what is preserved (aerobic exposure) and what is not (impact and running-specific tissue stimulus)."
       - "If breathlessness, chest symptoms, dizziness, or abnormal responses persist, stop the substitution experiment and follow medical_referral rather than escalating or explaining it physiologically."
       - "Avoid mechanistic certainty from one easy session; use repeated comparable sessions and symptom response before progressing sport-specific work."
-    evidence: "Cross-training can preserve aerobic stimulus while changing mechanical specificity; modality and symptom claims require cautious interpretation (ACSM, 2021; Millet et al., 2002)."
+      - "Treat external class listings, booking feeds, and platform metadata as schedule evidence only—not as verified workout structure, completed training, or physiological load."
+      - "If a class's duration or intervals are not available from an authoritative workout description, state the uncertainty and prescribe a controllable effort or interval structure instead of inferring intensity from its title."
+    evidence: "Cross-training can preserve aerobic stimulus while changing mechanical specificity; modality and symptom claims require cautious interpretation (ACSM, 2021; Millet et al., 2002). External schedules identify availability, not training dose."
 
   medical_referral:
     description: >
