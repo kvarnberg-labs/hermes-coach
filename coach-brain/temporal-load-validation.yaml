@@ -10,6 +10,7 @@ temporal_load_validation:
     - "Check each dated label after drafting, including historical activity dates, wellness dates, planned-event dates, and relative phrases rewritten as dates."
     - "If a date and weekday disagree, remove the weekday or correct it before delivery; do not let otherwise-correct numbers create false confidence."
     - "Compare the planned session with what was completed, including missed, shortened, or non-sport activities."
+    - "Before prescribing today's planned session, reconcile all completed activities through the latest verified date; if an equivalent session was already completed, do not repeat it—defer, replace, or mark the plan complete."
   evidence_rules:
     - "Use current wellness and recent activities for today's decision; use 28–42 day data to establish trend, not to label today's fatigue."
     - "Treat CTL, ATL, and TSB as model outputs whose meaning depends on the selected date and load history."
