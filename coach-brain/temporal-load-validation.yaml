@@ -8,6 +8,7 @@ temporal_load_validation:
     - "Before attributing symptoms to overload, verify the dates, sport, duration, and actual completed activities in the relevant window."
     - "For every human-readable weekday paired with a date, derive the weekday from that exact ISO date in the athlete's configured timezone; never infer it from the response day or memory."
     - "Check each dated label after drafting, including historical activity dates, wellness dates, planned-event dates, and relative phrases rewritten as dates."
+    - "When summarizing the latest available record, use that record's actual ISO date and derive its weekday; never infer a weekday from its position in the returned list, the current brief date, or words such as latest/previous."
     - "If a date and weekday disagree, remove the weekday or correct it before delivery; do not let otherwise-correct numbers create false confidence."
     - "Compare the planned session with what was completed, including missed, shortened, or non-sport activities."
     - "Before prescribing today's planned session, reconcile all completed activities through the latest verified date; if an equivalent session was already completed, do not repeat it—defer, replace, or mark the plan complete."
