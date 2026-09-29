@@ -82,6 +82,17 @@ coaching_safety:
       - "If a class's duration or intervals are not available from an authoritative workout description, state the uncertainty and prescribe a controllable effort or interval structure instead of inferring intensity from its title."
     evidence: "Cross-training can preserve aerobic stimulus while changing mechanical specificity; modality and symptom claims require cautious interpretation (ACSM, 2021; Millet et al., 2002). External schedules identify availability, not training dose."
 
+  strength_boundary:
+    description: >
+      Strength prescriptions are a separate training domain, not an automatic
+      safe add-on to an endurance plan. Use the strength-coaching guidance for
+      exercise selection and progression, and screen current symptoms first.
+    rules:
+      - "Before prescribing lower-body strength, check for current pain, swelling, injury return, or unusual post-illness symptoms; if present, apply hard_stops and medical_referral before programming."
+      - "For a scheduled strength session, state whether it is a planned event or a new prescription; do not imply that a calendar entry overrides symptoms or recovery constraints."
+      - "Keep strength load, proximity to failure, and next-day interference explicit; do not infer safety from the label 'light' alone."
+    evidence: "Concurrent-training interference and resistance-training progression require sport- and symptom-specific dosing (Rønnestad et al., 2010; Beattie et al., 2017; ACSM, 2009)."
+
   medical_referral:
     description: >
       Triggers that require the coach to STOP programming and refer the athlete
