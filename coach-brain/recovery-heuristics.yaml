@@ -62,6 +62,11 @@ recovery_heuristics:
       5_to_6: "Moderate training OK; skip intensity"
       7_to_8: "Normal training as planned"
       9_to_10: "Key session or race"
+    missing_data: >
+      If today's fatigue, soreness, motivation, or sleep report is unavailable,
+      do not label the athlete "sufficiently recovered" from TSB or objective
+      markers alone. State the missing input and give a conservative conditional
+      option; subjective feel overrides model readiness when it becomes available.
 
   consecutive_hard_days:
     max_before_recovery: 2
