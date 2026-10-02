@@ -10,11 +10,12 @@ headless_coaching_failures:
     delivery_failure: "The report was generated but did not reach the intended destination; inspect delivery separately from credential validity."
     semantic_failure: "The scheduler reports success but the response contains an error, placeholder, empty report, or identity-unavailable message. Treat the report as failed."
     output_corruption: "Any coaching response—not only a scheduled brief—containing glitched or garbled tokens (mixed unprompted language, fused words like 'PlanB', broken punctuation/hash fragments inside numbers, or nonsense inserted into otherwise valid prose) is failed output. GLM-5.3-flash-class models have a known intermittent token-corruption mode."
+    coherence_failure: "A response can pass lexical lint yet still be corrupted when a sentence repeats a fragment, contains an impossible/unfinished phrase, or contradicts its own dated facts or numbers. Treat semantically incoherent prose as failed output, not as a cue to guess the intended meaning."
   procedure:
     - "Validate identity, then fetch profile, wellness, activities, planned events, and sport settings with the resolved identity. Stop immediately when verification fails."
     - "State the actual failure class and next action; do not describe missing data as poor recovery or complete rest."
     - "When overnight fields are absent, say they were unavailable and use dated historical records only as context."
-    - "Before sending any coaching response, run a final integrity sweep over the assembled text—not only cron briefs. Read it once as text and fix or regenerate sections with garbled tokens, mixed languages, fused words, or broken numeric values."
+    - "Before sending any coaching response, run a final integrity sweep over the assembled text—not only cron briefs. Read it once as text and fix or regenerate sections with garbled tokens, mixed languages, fused words, broken numeric values, repeated fragments, unfinished phrases, or internal contradictions."
     - "If corruption is found after delivery, acknowledge the unreliable text and regenerate from the verified tool results; never defend or infer meaning from a garbled sentence."
   evidence_basis: "Credential isolation and observability principles: authentication, routing, scheduler status, semantic report validity, and textual integrity are independent signals; conflating them can misattribute data or hide failed care."
   safety: "Never fabricate coaching from unverified data. A missing response is safer than a confident response about the wrong athlete, and corrupted text is worse than a delayed clean response."
