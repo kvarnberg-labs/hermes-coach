@@ -73,6 +73,7 @@ recovery_heuristics:
       - "For a scheduled/headless brief, missing today's subjective feel or overnight recovery inputs makes readiness indeterminate, even when TSB is neutral or positive."
       - "State the missing inputs and give a conservative conditional option; do not label the athlete recovered or prescribe progression from older records alone."
       - "Use TSB, HRV, sleep, resting HR, and recent load as context—not a substitute for subjective feel; update the decision when the athlete reports how they feel."
+      - "When required current inputs are missing, describe only the objective trend (for example, lower ATL or improving HRV); do not call the recovery picture solid/good, say the athlete is ready/recovered, or imply readiness through an unqualified progression recommendation."
     evidence_basis: "Autonomic and sleep markers are context-sensitive and should be interpreted with subjective effort and symptoms rather than as standalone readiness tests (Halson, 2014; Buchheit, 2014)."
 
   consecutive_hard_days:
