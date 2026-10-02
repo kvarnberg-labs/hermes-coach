@@ -97,3 +97,28 @@ def test_legit_camelcase_sport_tokens_not_flagged():
     assert not [m for _, m in _lint_full(body) if "CamelCase" in m], msgs
     assert not [m for _, m in _lint_full(body) if m.startswith("unknown words")]
     assert any("VirtualRide" in m for m in msgs) is False
+
+
+CORRUPTED_WITH_VERDICT = (
+    "**Bedömning**\n"
+    "TSBToolData — ATL faller snabbt och TSB pendlar tillbaka mot noll.\n"
+    "CORRUPTION-LINT: 1 finding(s) (1 HARD) — fix/regenerate before delivery:\n"
+    "  [HARD] CamelCase fused word: TSBToolData\n"
+)
+
+
+def test_lint_self_verdict_not_self_flagged():
+    """2026-09-17 regression: SLUTKONTROLL prefixes a corrupt draft with the lint's
+    own verdict before the agent reviews it. The separation must key on the
+    CORRUPTION-LINT: line itself — NOT on generic verdict prose like 'to confirm'
+    (which also appears in 'brief_draft references... to confirm' and 'verify the
+    returned schedule... and confirm the weekday'), which had produced a second
+    bogus finding that masked the real corruption."""  # noqa: Q000
+    msgs = [m for _, m in _lint_full(CORRUPTED_WITH_VERDICT)]
+    assert not any("internal tool-error leak" in m for m in msgs), msgs
+    assert any("TSBToolData" in m for m in msgs), msgs
+
+
+def test_clean_body_with_verdict_still_clean():
+    text = CLEAN_BRIEF + "\nCORRUPTION-LINT: clean\n"
+    assert _lint_full(text) == []
