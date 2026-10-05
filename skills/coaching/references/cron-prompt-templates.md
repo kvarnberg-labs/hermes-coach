@@ -24,6 +24,19 @@ Detta är en AUTOMATISK morgonbrief som körs kl [HH:MM] Stockholmstid varje dag
 Du har ingen Discord-gateway, så coaching-verktygen fungerar INTE direkt.
 Använd terminal-workaround:
 
+## STEG 0 — Hämta coach-regler (körs före STEG 1)
+Kör detta i terminalen och använd reglerna när du skriver bedömningen:
+
+```bash
+cd /opt/hermes && /opt/hermes/.venv/bin/python3 -c 'import yaml; d=yaml.safe_load(open("/opt/data/coach-brain/recovery-heuristics.yaml")); g=d["recovery_heuristics"]["scheduled_brief_gate"]["rules"]; print("\n".join("- "+r for r in g))'
+```
+
+⚠️ Must use the venv python (`/opt/hermes/.venv/bin/python3`) — the system python3
+lacks pyyaml and the loader silently returns `{"error": "pyyaml not installed"}`.
+This step is what surfaces `coach-brain/recovery-heuristics.yaml →
+scheduled_brief_gate` (PRs #117–#120) to headless agents: knowledge PRs alone never
+reach them because headless prompts never call `get_coaching_knowledge`.
+
 ## STEG 1 — Hämta data via terminal
 Kör detta i terminalen:
 
@@ -47,6 +60,9 @@ today's planned session or rest day, 1-2 sentence pep talk tied to goal]
 ## REGELVERK
 - ALLTID datum + veckodag tillsammans. Dubbelkolla veckodag mot datum!
 - Om sömndata saknas: säg det rakt, hitta inte på
+- Följ STEG 0-reglerna (scheduled_brief_gate): rapportera TSB/HRV/sömn som objektiva
+  trender — aldrig "återhämtningen är god" eller ett readiness-omdöme när dagens
+  subjektiva känsla eller nattens data saknas; ge ett villkorat förslag i stället
 - Håll briefen KORT — max ~15 rader
 - Svenska, rakt, inget fluff
 - Inga relativa dagsreferenser utan verifiering
@@ -69,6 +85,7 @@ activities, and a full week-by-week table output with:
 | Element | Why it matters |
 |---------|---------------|
 | Snowflake hard-coded in terminal command | Without it, the agent cannot fetch any data |
+| STEG 0 knowledge-gate command (venv python) | Headless prompts never call `get_coaching_knowledge`; without STEG 0 the coach-brain rules never reach the brief agent. Use `/opt/hermes/.venv/bin/python3` — system python3 has no pyyaml and the loader fails silently |
 | `PYTHONPATH=/opt/data/plugins` + `from training import intervals_icu` | Package-relative imports resolve inside the `training` package |
 | `HERMES_HOME=/opt/data` | Credential directory resolution |
 | Analysis structure (STEG 1, STEG 2, REGELVERK) | Prevents the agent from free-form rambling |
