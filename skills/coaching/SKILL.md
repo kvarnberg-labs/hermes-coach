@@ -306,6 +306,7 @@ see `references/sustainable-plan-design.md`.
 - **Power is authoritative for cycling Z2 — HR is secondary and confirming.** See `references/hr-based-training.md`.
 - **Masters athletes (60+) need fundamentally different program design** — apply masters adjustments before planning. See `references/masters-training.md`.
 - **Configured FTP vs eFTP gap — flag it, but don't treat eFTP as gospel** — `power_pct` uses configured FTP; eFTP can underestimate. See `references/event-creation-pitfalls.md`.
+- **Output integrity — run the mechanical lint before sending ANY deliverable (interactive included)** — draft → `brief_lint.py` → clean exit 0, then read the whole text once; regenerating a garbled row beats delivering it. See `references/output-integrity-lint-gate.md`.
 - **Lactate testing data > generic estimates.** See `references/pitfalls-training-judgment.md`.
 - **Session average pace is NOT interval pace** — use `get_activity_intervals` (interval objects), not the session average. See `references/activity-detail-analysis.md`.
 - **intervals.icu field names are the published model names** — Strava-style aliases (`avg_heartrate`, `avg_cadence`, `avg_pace`) are silently dropped by `fields=` and the projection reads null. See `references/intervals-icu-api.md`.
