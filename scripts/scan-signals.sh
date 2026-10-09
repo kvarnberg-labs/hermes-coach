@@ -86,6 +86,56 @@ else
     echo ""
 fi
 
+query_db "Kept-alive system msgs (corruption/duplicate markers):" \
+    "SELECT datetime(timestamp,'unixepoch'), substr(content,1,200)
+     FROM messages
+     WHERE role='system'
+       AND timestamp >= strftime('%s','now','-7 days')
+       AND (content LIKE '%duplicate%' OR content LIKE '%keep-alive%' OR content LIKE '%corrupt%')
+     ORDER BY timestamp DESC LIMIT 5;"
+
+# ---------------------------------------------------------------------------
+# 2b. Cron job health — failed cron runs are silent gaps (no conversation
+#     row to mine when the run dies pre-agent, e.g. provider timeouts).
+#     Surface last_status=error and failure_streak>=2 from jobs.json.
+# ---------------------------------------------------------------------------
+JOBS_FILE="${HERMES_HOME}/cron/jobs.json"
+if [ -f "$JOBS_FILE" ] && command -v python3 >/dev/null 2>&1; then
+    job_health=$(python3 -c "
+import json, sys
+try:
+    jobs = json.load(open('$JOBS_FILE'))['jobs']
+except Exception as e:
+    print(f'unreadable jobs.json: {e}'); sys.exit(0)
+alerts = []
+for j in jobs:
+    streak = j.get('failure_streak') or 0
+    last_status = j.get('last_status')
+    if last_status == 'error' or streak >= 2:
+        alerts.append((j.get('name','?'), streak or 1,
+                       (j.get('last_error') or '?')[:120],
+                       (j.get('last_run_at') or '?')[:10]))
+for name, streak, err, when in sorted(alerts, key=lambda a: -a[1]):
+    print(f'  [-] {name}: last_status=error, failure_streak={streak} (last run {when}): {err}')
+if not alerts:
+    print('none')
+" 2>/dev/null)
+    if [ -n "$job_health" ]; then
+        echo "CRON JOB HEALTH (jobs.json):"
+        if [ "$job_health" != "none" ]; then
+            echo "$job_health"
+            echo ""
+            echo "  -> Failed cron runs are silent gaps. If a coaching job is failing,"
+            echo "     check its cron output dir and escalate; if this self-improve job"
+            echo "     itself shows failure_streak >= 2, note it as an operator-level"
+            echo "     scheduler/retry problem (nonce-based retries are not configured)."
+        else
+            echo "  all jobs last_status=ok"
+        fi
+        echo ""
+    fi
+fi
+
 # ---------------------------------------------------------------------------
 # 3. Recent worklog (last 3 entries) — avoid re-doing recent work
 # ---------------------------------------------------------------------------
