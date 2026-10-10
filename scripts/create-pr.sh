@@ -54,9 +54,15 @@ fi
 auth() { printf 'Authorization: Bearer %s' "$TOKEN"; }
 
 # ---------------------------------------------------------------------------
-# 1. Get main SHA
+# 1. Resolve base ref: explicit branch first, then main
 # ---------------------------------------------------------------------------
-MAIN_SHA=$(curl -sf "$API/repos/$REPO/git/ref/heads/main" \
+BASE_REF="${PR_BASE_REF:-}"
+if [ -n "$BASE_REF" ]; then
+    echo "base ref override: $BASE_REF"
+else
+    BASE_REF="main"
+fi
+MAIN_SHA=$(curl -sf "$API/repos/$REPO/git/ref/heads/$BASE_REF" \
     -H "$(auth)" \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['object']['sha'])")
 
