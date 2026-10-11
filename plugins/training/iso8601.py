@@ -1,4 +1,4 @@
-"""iso8601.py — stdlib-only UTC-safe date helpers for headless coaching briefs.
+"""iso8601.py — stdlib-only UTC-safe date helpers + CLI for headless coaching briefs.
 
 Why this exists in a plugins tree: headless cron prompts (Morgonbrief Millberg,
 Morgonbrief Wilma, Veckoplan Wilma) hard-require "ALLTID datum + veckodag
@@ -7,7 +7,11 @@ only a bare template ``python3 -c "import datetime as d; print({...}[d.date(ÅÅ
 with placeholder year/month/day fields. Every agent must re-assemble that
 one-liner by hand and substitute ÅÅÅÅ/M/D correctly; a wrong year or swapped
 arguments fails silently and burns athlete trust. This module is the drop-in
-replacement the prompts can reference instead.
+replacement the prompts can reference instead, callable both as a library
+(`from plugins.training import iso8601`) and as a CLI via the system python3::
+
+    python3 /opt/data/plugins/training/iso8601.py               # today + tomorrow
+    python3 /opt/data/plugins/training/iso8601.py 2026-10-12    # one/more dates
 
 Design constraints (loop contract + PR #124 precedent):
 - Python 3 stdlib only — no PyYAML, no third-party deps (runs under the system
@@ -20,6 +24,10 @@ Fromisoformat returns a NAIVE datetime — it carries no tzinfo — so naive-loc
 arithmetic on UTC timestamps drifts by +1/+2h for Swedish athletes. These
 helpers enforce: parse as UTC, keep everything in UTC, convert ONLY at the
 explicit formatting boundary.
+
+CLI note: the two headless fire times (04:20 and 06:30 Australia/Sydney local,
+02:20/04:30 UTC) land on the same calendar date as the athlete's Swedish
+morning, so `date.today()` on the pod equals the date the brief should print.
 """
 
 import datetime as _dt
@@ -27,7 +35,6 @@ import re
 
 _UTC = _dt.timezone.utc
 
-# Thresholds (weeks) at which a naive/aware arithmetic bug becomes likely.
 _WEEKDAY_SV = {
     0: "måndag",
     1: "tisdag",
@@ -39,7 +46,7 @@ _WEEKDAY_SV = {
 }
 
 # Accepts: "2026-10-01", "2026-10-01T04:21:24", "...24.000000",
-# "...24Z", "...24+00:00", "...24.000000Z" — plus true offsets (“+02:00”).
+# "...24Z", "...24+00:00", "...24.000000Z" — plus true offsets ("+02:00").
 _ISO_TS = re.compile(
     r"^(\d{4})-(\d{2})-(\d{2})"
     r"(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?"
@@ -106,3 +113,28 @@ def date_sv(value):
     if isinstance(value, _dt.date):
         return "%s (%s)" % (value.isoformat(), _WEEKDAY_SV[value.weekday()])
     raise ValueError("iso8601.date_sv expects a str or date, got %r" % type(value))
+
+
+def _cli(argv):
+    """Print datum (veckodag) pairs for each argument date, or today+tomorrow
+    when called with no arguments. Errors go to stderr; exit 1 on any bad date."""
+    import sys
+
+    ok = True
+    if not argv:
+        today = _dt.datetime.now(tz=_UTC).date()
+        print("I dag:    %s" % date_sv(today))
+        print("I morgon: %s" % date_sv(today + _dt.timedelta(days=1)))
+    for arg in argv:
+        try:
+            print(date_sv(arg))
+        except ValueError as exc:
+            print("fel: %s" % exc, file=sys.stderr)
+            ok = False
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(_cli(sys.argv[1:]))
