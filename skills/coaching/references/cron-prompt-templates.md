@@ -58,7 +58,13 @@ print('RUN_SETTINGS:', intervals_icu.get_sport_settings(uid, 'Run'))
 today's planned session or rest day, 1-2 sentence pep talk tied to goal]
 
 ## REGELVERK
-- ALLTID datum + veckodag tillsammans. Dubbelkolla veckodag mot datum!
+- ALLTID datum + veckodag tillsammans. Härled veckodagen mekaniskt med den installerade CLI:n:
+  `python3 /opt/data/plugins/training/iso8601.py <dagens-datum>` → `DATUM (veckodag)` (PRs #126/#127).
+  Para CLI-raden direkt i rubriken — skriv aldrig veckodagen för hand och interpolera aldrig
+  in ÅÅÅÅ,M,D i ett handbyggt datetime-uttryck (fel veckodag på korrekta värden bränder förtroendet).
+  ⚠️ ANVÄND ALDRIG ett exempeldatum från prompten i utdata — rubrikdatumet = datumet för
+  körningen, aldrig dagen efter. (Off-by-one-bugg: prompttexten "iso8601.py 2026-10-14" paras
+  in som rubrik den 13 oktober — båda 13/10-morgonbriefarna blev felkoded "2026-10-14".)
 - Om sömndata saknas: säg det rakt, hitta inte på
 - Följ STEG 0-reglerna (scheduled_brief_gate): rapportera TSB/HRV/sömn som objektiva
   trender — aldrig "återhämtningen är god" eller ett readiness-omdöme när dagens
@@ -92,6 +98,18 @@ activities, and a full week-by-week table output with:
 | Output format spec (max lines, language, sections) | Keeps the brief scannable for the athlete |
 | `attach_to_session: true` on the cronjob | Lets the athlete reply to the brief and get context |
 | `deliver: discord:<channel>:<channel>` | Routes to the athlete, not the coach |
+
+
+### Final-delivery integrity gate (all scheduled prompts)
+
+After SLUTKONTROLL passes, re-read the EXACT text that leaves the session (the very last
+message). If it starts or ends with broken text (`E-post`, half sentences, tool output,
+truncated rows), abort delivery and rewrite the whole brief. Small append/restart messages
+after SLUTKONTROLL are forbidden — they bypass the lint gate. Rationale: job 5e3286d57ae3
+(Oct 9) linted its entire brief, then a small percentage-tokens continuation was appended
+to the delivered text. Also: never add delivery metadata (e.g. `deliver:`) to the prompt —
+`deliver` is a jobs.json routing field; the scheduler rewrites job-level fields when a
+prompt is re-saved (observed Oct 12).
 
 ## Testing after creation
 
