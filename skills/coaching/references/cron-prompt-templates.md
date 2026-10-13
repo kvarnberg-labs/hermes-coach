@@ -59,9 +59,12 @@ today's planned session or rest day, 1-2 sentence pep talk tied to goal]
 
 ## REGELVERK
 - ALLTID datum + veckodag tillsammans. Härled veckodagen mekaniskt med den installerade CLI:n:
-  `python3 /opt/data/plugins/training/iso8601.py 2026-10-14` → `2026-10-14 (onsdag)` (PRs #126/#127).
-  Para CLI-raden direkt i briefen — skriv aldrig veckodagen för hand och interpolera aldrig
+  `python3 /opt/data/plugins/training/iso8601.py <dagens-datum>` → `DATUM (veckodag)` (PRs #126/#127).
+  Para CLI-raden direkt i rubriken — skriv aldrig veckodagen för hand och interpolera aldrig
   in ÅÅÅÅ,M,D i ett handbyggt datetime-uttryck (fel veckodag på korrekta värden bränder förtroendet).
+  ⚠️ ANVÄND ALDRIG ett exempeldatum från prompten i utdata — rubrikdatumet = datumet för
+  körningen, aldrig dagen efter. (Off-by-one-bugg: prompttexten "iso8601.py 2026-10-14" paras
+  in som rubrik den 13 oktober — båda 13/10-morgonbriefarna blev felkoded "2026-10-14".)
 - Om sömndata saknas: säg det rakt, hitta inte på
 - Följ STEG 0-reglerna (scheduled_brief_gate): rapportera TSB/HRV/sömn som objektiva
   trender — aldrig "återhämtningen är god" eller ett readiness-omdöme när dagens
