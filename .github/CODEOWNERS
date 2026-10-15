@@ -1,0 +1,13 @@
+# Operator-owned paths: the self-improvement loop must not be able to merge
+# changes here without the operator. Enforced only when branch protection on
+# main has "Require review from Code Owners" enabled.
+/.github/CODEOWNERS                   @JohanMillberg
+/tests/golden/                        @JohanMillberg
+/tests/test_golden_verifiers.py       @JohanMillberg
+/loops/self-improve/CONTRACT.md       @JohanMillberg
+/skills/self-improvement/             @JohanMillberg
+/scripts/brief_lint.py                @JohanMillberg
+/scripts/brief_lint_*                 @JohanMillberg
+/tests/test_brief_lint.py             @JohanMillberg
+/coach-brain/coaching-safety.yaml     @JohanMillberg
+/coach-brain/headless-coaching-failures.yaml @JohanMillberg

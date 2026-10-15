@@ -1,0 +1,136 @@
+# Golden set for athlete-facing output verifiers. OPERATOR-OWNED.
+#
+# The self-improvement loop must never edit this file (CONTRACT.md boundary,
+# CODEOWNERS). A verifier the loop writes can be graded only against labels
+# the loop cannot change — an always-pass gate otherwise looks as good as a
+# valid one (arXiv:2610.11464).
+#
+# label:  bad  = the verifier must block delivery
+#         good = the verifier must let it through
+# known_miss: true = a real bad case the verifier misses today. Tracked as a
+#         strict xfail; when a fix catches it the test fails until the flag is
+#         removed. Never set known_miss to make a regression pass.
+# failure_class: key from coach-brain/headless-coaching-failures.yaml.
+
+cases:
+  # --- bad: delivered incidents -------------------------------------------
+  - id: garbled-row-2026-09-13
+    label: bad
+    failure_class: output_corruption
+    source: "Millberg morning brief 2026-09-13 (brief_lint.py docstring)"
+    text: "Vid livri och (133}.sget48-185 W - RegnarPlan\n"
+
+  - id: regnarplan-2026-09-13
+    label: bad
+    failure_class: output_corruption
+    source: "Millberg morning brief 2026-09-13"
+    text: " och egnarplan i lax — RegnarPlan B:\n"
+
+  - id: livri-bilh-2026-09-12
+    label: bad
+    failure_class: output_corruption
+    source: "Millberg morning brief 2026-09-12 (brief_lint.py docstring)"
+    text: "vid Livri TSB +11 bilh\n"
+
+  - id: pentalk-2026-09-12
+    label: bad
+    failure_class: output_corruption
+    known_miss: true
+    source: "Millberg morning brief 2026-09-12/13 (brief_lint.py docstring). 'pentalk' decomposes as a compound and lints clean."
+    text: "bakom pentalk på lax\n"
+
+  - id: tsbtooldata-2026-09-17
+    label: bad
+    failure_class: output_corruption
+    source: "Wilma brief 2026-09-17"
+    text: "TSBToolData — ATL faller snabbt och TSB pendlar tillbaka mot noll.\n"
+
+  - id: cjk-injection-2026-10-15
+    label: bad
+    failure_class: output_corruption
+    source: "Wilma analysis, session 20260831_043233_5e644b44 msg 22060"
+    text: "men pulsen uppenbarade betydande stress på kroppen.地位Tänk Datum: du har inte returnerat till din baseline.\n"
+
+  - id: verifier-leak-2026-09-14
+    label: bad
+    failure_class: semantic_failure
+    source: "Three delivered briefs 2026-09-13/14 ending in Hermes error noise"
+    text: |
+      Idag: Z2 60 min.
+      ⚠️ File-mutation verifier: 1 file(s) were NOT modified this turn.
+        • `/tmp/brief_draft.md` — [write_file] Write denied: outside HERMES_WRITE_SAFE_ROOT (/opt/data).
+
+  # --- bad: synthetic, one per remaining HARD rule ------------------------
+  - id: replacement-char
+    label: bad
+    failure_class: output_corruption
+    source: "synthetic (rule 1)"
+    text: "Hej� vi ses imorgon\n"
+
+  - id: traceback-leak
+    label: bad
+    failure_class: semantic_failure
+    source: "synthetic (delivery-noise rule)"
+    text: "Idag vila.\nTraceback (most recent call last):\n"
+
+  - id: draft-file-reference
+    label: bad
+    failure_class: semantic_failure
+    source: "synthetic (delivery-noise rule)"
+    text: "Idag vila.\n(draft saved to brief_draft for lint)\n"
+
+  - id: empty-output
+    label: bad
+    failure_class: semantic_failure
+    source: "synthetic (brief_lint.main empty-input rule)"
+    text: "  \n"
+
+  # --- good ---------------------------------------------------------------
+  # Drafted 2026-10-15 from the shape of delivered briefs. Operator: confirm
+  # each is something you would send to an athlete before merging.
+  - id: morning-brief-basic
+    label: good
+    source: "tests/test_brief_lint.py CLEAN_BRIEF"
+    text: |
+      Måndag 14/9 — morgonbrief
+
+      Sömn: 7,5 h, HRV 29, vilopuls 55.
+      Idag: Z2 60–90 min @ 150–185 W. Väder: +8 °C, torrt.
+
+  - id: emoji-brief
+    label: good
+    source: "tests/test_brief_lint.py emoji case"
+    text: "Stärk dagsformen. 💪🏃‍♀️ 🛌 — Kör lugnt på långpasset!\n"
+
+  - id: legit-camelcase
+    label: good
+    source: "tests/test_brief_lint.py VirtualRide case"
+    text: "Cross-training handled: VirtualRide analysis per skill, TrainerRoad och eHealthFit not relevant today.\n"
+
+  - id: post-workout-feedback
+    label: good
+    source: "drafted 2026-10-15"
+    text: |
+      Bra jobbat igår! Tröskelpasset 3×12 min @ 250 W satt fint, puls 158–162.
+      Idag: vila eller lätt Z1 30 min. TSB −8, CTL 62.
+      Imorgon: Z2 90 min, ta med vätska.
+
+  - id: week-plan
+    label: good
+    source: "drafted 2026-10-15"
+    text: |
+      Veckoplan v.43
+      Måndag: vilodag
+      Tisdag: VO2max 5×4 min @ 300 W, 3 min vila
+      Torsdag: Z2 2 h
+      Lördag: långpass 3 h Z2, sista 20 min Z3
+
+  - id: low-recovery-advice
+    label: good
+    source: "drafted 2026-10-15"
+    text: "Sömnen var kort (5,8 h) och HRV lägre än vanligt (24). Kör hellre ett lugnt pass idag och spara intervallerna till torsdag.\n"
+
+  - id: missing-data-disclosed
+    label: good
+    source: "drafted 2026-10-15"
+    text: "Data saknas för natten — klockan synkade inte. Jag bygger dagens råd på gårdagens värden.\n"

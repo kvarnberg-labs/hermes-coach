@@ -40,10 +40,18 @@ Improvements target:
 - [ ] Tool name is snake_case; description is one sentence
 - [ ] Returns valid JSON
 
+### PR body (every PR)
+The operator merging the PR is the outer judge and needs the task contract. `create-pr.sh` takes a one-line body, so separate the fields with ` · `:
+- **Failure class** — key from `coach-brain/headless-coaching-failures.yaml`, or `knowledge_gap`
+- **Anchor** — session ID / message ID / signal file that triggered the change
+- **Golden check** — for any verifier change: `tests/test_golden_verifiers.py` result
+- **Evidence** — source for knowledge edits
+
 ## Boundaries (hard limits — do not cross)
 
 - Only edit files under `coach-brain/` or create new tools via `develop_tool`
 - Do NOT modify auth, security, deployment manifests, or test files
+- NEVER edit `tests/golden/` or `tests/test_golden_verifiers.py`. They are the operator-owned anchor every verifier is graded against; a gate that disagrees with a golden label is wrong, not the label
 - Do NOT expose new tools with `toolset="training"` — use `"self-improve"` or a topic-specific set
 - Do NOT make multiple PRs in one run
 - Do NOT wrap PR creation in `sh -c`, `python -c`, or heredocs; cron policy blocks wrapper execution
