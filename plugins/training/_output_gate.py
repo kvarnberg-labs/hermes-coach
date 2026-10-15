@@ -80,12 +80,14 @@ def gate_reply(response_text: str = "", session_id: str = "", platform: str = ""
         return None
     blocking, shadow = classify(response_text)
     if shadow:
-        logger.info("OUTPUT-GATE shadow session=%s platform=%s findings=%s",
-                    session_id, platform, shadow)
+        logger.info("OUTPUT-GATE shadow session=%s platform=%s rules=%s",
+                    session_id, platform, [m.split(":")[0] for m in shadow])
     if not blocking:
         return None
-    logger.warning("OUTPUT-GATE blocked session=%s platform=%s findings=%s",
-                   session_id, platform, blocking)
+    # Rule names only at WARNING: findings quote ~40 chars of the athlete's reply.
+    logger.warning("OUTPUT-GATE blocked session=%s platform=%s rules=%s",
+                   session_id, platform, [m.split(":")[0] for m in blocking])
+    logger.debug("OUTPUT-GATE blocked findings=%s", blocking)
     return BLOCKED_NOTICE
 
 

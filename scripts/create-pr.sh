@@ -82,13 +82,13 @@ echo "main SHA: $MAIN_SHA"
 
 # Contract checks that need GitHub state — before any branch or file write.
 BASE_FILE=$(mktemp)
+trap 'rm -f "$BASE_FILE"' EXIT
 BASE_SHA=$(curl -sf "$API/repos/$REPO/contents/${FILE_PATH}?ref=${BASE_REF}" -H "$(auth)" \
     | python3 "$GUARD" base-file "$BASE_FILE")
 python3 "$GUARD" existing-file "$FILE_PATH" "$BASE_SHA" || exit 1
 python3 "$GUARD" added-lines "$LOCAL_FILE" "$BASE_FILE" || exit 1
 curl -sf "$API/repos/$REPO/pulls?state=open&per_page=100" -H "$(auth)" \
     | python3 "$GUARD" open-today || exit 1
-rm -f "$BASE_FILE"
 
 # ---------------------------------------------------------------------------
 # 2. Create branch (ignore 422 = already exists)

@@ -19,6 +19,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 
 import brief_lint  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "plugins"))
+
+from training._output_gate import gate_reply  # noqa: E402
+
 CASES = yaml.safe_load((Path(__file__).parent / "golden" / "cases.yaml").read_text(encoding="utf-8"))["cases"]
 WORDS = brief_lint.load_words()
 
@@ -29,13 +33,22 @@ def _brief_lint_blocks(text: str) -> bool:
     return not text.strip() or bool(brief_lint.lint(text, WORDS) + brief_lint.lint_delivery_noise(text))
 
 
-VERIFIERS: dict[str, Callable[[str], bool]] = {"brief_lint": _brief_lint_blocks}
+def _output_gate_blocks(text: str) -> bool:
+    # The send-path gate (transform_llm_output hook): a returned string replaces the reply.
+    return gate_reply(response_text=text) is not None
+
+
+VERIFIERS: dict[str, Callable[[str], bool]] = {
+    "brief_lint": _brief_lint_blocks,
+    "output_gate": _output_gate_blocks,
+}
 
 
 def _params():
     for name, verifier in VERIFIERS.items():
         for case in CASES:
-            marks = [pytest.mark.xfail(strict=True, reason="known miss", raises=AssertionError)] if case.get("known_miss") else []
+            missed = name in case.get("known_miss", [])
+            marks = [pytest.mark.xfail(strict=True, reason="known miss", raises=AssertionError)] if missed else []
             yield pytest.param(verifier, case, id=f"{name}:{case['id']}", marks=marks)
 
 
@@ -48,6 +61,8 @@ def test_cases_are_well_formed():
     assert len(ids) == len(set(ids)), "duplicate golden ids"
     assert {c["label"] for c in CASES} == {"good", "bad"}
     assert not [c["id"] for c in CASES if c.get("known_miss") and c["label"] != "bad"]
+    unknown = {v for c in CASES for v in c.get("known_miss", [])} - set(VERIFIERS)
+    assert not unknown, f"known_miss names unknown verifiers: {unknown}"
 
 
 @pytest.mark.parametrize("verifier,case", _params())
