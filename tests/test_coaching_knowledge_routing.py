@@ -114,3 +114,13 @@ def test_nutrition_query_pulls_only_nutrition_omnibus():
 
 def test_strength_skill_keeps_explicit_access():
     assert {"strength_principles", "strength_standards"} <= _keys("strength")
+
+
+@pytest.mark.parametrize("topic,key", [
+    ("standards", "strength_standards"),
+    ("principles", "strength_principles"),
+    ("programming", "strength_programming"),
+    ("database", "exercise_database"),
+])
+def test_bare_specific_word_still_reaches_omnibus(topic: str, key: str):
+    assert key in _keys(topic)
