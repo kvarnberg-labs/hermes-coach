@@ -70,18 +70,21 @@ PYTHONPATH=plugins python -m pytest tests/ -q --import-mode=importlib
 Use the helper script — it handles token resolution, branch creation, file upload, and PR opening in one call:
 
 ```sh
-/opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]
+/opt/data/scripts/create-pr.sh <file-path> <branch-slug> <pr-title> <pr-body>
 ```
 
 Arguments:
 - `file-path` — path relative to repo root, e.g. `coach-brain/heat.yaml`
 - `branch-slug` — short identifier, e.g. `add-heat-knowledge`
 - `pr-title` — must start with `improve: `
-- `pr-body` — optional; defaults to the title
+- `pr-body` — required, one line: `Failure class: … · Anchor: … · Golden check: … · Evidence: …`
 
 The file must exist at `$HERMES_HOME/<file-path>` (i.e. `/opt/data/<file-path>`).
 The script reads the token from `GITHUB_TOKEN` env or `/opt/data/.github_token`.
 It exits 0 and prints the PR URL on success, exits 1 with a clear error on failure.
+`scripts/pr_guard.py` enforces CONTRACT.md first: only `coach-brain/*.yaml` or a new
+`plugins/training/<tool>.py`, `improve: ` title, the four body fields, < 50 added lines,
+one `improve/` PR per day. A `REFUSED:` line means stop and file a signal — never work around it.
 
 Example:
 ```sh
@@ -89,7 +92,7 @@ Example:
   coach-brain/heat.yaml \
   add-heat-knowledge \
   "improve: heat acclimatization knowledge" \
-  "Adds heat.yaml. Evidence: Lorenzo et al. (2010)."
+  "Failure class: knowledge_gap · Anchor: loops/signals/2026-10-15-heat.md · Golden check: n/a · Evidence: Lorenzo et al. (2010)"
 ```
 
 If the script fails (no token, API error), output the proposed diff to ops Discord and note that a human must apply it.

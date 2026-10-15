@@ -174,7 +174,8 @@ Apply the CONTRACT.md verification rubric for the path you took.
 
 PR body must be a single line with those four fields (CONTRACT.md → PR body).
 Never edit `tests/golden/` or `tests/test_golden_verifiers.py`. If
-`create-pr.sh` fails, stop and write a blocker signal — do not retry.
+`create-pr.sh` fails or prints `REFUSED:` (the contract checks in
+`scripts/pr_guard.py`), stop and write a blocker signal — do not retry or work around it.
 
 ## Append to worklog before stopping
 
