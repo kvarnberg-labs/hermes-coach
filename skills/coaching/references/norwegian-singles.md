@@ -4,42 +4,32 @@ Load when planning or reviewing threshold running for a single-session-per-day
 runner (Norwegian Singles, sub-threshold, "Norska modellen"), or when deriving
 running training paces.
 
-The principle summary lives in coach-brain:
-`get_coaching_knowledge("norwegian singles")` → `training_philosophies.norwegian_singles`.
-That YAML allows 2–3 threshold sessions/week and describes reps more broadly;
-this file is the operational default (2 sessions/week, the progression ladder
-below). If they disagree for a specific athlete, say which you are using.
+The rules come from coach-brain
+(`get_coaching_knowledge("norwegian singles")` → `training_philosophies.norwegian_singles`);
+this file applies them. If the two ever disagree, the YAML wins.
 
 ## Core rules
 
-- 2 threshold sessions per week, separated by at least one easy day.
-- Reps are **controlled**: at or just below threshold, finish feeling one more
-  rep was possible. Short recoveries (~60 s).
-- Easy days are truly easy — conversational, no grey zone. Running easy days
-  too fast is the most common mistake.
+- 2–3 threshold sessions per week; beginners start with 2. Never two
+  threshold days in a row: Threshold → Easy → (Easy or Threshold) → repeat.
+- Threshold session: **1–2 × 4–10 min** at lactate-threshold pace/HR,
+  60–90 s rest between reps. Reps are sub-maximal — finish feeling one more
+  rep was possible, not a time trial.
+- Easy days are truly easy — Zone 1, conversational, no grey zone. Running
+  easy days too fast is the most common mistake.
+- Build volume first; add threshold sessions only once the base is established.
 
-## Progression ladder (planned → actual → adjust)
+## Progression (planned → actual → adjust)
 
-3×6 → 5×6 → 3×8 → 4×8 → 3×10 → 4×10 → 3×12 min.
+Within those bounds: 1×4 → 2×4 → 2×6 → 2×8 → 2×10 min, then add the third
+weekly session (non-beginners only).
 
-- Move **one step** at a time; each step changes one variable. Do not skip
-  steps (3×6 → 3×8 raises rep length +33 % and total work +20 % at once).
+- Move **one step** at a time and change one variable per step.
 - Advance only when the athlete repeatedly finishes with a rep in hand.
 - **Failed step** (pauses, HR drifting above zone, RPE over target): drop back
   one step and rebuild — this is a dosing error, not the athlete's fault.
 - After each session compare planned format/pace with the actual work
   intervals (`get_activity_intervals`) before choosing the next step.
-
-## Format library
-
-| Format | Work | Best when |
-|---|---|---|
-| 5×6 min | 30 min | Variety; fresher feel |
-| 4×8 min | 32 min | Bridge to 3×10 |
-| 3×10 min | 30 min | Classic default |
-| 3×12 min | 36 min | Ready for a volume bump |
-| 2×15 min | 30 min | Prefers fewer, longer reps |
-| 6×5 min | 30 min | Sharpening when fresh |
 
 ## Threshold pace — source priority
 
@@ -78,15 +68,16 @@ With strength (weekday sessions ≤ ~60 min):
 
 ```
 Mon: Easy run 35–40 min + Strength A (legs) 25 min
-Tue: Threshold #1 (e.g. 4×8)
+Tue: Threshold #1 (e.g. 2×8)
 Wed: Easy run 35–40 min
-Thu: Rest (named in the plan table, no calendar event) / optional easy 0–25 min
+Thu: Rest (named in the plan table, no calendar event) — or Threshold #3 for non-beginners
 Fri: Strength B (upper body + core + plyo) 25 min
-Sat: Threshold #2 (e.g. 5×6)
-Sun: Long run 60–90 min, progressive
+Sat: Threshold #2 (e.g. 2×6)
+Sun: Long run 60–90 min, easy
 ```
 
 Without strength: Mon easy 35–45 · Tue threshold · Wed easy 40 or rest · Thu
-rest or easy 30–40 · Fri easy 35–45 · Sat threshold · Sun long 60–90.
+rest, easy 30–40 or threshold #3 · Fri easy 35–45 · Sat threshold · Sun long
+60–90 easy.
 
 Strength A/B content and rotation: `references/strength-for-runners.md`.

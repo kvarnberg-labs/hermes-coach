@@ -64,10 +64,10 @@ as threshold pace. Threshold sources and pace zones:
 
 | Phase | Months | Running | Strength |
 |---|---|---|---|
-| 1 Base + strength | 1–4 | 3–4 easy 35–50 min Z1; 2 threshold from 3×6 → 4×8; long run 60 → 90 min Z1–Z2; deload every 3rd–4th week (−30–40 % volume) | 2×/week compound lifts: anatomical adaptation → max strength → power |
-| 2 Intensification | 5–8 | 3 easy 40–50 min; threshold 4×8 → 3×12; long run 90–120 min, last 20 min moderate; 2–3×5 min at HM pace in long runs from month 7 | 1–2×/week maintenance |
+| 1 Base + strength | 1–4 | 3–4 easy 35–50 min Z1; 2 threshold from 1×4 → 2×8 (`norwegian-singles.md` progression); long run 60 → 90 min Z1–Z2; deload every 3rd–4th week (−30–40 % volume) | 2×/week compound lifts: anatomical adaptation → max strength → power |
+| 2 Intensification | 5–8 | 3 easy 40–50 min; threshold 2×8 → 2×10, third weekly session if not a beginner; long run 90–120 min, last 20 min moderate; 2–3×5 min at HM pace in long runs from month 7 | 1–2×/week maintenance |
 | 3 HM-specific | 9–10 | 2–3 easy; 1–2 threshold; long run with 10–20 min HM-pace blocks; 10K/HM B-race in month 9 | 1×/week; no heavy legs in the last 10 days |
-| 4 Taper | last 10–14 days | D-14…10 last long run at 50 %; D-9…7 short threshold 3×5; D-6…4 easy + 3–4×60 s HM pace; D-3 easy 30 or rest; D-2 rest/20 min jog; D-1 rest, strides optional | — |
+| 4 Taper | last 10–14 days | D-14…10 last long run at 50 %; D-9…7 short threshold 2×5; D-6…4 easy + 3–4×60 s HM pace; D-3 easy 30 or rest; D-2 rest/20 min jog; D-1 rest, strides optional | — |
 
 Race-day TSB target +5 to +15. Heavy leg strength never the day before a
 threshold run. Strength A/B for runners: `references/strength-for-runners.md`;
