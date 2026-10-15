@@ -69,12 +69,30 @@ def _key_score(key: str, keywords: set[str]) -> int:
     return sum(1 for kw in specific if kw in key_text)
 
 
-def _rank(brain: dict[str, Any], keywords: set[str]) -> list[str]:
+def _nested_keys(value: Any) -> set[str]:
+    """All dict keys below a section, lower-cased."""
+    if isinstance(value, dict):
+        return {str(k).lower() for k in value} | {
+            n for v in value.values() for n in _nested_keys(v)}
+    if isinstance(value, list):
+        return {n for v in value for n in _nested_keys(v)}
+    return set()
+
+
+def _rank(brain: dict[str, Any], keywords: set[str], topic_order: list[str]) -> list[str]:
     """Key matches, best first; content matches only when no key names the topic."""
     scores = {key: _key_score(key, keywords) for key in brain}
     hits = [key for key, score in scores.items() if score]
     if hits:
         return sorted(hits, key=lambda k: (-scores[k], _size(brain[k])))
+    # A non-omnibus section that has the topic as a sub-key ("medical referral" ->
+    # coaching_safety.medical_referral) wins outright: before this, four small
+    # sections that merely mentioned both words pushed the safety section out.
+    joined = "_".join(sorted(keywords, key=topic_order.index))
+    owners = [key for key, value in brain.items()
+              if key not in _OMNIBUS_SECTIONS and joined in _nested_keys(value)]
+    if owners:
+        return sorted(owners, key=lambda k: _size(brain[k]))
     # Content fallback keeps only the sections mentioning the MOST topic words
     # (any-word matching pulled most of the corpus) and never serves omnibus.
     content = {
@@ -120,8 +138,9 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
             "topic": topic,
         })
 
-    keywords = set(topic.lower().replace("-", " ").split()) - _STOPWORDS
-    ranked = _rank(brain, keywords) if keywords else []
+    words = [w for w in topic.lower().replace("-", " ").split() if w not in _STOPWORDS]
+    keywords = set(words)
+    ranked = _rank(brain, keywords, words) if keywords else []
 
     if not ranked:
         # Fall back: return top-level keys so the agent knows what's available

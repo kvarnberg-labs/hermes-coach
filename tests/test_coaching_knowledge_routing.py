@@ -140,3 +140,15 @@ def test_result_stays_within_budget_beyond_best_match(topic: str):
 ])
 def test_bare_specific_word_still_reaches_omnibus(topic: str, key: str):
     assert key in _keys(topic)
+
+
+@pytest.mark.parametrize("topic,key", [
+    ("medical referral", "coaching_safety"),
+    ("hard stops", "coaching_safety"),
+])
+def test_sub_key_topic_reaches_its_section(topic: str, key: str):
+    assert key in _keys(topic)
+
+
+def test_sub_key_match_never_serves_omnibus():
+    assert not _keys("deload guidelines") & _OMNIBUS_SECTIONS
