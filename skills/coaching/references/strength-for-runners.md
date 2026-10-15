@@ -65,4 +65,4 @@ Pick 3-4 from:
 - **Only prescribing legs** is the #1 strength programming error for runners. The athlete will notice and call it out.
 - **Identical sessions every time** — 4× the same 4 exercises is lazy programming. Rotate.
 - **Missing plyometrics** — runners specifically ask for "spänst" and it directly improves running economy.
-- **Rest days must be explicitly labeled** — a blank calendar day is not a rest day to the athlete. Name them "🛌 Vilodag".
+- **Rest days are named in the plan table, not created as events** — the calendar day stays empty (see `pitfalls-calendar.md`).

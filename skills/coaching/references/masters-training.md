@@ -1,14 +1,14 @@
-# Masters Athlete Training Adaptations (60+)
+# Masters Athlete Training Adaptations (50+)
 
 ## Evidence Base
 
-Masters athletes (>60) have different recovery kinetics, hormone profiles, and
+Masters athletes (50+) have different recovery kinetics, hormone profiles, and
 injury risk compared to younger athletes. The standard polarized/pyramidal
 templates designed for 30-year-olds will cause overtraining if applied directly.
 
 ### Key physiological differences
 
-| System | Young (20–40) | Masters (60+) | Program impact |
+| System | Young (20–40) | Masters (50+) | Program impact |
 |--------|--------------|---------------|----------------|
 | Recovery rate | 24–48h post-intensity | 48–72h post-intensity | Never stack quality days |
 | Muscle protein synthesis | Robust | Blunted (anabolic resistance) | Higher protein: 2.0–2.4 g/kg/day |
@@ -91,4 +91,4 @@ Total intensity sessions: 2 threshold workouts across the entire program.
 
 ## Moved from SKILL.md (2026-09-14)
 
-- **Masters athletes (60+) need fundamentally different program design.** When `get_athlete_profile` shows `date_of_birth` indicating age ≥60 (or the athlete tells you their age), apply masters-specific adjustments BEFORE building any training plan. Key differences from standard programming: (1) recovery weeks every 2nd–3rd week instead of 3rd–4th, (2) conservative ramp rate +3–5 CTL/week instead of +3–8, (3) max 1 intensity session per week — never stack two quality days, (4) strength training is year-round maintenance, not seasonal, (5) longer warm-ups (15+ min before any intensity), (6) total volume ceiling ~5.5h/week peak. Do NOT apply a generic polarized/pyramidal template designed for a 30-year-old to a 66-year-old — it will cause overtraining.
+- **Masters athletes (50+) need fundamentally different program design.** When `get_athlete_profile` shows `date_of_birth` indicating age ≥50 (or the athlete tells you their age), apply masters-specific adjustments BEFORE building any training plan. Key differences from standard programming: (1) recovery weeks every 2nd–3rd week instead of 3rd–4th, (2) conservative ramp rate +3–5 CTL/week instead of +3–8, (3) max 1 intensity session per week — never stack two quality days, (4) strength training is year-round maintenance, not seasonal, (5) longer warm-ups (15+ min before any intensity), (6) total volume ceiling ~5.5h/week peak. Do NOT apply a generic polarized/pyramidal template designed for a 30-year-old to a 66-year-old — it will cause overtraining.

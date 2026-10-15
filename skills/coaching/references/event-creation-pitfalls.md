@@ -198,9 +198,7 @@ API enum. Passing an invalid value like `"REST"` returns a tool-level error (not
 `HOLIDAY`, `SICK`, `INJURED`, `SET_EFTP`, `FITNESS_DAYS`, `SEASON_START`, `TARGET`,
 `SET_FITNESS`.
 
-There is no `REST` category. For a rest day:
-- Use `category="NOTE"` (rest-day note on the calendar)
-- Or omit `category` (defaults to `WORKOUT`) and use a clear name like `"🛌 Vilodag"`
+There is no `REST` category, and rest days get no event: leave the date empty and name it in the plan table (see `pitfalls-calendar.md`).
 
 The tool schema includes an `enum` constraint, so the LLM should only propose valid values.
 

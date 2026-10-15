@@ -143,7 +143,7 @@ The user-facing explanation must name the actual failure class and next action. 
 | Half marathon planning | `get_coaching_knowledge("half marathon")` + athlete data | See `references/half-marathon-periodization.md` |
 | HR-vs-pace drift analysis | `get_recent_activities(30)` + `get_fitness_chart(60)` | See `references/hr-pace-drift-analysis.md` — quantify HR creep at fixed pace, connect to CTL ramp / chronic negative TSB, prescribe deload (60 days: daily resolution needed for the consecutive-day TSB check) |
 | HR-based training (no power meter) | Check `get_recent_activities` for null `normalized_power_w` | See `references/hr-based-training.md` |
-| Masters athlete adaptations (60+) | Check `get_athlete_profile` for `date_of_birth` | See `references/masters-training.md` |
+| Masters athlete adaptations (50+) | Check `get_athlete_profile` for `date_of_birth` | See `references/masters-training.md` |
 | Gravel route building | maps skill + OSRM cycling + Overpass API | See `references/gravel-route-building.md` |
 | Two-location training plan | — | See `references/two-location-training.md` |
 | Multi-week training plan + cron delivery | Full data pull → periodized plan → cron job | See `references/training-plan-creation.md` |
@@ -290,7 +290,7 @@ see `references/sustainable-plan-design.md`.
 - **Language consistency** — the session language is set by the athlete's first message; never switch unprompted. See `references/pitfalls-communication.md`.
 - **Grey zone detection — compare planned vs actual IF systematically** — fix the execution, not the plan. See `references/pitfalls-training-judgment.md`.
 - **Date/weekday accuracy — always cross-reference** before writing. See `references/weekday-verification.md`.
-- **Rest days must be explicit calendar events** — an empty slot is invisible. See `references/pitfalls-calendar.md`.
+- **Rest days stay empty in the calendar** — name them in the plan table instead. See `references/pitfalls-calendar.md`.
 - **Strength sessions must rotate muscle groups** — alternate Styrka A (ben) / Styrka B (överkropp+bål+spänst). See `references/pitfalls-calendar.md`.
 - **Weekday combined sessions must stay under ~60 min total.** See `references/pitfalls-calendar.md`.
 - **Relative day references after a multi-day plan — never use "tomorrow" loosely** — use weekday+date or restate the plan row. See `references/pitfalls-calendar.md`.
@@ -304,7 +304,7 @@ see `references/sustainable-plan-design.md`.
 - **FTP test analysis — check intervals.icu's own estimate before giving your verdict.** See `references/ftp-testing.md`.
 - **Verify max HR with the athlete** — LTHR-based zones are the fallback. See `references/hr-based-training.md`.
 - **Power is authoritative for cycling Z2 — HR is secondary and confirming.** See `references/hr-based-training.md`.
-- **Masters athletes (60+) need fundamentally different program design** — apply masters adjustments before planning. See `references/masters-training.md`.
+- **Masters athletes (50+) need fundamentally different program design** — apply masters adjustments before planning. See `references/masters-training.md`.
 - **Configured FTP vs eFTP gap — flag it, but don't treat eFTP as gospel** — `power_pct` uses configured FTP; eFTP can underestimate. See `references/event-creation-pitfalls.md`.
 - **Output integrity — run the mechanical lint before sending ANY outgoing message — interactive chat replies included, however short** ("deliverable" = every athlete-facing text, length is never a trigger; send the linted draft verbatim, never live-compose). Draft → `brief_lint.py` → clean exit 0, then read the whole text once; regenerating a garbled row beats delivering it. See `references/output-integrity-lint-gate.md`.
 - **Lactate testing data > generic estimates.** See `references/pitfalls-training-judgment.md`.

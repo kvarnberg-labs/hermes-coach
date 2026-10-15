@@ -38,7 +38,7 @@ WHERE they're going.
 
 ### Periodization for gran fondo / sportive (70-150 km)
 
-**For standard athletes (<60):**
+**For standard athletes (<50):**
 
 | Phase | Duration | Focus | Key sessions |
 |-------|----------|-------|-------------|
@@ -49,7 +49,7 @@ WHERE they're going.
 | Taper | 10-14 days | Cut volume 40-60%, keep intensity | 1 short threshold + easy rides + openers |
 | Race Week | 7 days | Minimal volume, carb load | Short activation rides, rest day before |
 
-**For masters athletes (60+):** Use 2:1 build:recovery rhythm. See `references/masters-training.md` for the full template.
+**For masters athletes (50+):** Use 2:1 build:recovery rhythm. See `references/masters-training.md` for the full template.
 
 | Phase | Duration | Focus | Key sessions |
 |-------|----------|-------|-------------|
@@ -264,11 +264,11 @@ verify the full calendar. Confirm the count and highlight key sessions
 - **Start conservatively if the athlete reports ≤ 6/10 feel.** Don't prescribe intensity in the first week.
 - **The cron agent must NEVER ask "hur känns det?".** The athlete isn't there to answer — it's a push notification, not a conversation. Deliver the workout or flag the TSB warning.
 - **Don't prescribe routes unless asked.** Some athletes prefer to build their own.
-- **Masters athletes (60+) need a completely different periodization.** If `get_athlete_profile` returns `date_of_birth` indicating ≥60, or the athlete tells you their age, switch to the masters template immediately. A standard 4-week block (3 build + 1 recovery) with 2 threshold sessions/week WILL cause overtraining in a 66-year-old. See `references/masters-training.md`.
+- **Masters athletes (50+) need a completely different periodization.** If `get_athlete_profile` returns `date_of_birth` indicating ≥50, or the athlete tells you their age, switch to the masters template immediately. A standard 4-week block (3 build + 1 recovery) with 2 threshold sessions/week WILL cause overtraining in a 66-year-old. See `references/masters-training.md`.
 
 ---
 
 ## Moved from SKILL.md (2026-09-14)
 
 - **Present multi-week plans for approval BEFORE bulk-creating events.** When an athlete asks for a training program spanning weeks or months, present the full plan as a table first and wait for explicit confirmation. If the athlete wants changes, iterating on a table is trivial — deleting and recreating 25+ events because you jumped the gun is not. Only call `create_planned_event` after the athlete explicitly approves.
-- **Permanent schedule changes require full-week reconciliation, not single-day edits.** When an athlete requests a recurring change (e.g. "I want to add HIIT cycling on Fridays"), do NOT just create the new event and move on. Map the entire week: identify what the new session displaces (strength? easy run? rest day?), present the reshuffled week as a table, use `clarify` to let the athlete choose between viable arrangements, and only then create/delete events. The athlete may propose their own arrangement (e.g. "put strength before the HIIT and skip the jog") — adapt to their solution rather than forcing your own. After calendar writes, update the athlete's saved weekly schedule in memory so future sessions and cron jobs use the new structure. **Delete superseded events instead of only creating new ones.** A mid-week revision that re-creates the week leaves the old events beside the new ones — the athlete sees two workouts per day and intervals.icu's projected CTL/ATL double-counts. Detection heuristic: `get_planned_events` returning more events than days in the window signals stale duplicates (e.g. 15 events across 7 days). When a rest day exists both as a NOTE-type '🛌 Vilodag' and a stray WORKOUT-type 'Vila', keep the NOTE and delete the stray. Verify the reconciliation by re-pulling the planned-event range after the deletions.
+- **Permanent schedule changes require full-week reconciliation, not single-day edits.** When an athlete requests a recurring change (e.g. "I want to add HIIT cycling on Fridays"), do NOT just create the new event and move on. Map the entire week: identify what the new session displaces (strength? easy run? rest day?), present the reshuffled week as a table, use `clarify` to let the athlete choose between viable arrangements, and only then create/delete events. The athlete may propose their own arrangement (e.g. "put strength before the HIIT and skip the jog") — adapt to their solution rather than forcing your own. After calendar writes, update the athlete's saved weekly schedule in memory so future sessions and cron jobs use the new structure. **Delete superseded events instead of only creating new ones.** A mid-week revision that re-creates the week leaves the old events beside the new ones — the athlete sees two workouts per day and intervals.icu's projected CTL/ATL double-counts. Detection heuristic: `get_planned_events` returning more events than days in the window signals stale duplicates (e.g. 15 events across 7 days). Existing rest-day events ('🛌 Vilodag' NOTE or 'Vila' WORKOUT) left from older plans are deleted during reconciliation — rest days stay empty. Verify the reconciliation by re-pulling the planned-event range after the deletions.

@@ -31,7 +31,7 @@ recovery_heuristics:
     description: Rate of CTL change per week. Target for sustainable progression.
     safe_range: "+3 to +8 CTL points per week"
     warning: "> +10 per week significantly increases injury and illness risk"
-    conservative: "+3 to +5 for masters athletes (40+) or returning from injury"
+    conservative: "+3 to +5 for masters athletes (50+) or returning from injury"
 
   hrv_interpretation:
     description: >
@@ -86,7 +86,7 @@ recovery_heuristics:
 
   recovery_week_frequency:
     general: "Every 3rd or 4th week"
-    masters_40_plus: "Every 2nd or 3rd week"
+    masters_50_plus: "Every 2nd or 3rd week"
     volume_reduction: "30–40% reduction from peak week"
     intensity: "Reduce intensity AND volume during recovery weeks"
 

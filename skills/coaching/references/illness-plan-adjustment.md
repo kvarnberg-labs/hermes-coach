@@ -90,7 +90,7 @@ Mån 10/8: 50-60 min Z2 låg (121-128) — återgång efter sjukdom
 Nästa vecka är redan återhämtning — perfekt tajming
 ```
 
-## Masters-Specific Considerations (60+)
+## Masters-Specific Considerations (50+)
 
 - Masters athletes need MORE conservative return: add 1-2 extra easy days
 - Resting HR recovery is slower — don't trust a single normal reading

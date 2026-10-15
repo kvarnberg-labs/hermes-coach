@@ -64,7 +64,7 @@ Sun: Long run 60-90 min progressive                      → 60-90 min
 - Styrka A = lower body focus (split squats, deadlifts, hip thrusts, lunges — rotate exercises weekly)
 - Styrka B = upper body + core + plyometrics (rows, presses, anti-rotation, box jumps — rotate weekly)
 - No single weekday session exceeds 60 min total
-- Rest day (Thursday) is explicitly labeled in the calendar, never left as an empty slot
+- Rest day (Thursday) is named in the plan table and left empty in the calendar
 
 **Template without strength** (athlete prefers 0-1 strength sessions):
 ```
