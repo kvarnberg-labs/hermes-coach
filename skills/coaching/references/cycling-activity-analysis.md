@@ -1,5 +1,7 @@
 # Cycling Activity Detail Analysis
 
+Load when analysing a ride's power/HR zones, cadence, decoupling or fuelling.
+
 How to analyze a cycling ride from intervals.icu activity data —
 power zones, HR zones, and the power-vs-HR comparison that reveals
 ride quality on hilly Z2 endurance routes.
@@ -17,9 +19,9 @@ Call `get_activity_detail(activity_id)` and extract these fields:
 | `avg_hr` | Average heart rate (bpm) |
 | `max_hr` | Peak HR — check if athlete crossed threshold |
 | `lthr` | Lactate threshold HR for zone boundaries |
-| `hr_zones` | Array of HR zone boundaries: [131, 146, 153, 163, 167, 172, 181] |
+| `hr_zones` | HR zone boundaries in bpm |
 | `hr_zone_times` | Seconds in each HR zone |
-| `power_zones` | Array of power zone boundaries as % FTP: [55, 75, 90, 105, 120, 150, 999] |
+| `power_zones` | Power zone boundaries as % FTP |
 | `power_zone_times` | Array of {id: "Z1", secs: N} objects |
 | `elevation_gain_m` | Total climbing — context for zone interpretation |
 | `decoupling_pct` | HR/power decoupling — <5% = good endurance |
@@ -34,29 +36,10 @@ Call `get_activity_detail(activity_id)` and extract these fields:
 
 ## Zone distribution analysis
 
-### Power zones (Coggan 7-zone, % FTP)
-
-| Zone | % FTP | Watt range (FTP 265) | Purpose |
-|------|-------|----------------------|---------|
-| Z1 Recovery | <55% | <146W | Active recovery |
-| Z2 Endurance | 56-75% | 146-199W | Aerobic base building |
-| Z3 Tempo | 76-90% | 199-239W | "Grey zone" — adds fatigue without threshold stimulus |
-| Z4 Threshold | 91-105% | 239-278W | FTP-building |
-| Z5 VO2max | 106-120% | 278-318W | VO2max |
-| Z6 Anaerobic | 121-150% | 318-398W | Anaerobic capacity |
-| Z7 Neuromuscular | >150% | >398W | Sprint power |
-
-### HR zones (based on LTHR)
-
-| Zone | bpm range (LTHR 164) |
-|------|----------------------|
-| Z1 | <131 |
-| Z2 | 131-146 |
-| Z3 | 146-153 |
-| Z4 | 153-163 |
-| Z5 | 163-167 |
-| Z6 | 167-172 |
-| Z7 | >172 |
+Zone boundaries come with the activity (`power_zones` as % FTP, `hr_zones` in
+bpm) — use those, not a generic table. Coggan 7-zone definitions:
+`get_coaching_knowledge("power zones")` → `coggan_power_7_zone`. Z3 (76–90 %)
+is the grey zone on endurance days.
 
 ### Power-vs-HR comparison (key insight for Z2 rides)
 
@@ -64,7 +47,7 @@ The most revealing analysis for a Z2 endurance ride is comparing **time in
 power zones** against **time in HR zones**. On hilly routes, these diverge
 significantly:
 
-**Example: 4 July 2026, Z2 long ride, 87.7 km, 687m elevation**
+**Example: Z2 long ride, 87.7 km, 687 m climbing**
 
 | Zone | Power time | HR time | Gap |
 |------|-----------|---------|-----|
@@ -108,7 +91,7 @@ Example: avg_cadence 70.5 rpm, coasting 1607s (27 min) of 11772s (196 min):
 
 ### Zone-specific cadence
 
-intervals.icu provides `icu_cadence_z2` — cadence specifically when power
+`get_activity_detail` returns `cadence_z2_rpm` — cadence specifically when power
 was in Z2. This excludes coasting and Z1 descending, making it more useful
 than overall average for Z2 ride analysis. No per-zone cadence is
 available for Z3/Z4 via the API.
@@ -127,7 +110,7 @@ had 25%+ coasting time, the raw average is misleading. Acknowledge the
 downhill/free-wheeling contribution before suggesting cadence changes.
 The athlete may push back on low-cadence advice if they know they had
 significant coasting — this is a valid question, and the correct response
-is to estimate pedaling-only cadence and use `icu_cadence_z2` for a
+is to estimate pedaling-only cadence and use `cadence_z2_rpm` for a
 more accurate picture.
 
 ## Decoupling interpretation

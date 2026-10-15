@@ -65,8 +65,8 @@ the system handles everything.
   athlete sees before giving button-based instructions. Fall back to Garmin activation.
 - **Right hoods button = D-Fly Ch.2 by default** (left = Ch.1). When mapping bell,
   check which channel the athlete's desired button is on.
-- **Synchro Shift is per-bike** — must be configured separately on each bike. BMC and
-  Pinarello need independent setup even with same Garmin head unit.
+- **Synchro Shift is per-bike** — must be configured separately on each bike. Two bikes need
+  independent setup even with the same Garmin head unit.
 
 ## Quick Setup Checklist (new bike)
 
@@ -74,3 +74,7 @@ the system handles everything.
 2. Garmin → Sensors → Di2 → Shift Mode → S2
 3. Garmin → Sensors → Di2 → D-Fly Ch.2 → Bell
 4. Verify: ride around block, confirm front shifts auto, bell works
+
+Source: worked through in a live athlete session; menu names follow Shimano
+E-TUBE PROJECT and Garmin Edge UIs and can differ by firmware — if the athlete
+sees different menus, ask what is on screen rather than insisting.

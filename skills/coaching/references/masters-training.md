@@ -1,94 +1,59 @@
-# Masters Athlete Training Adaptations (50+)
+# Masters athletes (50+)
 
-## Evidence Base
+Load before building or changing any plan for an athlete aged 50 or older
+(`get_athlete_profile → date_of_birth`; if null, ask). Apply these adjustments
+before the plan is drafted — a template built for a 30-year-old over-trains a
+masters athlete.
 
-Masters athletes (50+) have different recovery kinetics, hormone profiles, and
-injury risk compared to younger athletes. The standard polarized/pyramidal
-templates designed for 30-year-olds will cause overtraining if applied directly.
+Hard limits are in coach-brain and win on conflict:
+`coach-brain/coaching-safety.yaml` (`ramp_rate_caps.conservative`,
+`recovery_weeks.masters_50_plus`, `hard_stops`),
+`coach-brain/recovery-heuristics.yaml`, and
+`coach-brain/strength-training.yaml → masters_athletes_50_plus`.
 
-### Key physiological differences
+## Load parameters
 
-| System | Young (20–40) | Masters (50+) | Program impact |
-|--------|--------------|---------------|----------------|
-| Recovery rate | 24–48h post-intensity | 48–72h post-intensity | Never stack quality days |
-| Muscle protein synthesis | Robust | Blunted (anabolic resistance) | Higher protein: 2.0–2.4 g/kg/day |
-| Tendon/connective tissue | Elastic, fast repair | Stiffer, slower repair | Longer warm-ups, lower peak loads |
-| VO2max decline | Baseline | ~10% per decade after 30 | Lower intensity ceilings |
-| HRmax | Age-predicted | Lower, more variable | Verify individually — don't use formulas |
-| Testosterone | Normal | Lower (gradual decline) | Recovery takes longer |
-| Bone density | Stable | Declining if no impact loading | Strength training NON-NEGOTIABLE |
-
-## Program Template: 2:1 Rhythm
-
-```
-Week 1: BUILD — normal volume, moderate intensity
-Week 2: BUILD — progressive overload from week 1
-Week 3: RECOVERY — 30–40% volume reduction, no intensity above Z2
-Week 4: BUILD — resume from week 2 level
-Week 5: BUILD — progressive overload
-Week 6: RECOVERY
-...repeat
-```
-
-### Load parameters
-
-| Parameter | Standard | Masters |
-|-----------|----------|---------|
+| Parameter | Standard | Masters 50+ |
+|---|---|---|
 | Ramp rate (CTL/week) | +3–8 | **+3–5** |
-| Recovery week frequency | Every 3rd–4th | **Every 2nd–3rd** |
-| Max intensity sessions/week | 2 | **1** |
-| Consecutive hard days | 2 max | **0 — always separate by ≥1 easy day** |
-| Weekly volume ceiling | 8–12h | **~5.5h** |
+| Recovery week | every 3rd–4th | **every 2nd–3rd** (2:1 rhythm) |
+| Intensity sessions/week | 2 | **1** |
+| Consecutive hard days | max 2 | **never — ≥ 1 easy day between** |
 | Warm-up before intensity | 10 min | **15+ min** |
-| Strength training | Seasonal (off/build only) | **Year-round, 1–2x/week** |
+| Strength | seasonal | **year-round, 1–2×/week; never below 1** |
+| Weekly volume ceiling | 8–12 h | ~5.5 h (practice guideline) |
 
-### Intensity distribution
+Intensity distribution: ~80–85 % Z1–Z2, 10–15 % Z3–Z4 (threshold max 1×/week),
+< 5 % Z5+ only when fresh. Protein 2.0–2.4 g/kg/day (`nutrition.yaml`).
 
-- **80–85% Z1–Z2** (slightly more Z1 than younger athletes)
-- **10–15% Z3–Z4** (threshold work, max 1x/week)
-- **<5% Z5+** (VO2max — only when fresh and well into a block)
+## Building the plan (planned → actual → adjust)
 
-### Strength training for masters
+1. Age from the profile; ask if missing.
+2. `get_wellness(days=42)`: if the ramp is already > +5 CTL/week, start with a
+   recovery week.
+3. Ask for the real max HR — age formulas are unreliable (one athlete: formula
+   154, actual 162).
+4. Use 2:1 build:recovery, never 3:1 or 4:1; no threshold sessions in
+   back-to-back weeks without a recovery week between.
+5. Cap the longest ride near 3.5 h unless the event is longer (3.5 h is
+   enough for a 90 km gran fondo).
+6. Strength every week except the final taper week: 8–12 reps, submaximal
+   loads moved fast; avoid ≥ 90 % 1RM.
+7. Each recovery week, compare planned vs actual load and the ramp; hold or
+   reduce when the ramp exceeded +5 or recovery markers worsened.
 
-- 1–2 sessions/week, year-round. Do not drop below 1/week even in race season.
-- Reps: 8–12 (moderate load). Avoid maximal loads (90%+ 1RM) — higher injury risk.
-- Focus: power output (move submaximal loads fast) over 1RM chasing.
-- Bone density preservation is arguably more important than any wattage gain.
-
-## When Building a Program for a Masters Athlete
-
-1. **Get age from `get_athlete_profile` → `date_of_birth`.** If null, ASK the athlete.
-2. **Pull `get_wellness(days=42)`** — check ramp rate trend. If already >+5/week, start with a recovery week.
-3. **Verify max HR** — age-predicted formulas (220−age) are unreliable. Ask the athlete.
-4. **Build with 2:1 rhythm** — never 3:1 or 4:1.
-5. **Cap the longest ride at ~3.5h** unless the event is longer. For a 90 km gran fondo, 3.5h (210 min) is sufficient.
-6. **Include strength training** in every week of the program except the final taper week.
-
-## Common Mistakes
-
-- Applying a 4-week linear block (3 build + 1 recovery) — too aggressive.
-- Scheduling threshold sessions on consecutive weeks without a recovery week between them.
-- Using age-predicted HRmax (e.g. 220−66=154) when the athlete's actual max is 162.
-- Dropping strength work during build/race phases.
-- Long rides >4h for a 90 km event — unnecessary fatigue for limited additional adaptation.
-
-## Example: 7.5-Week Gran Fondo Program (66-year-old)
+## Example: 7.5-week gran fondo block (age 66)
 
 ```
-W31: Mjukstart       — 3 rides, 60–90 min, all Z2
-W32: Bygg 1          — 3 rides, 75–120 min, all Z2
-W33: ÅTERHÄMTNING    — 3 rides, 50–90 min, all Z2 low
-W34: Bygg 2          — 3 rides, 75–150 min, all Z2
-W35: Bygg 3          — 3 rides, 60–180 min, 1 threshold session
-W36: ÅTERHÄMTNING    — 3 rides, 50–100 min, all Z2 low
-W37: Peak + simulering — 3 rides, 50–210 min, 1 threshold + loppsimulering
-W38: RACE WEEK       — 2 short rides + 2 rest days + RACE
+W1 Soft start      3 rides, 60–90 min, all Z2
+W2 Build 1         3 rides, 75–120 min, all Z2
+W3 RECOVERY        3 rides, 50–90 min, low Z2
+W4 Build 2         3 rides, 75–150 min, all Z2
+W5 Build 3         3 rides, 60–180 min, 1 threshold
+W6 RECOVERY        3 rides, 50–100 min, low Z2
+W7 Peak + sim      3 rides, 50–210 min, 1 threshold + race simulation
+W8 Race week       2 short rides + 2 rest days + race
 ```
 
-Total intensity sessions: 2 threshold workouts across the entire program.
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Masters athletes (50+) need fundamentally different program design.** When `get_athlete_profile` shows `date_of_birth` indicating age ≥50 (or the athlete tells you their age), apply masters-specific adjustments BEFORE building any training plan. Key differences from standard programming: (1) recovery weeks every 2nd–3rd week instead of 3rd–4th, (2) conservative ramp rate +3–5 CTL/week instead of +3–8, (3) max 1 intensity session per week — never stack two quality days, (4) strength training is year-round maintenance, not seasonal, (5) longer warm-ups (15+ min before any intensity), (6) total volume ceiling ~5.5h/week peak. Do NOT apply a generic polarized/pyramidal template designed for a 30-year-old to a 66-year-old — it will cause overtraining.
+Two threshold sessions in the whole block. A VO2max ratio such as 38.5 at 66 is
+context ("excellent for age"), not a programme limiter.

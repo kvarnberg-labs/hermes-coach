@@ -1,5 +1,8 @@
 # Cross-Training (HIIT Cycling) as a Weekly Complement for Runners
 
+Load when a runner adds or analyses cycling/HIIT classes (Les Mills Sprint,
+studio cycling, Zwift) in their week.
+
 Guidance for integrating high-intensity cross-training — typically Les Mills Sprint,
 Zwift racing, or studio cycling classes — into a runner's weekly plan without
 compromising run-specific adaptations.
@@ -34,7 +37,8 @@ compromising run-specific adaptations.
 ## Constraints
 
 - **Does NOT replace run-specific training.** Cycling improves general
-  cardiovascular fitness but transfer to running pace is partial (~50–70%).
+  cardiovascular fitness but transfer to running performance is only partial
+  (the size varies between studies and athletes — do not quote a fixed percentage).
   Running economy, stride mechanics, and run-specific endurance require
   actual running. As race approaches, running must dominate.
 
@@ -98,8 +102,9 @@ When a runner completes a cycling HIIT session and asks for analysis:
 
 ### Key analysis points
 
-- **Cycling HR vs running HR:** Cycling HR runs ~5–10 bpm lower than running
-  HR at the same relative intensity. A max HR of 186 on the bike may
+- **Cycling HR vs running HR:** Cycling HR typically runs ~5–10 bpm lower than
+  running HR at the same relative intensity (individual — prefer the athlete's
+  own Ride vs Run zones when both exist). A max HR of 186 on the bike may
   correspond to ~191–196 while running. Account for this when classifying
   intensity — "reached 186 bpm" on a bike is approximately threshold, not
   VO2max, for an athlete with LTHR 191 running.
@@ -155,8 +160,5 @@ When a runner completes a cycling HIIT session and asks for analysis:
   VirtualRide may be misleading. Always check `get_sport_settings(sport="Ride")`
   for cycling-specific zones. If unavailable, note the limitation.
 
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **VirtualRide ≠ Zwift.** Not all `VirtualRide` activities on intervals.icu are from Zwift. Indoor trainer sessions recorded via Garmin Edge (with Wahoo or other smart trainers) also classify as VirtualRide. When an athlete reports Zwift import issues, ask what device recorded each VirtualRide before assuming Zwift import is working. Zwift-imported activities typically have names prefixed with `Zwift -`. For analyzing cross-training HIIT cycling sessions (Les Mills Sprint, studio cycling) for runners — cycling HR runs ~5–10 bpm lower than running HR at equivalent intensity, gym bikes often lack power data, and IF/load are HR-based and less precise.
+- **VirtualRide ≠ Zwift.** Garmin Edge + smart-trainer sessions are also
+  `VirtualRide`; ask which device recorded a session before assuming its source.

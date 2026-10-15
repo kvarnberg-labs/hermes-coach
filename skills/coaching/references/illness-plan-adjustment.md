@@ -1,104 +1,40 @@
-# Illness Plan Adjustment
+# Illness — adjust the plan, don't just skip
 
-When an athlete reports missing a session due to illness mid-training-block,
-follow this workflow to assess impact and adjust the plan.
+Load when an athlete reports being ill or missing sessions through illness, or
+when wellness shows an illness signal.
 
-## Detection Signals
+## Red flags first
 
-Before the athlete even reports illness, check for early-warning signs:
+Chest pain, breathlessness or abnormal HR response during easy exercise after a
+viral illness, fainting, or fever → stop training advice and refer
+(`injury_return_to_training.illness.post_viral_caution`;
+`coach-brain/coaching-safety.yaml → medical_referral`). Below-the-neck symptoms
+or fever = complete rest until 48 h fever-free.
 
-1. **Resting HR spike**: `get_wellness(days=7)` → compare `resting_hr` trend.
-   A +10-15 bpm spike 2-3 days before the missed session is common. Example:
-   Aug 1: 78 → Aug 3: 83 → Aug 5: 93 (clear illness signal).
+## Workflow
 
-2. **Missing activity**: `get_recent_activities(days=14)` — if a planned session
-   date has no matching activity, confirm with the athlete.
+1. **Verify the gap and the signal:** `get_recent_activities(days=14)` (the
+   missed date) and `get_wellness(days=7)` — a resting-HR rise of +10–15 bpm in
+   the 2–3 days before is a common early sign. Resting HR recovers slowly; do
+   not trust a single normal reading.
+2. **Get the return rules:** `get_coaching_knowledge("injury return to training")`
+   → `illness`. Neck rule: above-the-neck only → easy activity, much lower
+   intensity; below-the-neck or fever → complete rest.
+   Return timeline (from the YAML): day 1–2 walking/very light only; day 3–4
+   easy Z1 if feeling well; day 5–7 normal easy training; week 2 gradual return
+   to intensity.
+3. **Count days** from the missed session or from when the fever broke, and
+   map the next planned sessions onto that timeline: a long run on day 3–4
+   becomes 50–60 min low Z2; threshold moves out at least 5–7 days.
+4. **Recovery week nearby?** If a deload was already planned within 7 days,
+   say so — the forced rest lines up with it.
+5. **Show the adjusted days as a table** (weekday + date, session, zone) and
+   ask before changing the calendar. After approval use `update_planned_event`
+   / `delete_planned_event` (structured sessions: delete and re-create), then
+   re-read the range. Never compress the return to "catch up"; accept the lost
+   session.
+6. **Masters (50+):** add 1–2 extra easy days before intensity; consider a full
+   extra week for 65+ (conservative coaching practice, not a fixed rule).
 
-## Coach-Brain Knowledge
-
-The illness return guidelines live under `injury_return_to_training.illness`:
-
-```
-get_coaching_knowledge("injury return to training") → knowledge.illness
-```
-
-Key rules:
-- **Above-the-neck only** (runny nose, mild sore throat, NO fever/body aches):
-  Easy activity generally acceptable. Reduce intensity significantly.
-- **Below-the-neck or fever** (chest symptoms, fever, body aches, GI illness):
-  Complete rest. Do not train until fever-free for 48 hours.
-- **Return timeline:**
-  - Day 1-2: Easy walking or very light activity only
-  - Day 3-4: Easy Z1 cycling if feeling well
-  - Day 5-7: Return to normal easy training
-  - Day 8+: Resume intensity with caution
-
-## Adjustment Workflow
-
-### Step 1: Verify the gap
-```python
-get_recent_activities(days=14)  # confirm no activity on the missed date
-get_wellness(days=7)            # check resting HR trend for illness signal
-```
-
-### Step 2: Consult guidelines
-```python
-get_coaching_knowledge("injury return to training")
-# Look for the `illness` key in the response
-```
-
-### Step 3: Determine return day
-Count days FROM the missed session (or from when fever broke).
-Example: Sick Friday Aug 7. Athlete messages Saturday Aug 8 (Day 1-2).
-Next scheduled session is Monday Aug 10 (Day 3-4 from illness).
-
-### Step 4: Patch the training plan file
-Replace the missed session row and adjust upcoming sessions:
-
-```
-patch the plan file at /opt/data/training-plan-{athlete}.md:
-  - Mark missed session: "SJUK ❌ | — | —"
-  - Adjust next session per return timeline
-  - If next session was a long run (120+ min) → reduce to 50-60 min Z2 low
-  - If next session was threshold → push it out at least 5-7 days
-```
-
-### Step 5: Check if recovery week timing is favorable
-If a recovery/deload week was already scheduled within the next 7 days,
-the forced rest actually aligns well. Tell the athlete: the timing is
-lucky — the body gets double recovery.
-
-### Step 6: Present adjusted schedule
-Short format (Swedish, max 4 lines for Aldrin-style athletes):
-- Today: Vila
-- Tomorrow: Light activity if feeling well
-- Next session: Adjusted duration + zone + caveat
-- Note if recovery week absorbs the disruption
-
-## Example: Aldrin Aug 7 Illness
-
-1. Verified: no activity on Aug 7 (confirmed)
-2. Wellness: resting HR 78→83→93 over Aug 1-5 (early signal)
-3. Coach-brain: "below-the-neck or fever → complete rest → Day 3-4 easy Z1"
-4. Next session Mon Aug 10 = Day 3-4 → reduce 120 min long run to 50-60 min Z2 low
-5. Next week (Aug 11-17) was already recovery week → favorable timing
-6. Output:
-```
-Idag: Vila 🏠
-Sön: Kort promenad eller 30 min Z1 om frisk
-Mån 10/8: 50-60 min Z2 låg (121-128) — återgång efter sjukdom
-Nästa vecka är redan återhämtning — perfekt tajming
-```
-
-## Masters-Specific Considerations (50+)
-
-- Masters athletes need MORE conservative return: add 1-2 extra easy days
-- Resting HR recovery is slower — don't trust a single normal reading
-- Never compress the return timeline to "catch up" — accept the lost session
-- If the athlete is 65+, consider extending the return by a full week
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Missed session due to illness — adjust the plan, don't just skip.** When an athlete reports missing a session because they were sick: (a) verify by checking `get_recent_activities` — the missing date confirms their report, (b) check `get_wellness(days=7)` for resting HR trend — a +10-15 bpm spike 2-3 days before the missed session is a common early-warning signal, (c) consult `get_coaching_knowledge("injury return to training")` → `illness` key for the return timeline (Day 1-2: light walk only, Day 3-4: Z1 if feeling well, Day 5-7: normal easy training, Day 8+: intensity with caution), (d) patch the training plan file to replace the missed session with "SJUK ❌" and adjust upcoming sessions per the return timeline — a 120-min long run 3 days after illness becomes 50-60 min Z2 low, (e) if a recovery week was already scheduled next, note that the timing is actually favorable — the forced rest lines up with the planned deload.
+Short-answer athletes get it in four lines: today, tomorrow, next session
+(adjusted duration + zone), and whether a recovery week absorbs it.
