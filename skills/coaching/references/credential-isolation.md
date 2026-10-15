@@ -8,13 +8,13 @@ wrong-athlete data leaks.
 ### Credential directory resolution
 
 ```
-Discord adapter → source.user_id (snowflake, e.g. "117694354092457986")
+Discord adapter → source.user_id (snowflake, e.g. "123456789012345678")
   → handle_function_call(..., user_id=source.user_id)
-    → registry.dispatch(..., user_id="117694354092457986")
+    → registry.dispatch(..., user_id="123456789012345678")
       → _require_user_id(kw) reads kw["user_id"]
-        → returns "117694354092457986" (matches snowflake regex)
-          → _user_dir("117694354092457986")
-            → /opt/data/users/117694354092457986/
+        → returns "123456789012345678" (matches snowflake regex)
+          → _user_dir("123456789012345678")
+            → /opt/data/users/123456789012345678/
 ```
 
 Each athlete gets their own directory under `$HERMES_HOME/users/<snowflake>/`
@@ -23,7 +23,7 @@ containing:
 | File | Purpose |
 |------|---------|
 | `intervals_key` | intervals.icu API key (mode 0600) |
-| `intervals_athlete_id` | intervals.icu athlete ID, e.g. `i344591` |
+| `intervals_athlete_id` | intervals.icu athlete ID, e.g. `i000000` |
 | `intervals_athlete_name` | Discord display name, written during onboarding |
 | `cache/*.json` | Cached API responses (per-user, 15min–6h TTL) |
 

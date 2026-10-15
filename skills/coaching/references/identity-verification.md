@@ -18,7 +18,7 @@ Returns `verified: true` only when all three pass.
   "verified": false,
   "mismatched_fields": ["no_stored_name"],
   "error": "Credentials were not written through the onboarding flow...",
-  "stored_athlete_id": "i494629",
+  "stored_athlete_id": "i000000",
   "stored_name": null,
   "api_name": "Millberg"
 }

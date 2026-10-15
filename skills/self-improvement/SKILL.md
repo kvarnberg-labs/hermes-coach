@@ -1,6 +1,6 @@
 ---
 name: self-improvement
-description: "Hermes Coach continuous improvement agent: runs daily to audit plugins, fix bugs, add knowledge, and create PRs."
+description: "Hermes Coach continuous improvement agent: runs daily to audit the coaching system, fix knowledge gaps or add tools via PR, and signal everything else to the operator."
 version: 2.0.0
 author: kvarnberg-labs
 metadata:
@@ -27,6 +27,8 @@ consecutive days. You DO NOT have a fixed checklist. You search broadly and crea
 for ANY improvement opportunity across the entire coaching system: plugins, cron prompts,
 references, coach-brain knowledge, agent behavior patterns, deployment state,
 and tool availability. Think like a curious engineer, not a checklist robot.
+Search everywhere; change only coach-brain/ or new tools (Paths A/B) — every
+other finding becomes an operator signal (Path S).
 
 ## Mandatory first steps (every run)
 
@@ -108,28 +110,27 @@ and proceed to the broad audit.
      A. PLUGIN FILES — discover ALL .py files under /opt/data/plugins/ (not a fixed list).
         For each: check credential pattern (no _FALLBACK_USER_ID, _require_user_id raises ValueError),
         description-output parity, auth headers, silently-dropped fields.
-        PRIORITIZE files NOT in /opt/data/plugins/training/ — these are most likely to have drifted.
 
      B. CRON JOB PROMPTS — pull all cron jobs. For each with skill='coaching', read the full prompt.
         Check: does it tell the agent to call tools that fail in cron? Is deliver target correct?
-        Fix bad prompts immediately with cronjob(action='update', ...).
+        Bad prompt or deliver target → Path S signal (do not update the job).
 
      C. REFERENCE FILES — skim /opt/data/skills/coaching/references/ for completeness.
         Compare against issues found in conversation reading.
 
      D. DEPLOYMENT STATE — check worklog for gaps logged 5+ consecutive days.
-        If found, FIX or ESCALATE. Do not log and ignore again.
+        If found, ESCALATE via Path S. Do not log and ignore again.
 
-     E. TOOL AVAILABILITY — verify all /opt/data/plugins/ are at /opt/hermes/plugins/ too.
-        Missing = deployment gap → flag it.
-
-     F. COACH-BRAIN KNOWLEDGE — cross-reference YAML files vs coaching.py topic list.
+     E. COACH-BRAIN KNOWLEDGE — cross-reference YAML files vs coaching.py topic list.
 
    Every audit step must produce DIFFERENT results each run. If you find "no-action"
    for 3+ consecutive days, you are not looking broadly enough. Change your approach.
 ```
 
 ## Execution paths
+
+The loop may change exactly two things (CONTRACT.md → Boundaries). Everything
+else it finds becomes an operator signal.
 
 ### Path A — knowledge edit
 
@@ -138,44 +139,28 @@ Edit one file in `coach-brain/`. Keep changes to < 50 lines. Cite the physiologi
 ### Path B — new tool
 
 Use `develop_tool` to author and sandbox-test a new tool. Follow the existing
-credential pattern (PR #32 — `_require_user_id` raises `ValueError`, no fallback).
+credential pattern (`_require_user_id` raises `ValueError`, no fallback).
 
-### Path C — plugin code fix
+### Path S — operator signal (everything else)
 
-Edit an existing file under `plugins/`. Includes separately deployed plugins
-(`create_planned_event`, `get_athlete_stats`, etc.) — not just `plugins/training/`.
+Plugin bugs, bad cron prompts or `deliver` targets, wrong or missing coaching
+references, deployment drift: do NOT edit them. These change the bot's code,
+schedule, or the loop's own instructions, which need human review. Write
+`/opt/data/loops/signals/YYYY-MM-DD-<slug>.md`:
 
-### Path D — cron prompt fix
+```
+failure_class: <key from coach-brain/headless-coaching-failures.yaml, or knowledge_gap>
+anchor: <session ID / message ID / cron job ID / file:line>
+finding: <what is wrong, with the evidence>
+proposed_fix: <exact change you would make>
+```
 
-Update a cron job's prompt via `cronjob(action='update', job_id=..., prompt=...)`.
-Always preserve or explicitly set the correct `deliver` target. Format:
-`deliver: "discord:<channel_id>:<channel_id>"`. Find channel ID:
-`grep "user=<Name>" /opt/data/logs/gateway.log | tail -1`.
-
-### Path E — reference improvement
-
-Update a reference file under `skills/coaching/references/`.
-
-### Path F — deploy plugin to runtime
-
-If a plugin exists at `/opt/data/plugins/<name>/` but NOT at
-`/opt/hermes/plugins/<name>/`, copy it. Note: `/opt/hermes/plugins/` is root-owned
-and may be read-only — if you can't copy, escalate to the user.
-
-## File locations
-
-- Runtime plugins: `/opt/hermes/plugins/training/` (protected — use terminal to edit)
-- Sandbox plugins: `/opt/data/plugins/training/` (writable with patch)
-- Separately deployed plugins: `/opt/data/plugins/<name>/`
-- Skills: `/opt/data/skills/`
-- References: `/opt/data/skills/coaching/references/`
-- Coach-brain: `/opt/data/coach-brain/`
+Then post a one-line summary to the ops Discord channel. A signal counts as a
+completed run — do not also open a PR for it.
 
 ## Verification
 
-- py_compile + smoke test for code changes
-- pytest for new tools (develop_tool handles this)
-- Grep for old patterns after edits (no stale `discord_dm`, no `_FALLBACK_USER_ID`)
+Apply the CONTRACT.md verification rubric for the path you took.
 
 ## Creating the PR
 
@@ -184,10 +169,12 @@ and may be read-only — if you can't copy, escalate to the user.
   <file-path> \
   <branch-slug> \
   "improve: <one-line description>" \
-  "<PR body: what changed, why, which signal>"
+  "Failure class: <key> · Anchor: <session/signal> · Golden check: <result or n/a> · Evidence: <source>"
 ```
 
-PR body must be a single line.
+PR body must be a single line with those four fields (CONTRACT.md → PR body).
+Never edit `tests/golden/` or `tests/test_golden_verifiers.py`. If
+`create-pr.sh` fails, stop and write a blocker signal — do not retry.
 
 ## Append to worklog before stopping
 

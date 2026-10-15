@@ -24,14 +24,14 @@ coaching_safety:
   ramp_rate_caps:
     description: Maximum tolerable chronic training load (CTL) increase per week.
     general_safe: "+3 to +8 CTL/week"
-    conservative: "+3 to +5 CTL/week"   # masters 40+, returning from injury, post-illness
+    conservative: "+3 to +5 CTL/week"   # masters 50+, returning from injury, post-illness
     hard_cap: "+10 CTL/week is never acceptable — reduce the planned load"
     see_also: coach-brain/recovery-heuristics.yaml (ramp_rate)
 
   recovery_weeks:
     required: true
     general: "Every 3rd or 4th week"
-    masters_40_plus: "Every 2nd or 3rd week"
+    masters_50_plus: "Every 2nd or 3rd week"
     volume_reduction: "30–40% from the peak week; reduce intensity AND volume"
     see_also: coach-brain/recovery-heuristics.yaml (recovery_week_frequency)
 
@@ -121,6 +121,6 @@ coaching_safety:
     rules:
       - "Never prescribe training through a current, undiagnosed injury."
       - "Never increase load on an athlete with an active RED-S red flag."
-      - "Never prescribe two consecutive hard days for a masters (60+) athlete."
+      - "Never prescribe two consecutive hard days for a masters (50+) athlete."
       - "Never exceed the +10 CTL/week hard cap."
       - "Never ignore an athlete reporting chest pain or syncope — refer immediately."

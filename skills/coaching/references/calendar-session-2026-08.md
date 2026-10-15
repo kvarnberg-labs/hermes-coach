@@ -5,7 +5,7 @@
 - An explicit request such as “Gör veckans pass …” authorizes immediate calendar creation; do not ask for a second confirmation.
 - Before creating, verify athlete identity and pull recent activities, wellness, sport settings, and profile so the week accounts for recent load, fatigue, FTP, age, and life commitments.
 - After creation, query the planned-event range and report what actually exists. This catches partial writes and malformed steps.
-- Rest days should be explicit calendar events, but validate the accepted event type before writing; `Rest` was rejected as an invalid intervals.icu type in this session. If a rest event cannot be created, state that plainly rather than claiming it was added.
+- Rest days stay empty in the calendar and are named in the plan table; `Rest` is not a valid intervals.icu type anyway.
 - Validate generated step targets and load/intensity values. A malformed target string or unsupported percentage can be accepted while silently producing wrong Z1 labels/loads; compare the returned event description and planned values against the prescription.
 
 ## Calorie aggregation
