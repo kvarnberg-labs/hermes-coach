@@ -14,8 +14,15 @@ Checks — [HARD] = structural corruption, always regenerate:
   3. Mismatched bracket pairs within a 40-char span ("( ... }")
   4. Digit directly followed by } or | then a letter ("133}.s")
   5. CamelCase fused words ("RegnarPlan") minus allowlist
+  6. Non-Latin script characters (CJK / Cyrillic / Greek / Arabic / Hebrew /
+     Thai / Hangul / Indic) anywhere in the text — added 2026-10-15 after a
+     delivered Wilma analysis (session 20260831_043233_5e644b44, msg 22060,
+     06:47 CEST) carried the CJK injection "地位Tänk Datum:" and lints CLEAN:
+     every pre-2026-10-15 rule is Latin-script/ASCII based, so non-Latin
+     injections were an unchecked variant. Swedish coaching text is Latin
+     script; any other script run inside it is corruption by definition.
 Check — [SOFT] = unknown token, REVIEW and justify or regenerate:
-  6. Tokens >= 4 letters not in the bundled Swedish+English wordlist
+  7. Tokens >= 4 letters not in the bundled Swedish+English wordlist
      (scripts/brief_lint_words.txt.gz), not decomposable into known Swedish
      compounds with clitic suffixes, and not in the allowlist. Dictionary checks
      can never be exact — a flagged token is cleared only when the agent can
@@ -61,6 +68,37 @@ CAMELCASE_ALLOW = {"vo2max", "di2", "s2", "etube",
 
 # Swedish clitic/inflectional suffixes allowed when stripping before re-splitting.
 CLITICS = ("s", "ts", "en", "et", "na", "rna", "arn", "arnas", "ns", "ens", "ets")
+
+# Non-Latin script runs (rule 6). Built from ascii range numbers below — file
+# stays pure-ascii and regex-compile-safe. Emoji/decorative symbols are OUT of
+# scope (deliverable tables use them heavily); any *script letter run* injected
+# into Swedish output is corruption. Ranges (decimal unicode codepoints):
+#   Hebrew 0x0590-0x5FF; Arabic 0x600-0x6FF+0x750-0x77F+0x8A0-0x8FF;
+#   Greek 0x370-0x3FF+0x1F00-0x1FFF; Cyrillic 0x400-0x52F;
+#   Armenian 0x530-0x58F; Devanagari+Indic 0x900-0x97F; Thai 0xE00-0xE7F;
+#   Tibetan 0xF00-0xFFF; Khmer 0x1780-0x17FF; Hmong 0x1680-0x169F;
+#   Han 0x4E00-0x9FFF+0x3400-0x4DBF+0xF900-0xFAFF;
+#   Hiragana/Katakana 0x3040-0x30FF+0xFF66-0xFF9F; Hangul 0xAC00-0xD7AF+0x1100-0x11FF.
+_NON_LATIN_RANGES = [
+    (0x0590, 0x05FF), (0x0600, 0x06FF), (0x0750, 0x077F), (0x08A0, 0x08FF),
+    (0x0370, 0x03FF), (0x1F00, 0x1FFF),
+    (0x0400, 0x052F), (0x0530, 0x058F),
+    (0x0900, 0x097F), (0x0E00, 0x0E7F), (0x0F00, 0x0FFF),
+    (0x1780, 0x17FF), (0x1680, 0x169F),
+    (0x4E00, 0x9FFF), (0x3400, 0x4DBF), (0xF900, 0xFAFF),
+    (0x3040, 0x30FF), (0xFF66, 0xFF9F),
+    (0xAC00, 0xD7AF), (0x1100, 0x11FF),
+]
+
+
+def _build_non_latin_re():
+    parts = []
+    for lo, hi in _NON_LATIN_RANGES:
+        parts.append("%s-%s" % (chr(lo), chr(hi)))
+    return re.compile("[" + "".join(parts) + "]+")
+
+
+NON_LATIN_RE = _build_non_latin_re()
 
 
 def load_words():
@@ -110,6 +148,17 @@ def lint(text, words):
     for m in re.finditer(r"[}\]][A-Za-zÅÄÖåäö]", text):
         s = max(0, m.start() - 15)
         hard(f"close-bracket+letter: ...{text[s:m.end() + 15]}...")
+
+    # Non-Latin script injection (rule 6). Every earlier rule keys on
+    # Latin/ASCII output, so a CJK/Cyrillic/... token injected mid-Swedish
+    # sailed through clean (2026-10-15, msg 22060 "地位Tänk Datum"). Swedish
+    # coaching text is Latin script — any run of non-Latin script letters is
+    # corruption regardless of context. No allowlist: there is no legitimate
+    # training term written in another script in these deliveries.
+    for m in NON_LATIN_RE.finditer(text):
+        s = max(0, m.start() - 20)
+        e = min(len(text), m.end() + 20)
+        hard(f"non-Latin script characters: ...{text[s:e]}...")
 
     for m in re.finditer(r"\([^()\n]{0,40}[}\]]|\[[^\[\]\n]{0,40}[})]", text):
         s = max(0, m.start() - 15)

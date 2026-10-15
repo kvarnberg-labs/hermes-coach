@@ -122,3 +122,26 @@ def test_lint_self_verdict_not_self_flagged():
 def test_clean_body_with_verdict_still_clean():
     text = CLEAN_BRIEF + "\nCORRUPTION-LINT: clean\n"
     assert _lint_full(text) == []
+
+
+CJK_INJECTION = (
+    "men pulsen uppenbarade betydande stress på kroppen.\u5730\u4f4d"
+    "Tänk Datum: du har inte returnerat till din baseline.\n"
+)
+
+
+def test_cjk_injection_hard_flagged():
+    """2026-10-15 regression (session 20260831_043233_5e644b44 msg 22060): a
+    delivered Wilma analysis carried the CJK injection '地位Tänk Datum' mid-
+    sentence and lints CLEAN — every pre-existing rule is Latin-script based.
+    Non-Latin script runs in Swedish coaching text must be a HARD finding."""
+    msgs = [m for _, m in _lint_full(CJK_INJECTION)]
+    assert any("non-Latin script characters" in m for m in msgs), msgs
+    assert any(sev == "HARD" for sev, _ in _lint_full(CJK_INJECTION)), msgs
+
+
+def test_clean_brief_with_emoji_stays_clean():
+    """No false positive on emoji + Swedish latin chars (delivered briefs use
+    both heavily)."""
+    body = CLEAN_BRIEF + "\nStärk dagsformen. 💪🏃‍♀️ 🛌 — Kör lugnt på långpasset!\n"
+    assert _lint_full(body) == []
