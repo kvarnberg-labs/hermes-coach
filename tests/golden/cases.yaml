@@ -79,6 +79,12 @@ cases:
     source: "synthetic (delivery-noise rule)"
     text: "Idag vila.\n(draft saved to brief_draft for lint)\n"
 
+  - id: empty-output
+    label: bad
+    failure_class: semantic_failure
+    source: "synthetic (brief_lint.main empty-input rule)"
+    text: "  \n"
+
   # --- good ---------------------------------------------------------------
   # Drafted 2026-10-15 from the shape of delivered briefs. Operator: confirm
   # each is something you would send to an athlete before merging.

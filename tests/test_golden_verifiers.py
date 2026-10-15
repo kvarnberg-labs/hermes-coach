@@ -24,8 +24,9 @@ WORDS = brief_lint.load_words()
 
 
 def _brief_lint_blocks(text: str) -> bool:
-    # Mirrors brief_lint.main(): any finding (HARD or SOFT) exits 1 = do not deliver.
-    return bool(brief_lint.lint(text, WORDS) + brief_lint.lint_delivery_noise(text))
+    # Mirrors brief_lint.main(): empty input or any finding (HARD or SOFT)
+    # exits 1 = do not deliver.
+    return not text.strip() or bool(brief_lint.lint(text, WORDS) + brief_lint.lint_delivery_noise(text))
 
 
 VERIFIERS: dict[str, Callable[[str], bool]] = {"brief_lint": _brief_lint_blocks}
@@ -34,7 +35,7 @@ VERIFIERS: dict[str, Callable[[str], bool]] = {"brief_lint": _brief_lint_blocks}
 def _params():
     for name, verifier in VERIFIERS.items():
         for case in CASES:
-            marks = [pytest.mark.xfail(strict=True, reason="known miss")] if case.get("known_miss") else []
+            marks = [pytest.mark.xfail(strict=True, reason="known miss", raises=AssertionError)] if case.get("known_miss") else []
             yield pytest.param(verifier, case, id=f"{name}:{case['id']}", marks=marks)
 
 
