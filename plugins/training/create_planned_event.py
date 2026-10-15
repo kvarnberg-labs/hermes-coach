@@ -62,7 +62,7 @@ _FIT_TO_ICU_SPORT = {
 
 
 # Valid intervals.icu event categories (from OpenAPI spec — no "REST" exists).
-# For a rest day, use category NOTE (rest-day note) or WORKOUT with no load/steps.
+# Rest days get no event: leave the date empty (named in the plan table instead).
 _VALID_CATEGORIES = frozenset([
     "WORKOUT", "RACE_A", "RACE_B", "RACE_C", "NOTE", "PLAN", "HOLIDAY",
     "SICK", "INJURED", "SET_EFTP", "FITNESS_DAYS", "SEASON_START",
@@ -320,7 +320,7 @@ def create_event(discord_id: str, **kw: Any) -> str:
             "error": (
                 f"Invalid category '{category}'. Valid values: "
                 f"{', '.join(sorted(_VALID_CATEGORIES))}. "
-                "For a rest day use NOTE or WORKOUT (with no load/steps)."
+                "Rest days get no event: leave the date empty."
             ),
         })
 
@@ -730,7 +730,7 @@ def register_tools(ctx) -> None:
             "planned_intensity": {"type": "number", "description": "Planned IF %."},
             "duration_min": {"type": "integer", "description": "Planned duration minutes."},
             "indoor": {"type": "boolean", "description": "True for Zwift/indoor."},
-            "category": {"type": "string", "enum": list(_VALID_CATEGORIES), "description": "Event category. Valid: WORKOUT, RACE_A, RACE_B, RACE_C, NOTE, PLAN, HOLIDAY, SICK, INJURED, SET_EFTP, FITNESS_DAYS, SEASON_START, TARGET, SET_FITNESS. For a rest day use NOTE or WORKOUT (no load/steps)."},
+            "category": {"type": "string", "enum": list(_VALID_CATEGORIES), "description": "Event category. Valid: WORKOUT, RACE_A, RACE_B, RACE_C, NOTE, PLAN, HOLIDAY, SICK, INJURED, SET_EFTP, FITNESS_DAYS, SEASON_START, TARGET, SET_FITNESS. Rest days get no event — leave the date empty."},
             "start_time": {"type": "string", "description": "ISO datetime override."},
             "steps": {
                 "type": "array",
