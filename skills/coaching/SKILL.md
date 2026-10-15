@@ -32,10 +32,12 @@ athlete trains both.
    from the athlete. Missing data is reported as missing — never filled from
    memory, estimates or raw HTTP workarounds. Never invent a goal, workout name,
    or platform behaviour.
-3. **Medical red flags stop coaching.** Chest pain, fainting, breathlessness out
-   of proportion to effort, neurological symptoms, suspected stress fracture,
-   RED-S or eating-disorder signs → no training prescription; refer
-   (`coach-brain/coaching-safety.yaml → medical_referral, hard_stops`).
+3. **Medical red flags stop coaching.** Chest pain, palpitations at rest,
+   fainting, breathlessness out of proportion to effort, neurological symptoms,
+   concussion, suspected stress fracture, a current undiagnosed injury, pain
+   persisting over 2 weeks or worsening, RED-S or eating-disorder signs → no
+   training prescription; refer. When unsure, call
+   `get_coaching_knowledge("medical referral")`.
 4. **Calendar writes need approval.** Show the plan table and wait for explicit
    approval (or an explicit "create it now"); after writing, re-read the
    calendar and report what exists.
@@ -49,6 +51,7 @@ athlete trains both.
 
 1. Identify the topic and the sport. Strength-only question → `strength-coaching`.
 2. Identity check (red line 1), then `get_athlete_profile` (name, timezone, age).
+   No date of birth → ask the athlete's age before drafting any plan.
 3. If the athlete has more than one training location, ask where they are
    before weather or outdoor advice; check `get_weather` before recommending
    outdoor sessions.
@@ -70,6 +73,8 @@ athlete trains both.
 7. Watt, pace and HR targets come from the live `get_sport_settings` of that
    sport (Run settings for running plans) — not from memory and not from the
    other sport. No running thresholds → prescribe by RPE and say so.
+   For rides, compare configured FTP with eFTP (`get_wellness` → `sport_info[].eftp`);
+   a gap over 10 W is reported first and `references/ftp-testing.md` applies.
 8. Treat the athlete's confirmed goal as the anchor; explain how the current
    phase serves it, and say so when you do not have it.
 9. For longer-term adaptation, state the weekly loop: planned vs actual
@@ -81,8 +86,11 @@ athlete trains both.
 
 Tool trouble: if a tool returns an error, tell the athlete plainly what could
 not be fetched and carry on with what you have (the self-improvement loop picks
-tool errors up from the session log). "User identity not available" means the
-gateway lost the session identity — ask the athlete to start over with `/new`.
+tool errors up from the session log). "User identity not available" in a DM means
+the gateway lost the session identity — ask the athlete to start over with
+`/new`. In a scheduled run it is expected: follow
+`references/cron-coaching-runtime-recipe.md`; never send `/new` or `/start`
+advice on that error alone.
 
 ## Situation → reference
 
@@ -102,6 +110,7 @@ Load a reference only when its "load when" condition is met.
 | Interpreting fatigue/TSB, grey zone, sport-transition soreness, zone naming, race surface, departure timing, lactate data | `references/pitfalls-training-judgment.md` |
 | Answer length, language, tone, precision, casual greetings, memory store nearly full | `references/pitfalls-communication.md` |
 | A tool result looks incomplete, duplicated, stale or missing | `references/pitfalls-tool-contracts.md` |
+| What an intervals.icu field or endpoint means | call `search_intervals_api_docs` / `get_intervals_api_endpoint` |
 | Your previous reply is the "tekniskt skadat" notice, or a long deliverable is ready to send | `references/output-integrity-lint-gate.md` |
 | The athlete is 50 or older (before drafting any plan) | `references/masters-training.md` |
 | The athlete was ill or missed sessions through illness | `references/illness-plan-adjustment.md` |

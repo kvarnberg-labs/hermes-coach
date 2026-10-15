@@ -14,7 +14,7 @@ permanent change to their weekly structure. Work through every item in order.
 5. `get_sport_settings` for **each** sport in the plan (Ride and/or Run).
 6. `get_planned_events(days_ahead=90)` — what already exists (stale events,
    races).
-7. `get_best_effort_curve(days=90)` when power/pace targets are involved.
+7. `get_best_effort_curve(sport=…, days=90)` when power/pace targets are involved (`sport="Run"` for pace; the default is Ride).
 8. Knowledge: `get_coaching_knowledge("periodization")`, `("tapering")`,
    `("nutrition")` as relevant.
 9. Event facts: surface, elevation, distance from the organiser's course page —

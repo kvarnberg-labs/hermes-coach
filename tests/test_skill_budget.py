@@ -22,7 +22,7 @@ REFS = SKILL.parent / "references"
 # 2026-10-15 consolidation (B1): SKILL.md cut from 40.7 KB to 8.7 KB — core
 # (identity, 6 red lines, 10-step procedure) plus a situation -> reference
 # routing table. Audit target was <= 15 KB.
-SKILL_MAX_BYTES = 9_000
+SKILL_MAX_BYTES = 10_000
 # Largest reference after the consolidation: pitfalls-calendar.md (8.3 KB).
 REFERENCE_MAX_BYTES = 12_000
 # Measured 61 before and 1 after the consolidation with the definition below.

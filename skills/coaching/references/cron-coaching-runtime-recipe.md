@@ -46,6 +46,7 @@ Use the same `uid` for every call; keep only the fields the report needs.
 | `get_activity_detail` / `get_activity_intervals` / `get_activity_streams` | `activity_id` |
 | `get_best_effort_curve` | `sport`, `days` |
 | `get_fitness_chart` | `days` (weekly resolution above 60) |
+| `get_athlete_stats` (`from training.get_athlete_stats import get_athlete_stats`) | `start_date`, `end_date` (YYYY-MM-DD) |
 
 Import as `from training import intervals_icu` with
 `PYTHONPATH=/opt/data/plugins` (package-relative imports). No raw `curl` for
@@ -56,6 +57,10 @@ Values hard-coded in the job prompt (FTP, weight) go stale: use the live
 
 ## Stage 3 — write the report
 
+- Derive every weekday mechanically, never by recall:
+  `python3 /opt/data/plugins/training/iso8601.py <YYYY-MM-DD> [...]` prints
+  `DATE (veckodag)` per date (no argument = today and tomorrow). Use each
+  record's own date, not the run date.
 - Missing overnight data ≠ poor recovery: say sleep/readiness fields are
   unavailable, use the latest dated record only as context, and do not claim
   to have reviewed "last night's" sleep.
