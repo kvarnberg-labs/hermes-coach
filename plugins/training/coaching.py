@@ -60,9 +60,11 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
 
     matched: dict[str, Any] = {}
     for key, value in brain.items():
-        # Skip omnibus sections unless the topic explicitly names them
+        # Skip omnibus sections unless the topic names their leading word
+        # ("strength", "nutrition", "exercise"). Matching any key word let
+        # generic words through: "polarized training" pulled strength_training.
         if key in _OMNIBUS_SECTIONS:
-            if not any(kw in key for kw in keywords):
+            if key.split("_")[0] not in keywords:
                 continue
 
         key_lower = key.lower().replace("_", " ").replace("-", " ")
