@@ -134,4 +134,4 @@ When an athlete re-onboards (new API key) or requests new cron jobs:
 2. Remove stale/failed jobs (`action='remove'`) — don't leave duplicates
 3. Create fresh jobs with updated prompts
 4. Test with `action='run'`
-5. Update the channel registry in `cron-delivery-routing.md`
+5. `deliver` must be the athlete's own DM channel — never `"origin"` from another user's chat, never a hardcoded channel copied from another job

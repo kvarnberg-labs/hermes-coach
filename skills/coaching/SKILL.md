@@ -97,7 +97,7 @@ A cron session has no Discord gateway user context, so the model-visible coachin
 
 **Headless credential hard-stop:** The delivery chat/channel ID is only a routing hint; it is not proof that credentials exist for the athlete. If direct verification for the resolved snowflake returns missing credentials, stop before all other training calls. Never inspect, infer, or reuse `discord_dm`, another user's directory, historical session data, or a cached athlete ID to fill the gap. Report that the scheduled brief could not be generated because `/start` onboarding is required for that Discord identity, and keep the wording neutral rather than attributing data to an unverified person. Do not claim poor recovery or "no new data" when the real result is an identity/credential setup failure.
 
-See `references/cron-coaching.md`, `references/cron-coaching-runtime-recipe.md`, `references/cron-delivery-routing.md`, and `references/cron-report-failure-triage.md`. When the athlete asks for a scheduled report early in an interactive session, pause the cron job and schedule a one-shot resume — see `references/training-summary-workflow.md` → 'Early delivery of a scheduled report'.
+See `references/cron-coaching.md`, `references/cron-coaching-runtime-recipe.md`, and `references/cron-report-failure-triage.md`. When the athlete asks for a scheduled report early in an interactive session, pause the cron job and schedule a one-shot resume — see `references/training-summary-workflow.md` → 'Early delivery of a scheduled report'.
 
 ### Cron report delivery and semantic-success checks
 

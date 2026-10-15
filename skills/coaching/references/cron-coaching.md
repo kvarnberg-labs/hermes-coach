@@ -10,10 +10,10 @@ When creating a cron job for a DIFFERENT athlete than the one you're currently t
 4. **Verify before creating:** confirm the athlete's snowflake from the job's `origin.user_id` (or the explicitly configured delivery identity), then check `ls /opt/data/users/<snowflake>/intervals_athlete_name` to confirm the credential directory exists. Never enumerate other users' directories.
 5. **Coaching tools fail in cron** — there is no Discord gateway. Any cron prompt that says "Anropa `get_wellness(days=1)`" will fail silently and the model will fabricate data. Use the terminal workaround below instead.
 
-**Example — correct setup for Aldrin (snowflake 1257567128349966388, channel 1531542557677322342):**
+**Example — correct setup (athlete snowflake <SNOWFLAKE>, DM channel <CHANNEL_ID>):**
 ```
 cronjob(action='create', 
-  deliver='discord:1531542557677322342:1531542557677322342',
+  deliver='discord:<CHANNEL_ID>:<CHANNEL_ID>',
   ...
 )
 ```
