@@ -81,6 +81,9 @@ spec:
               mkdir -p /opt/data/scripts
               cp /opt/hermes/scripts/scan-signals.sh /opt/data/scripts/scan-signals.sh
               cp /opt/hermes/scripts/create-pr.sh /opt/data/scripts/create-pr.sh
+              # brief_lint: cron SLUTKONTROLL calls /opt/data/scripts/brief_lint.py,
+              # which loads its wordlists from its own directory.
+              cp /opt/hermes/scripts/brief_lint.py /opt/hermes/scripts/brief_lint_words.txt.gz /opt/data/scripts/
               chmod +x /opt/data/scripts/scan-signals.sh /opt/data/scripts/create-pr.sh
 
               # Expose GitHub token to cron/tool subprocesses via a file because

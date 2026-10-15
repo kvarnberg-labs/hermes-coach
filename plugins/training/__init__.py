@@ -14,6 +14,7 @@ Registers all coaching tools via the Hermes plugin ctx interface:
   - create_planned_event : interval.icu calendar events (4 tools)
   - get_athlete_stats    : aggregate training statistics (1 tool)
   - intervals_docs   : search and inspect the intervals.icu OpenAPI spec (2 tools)
+  - _output_gate     : transform_llm_output hook — blocks corrupted replies before delivery
 """
 
 from __future__ import annotations
@@ -31,6 +32,7 @@ def register(ctx):
     from .get_athlete_stats import register_tools as register_stats
     from .strength_coach import register_tools as register_strength
     from .intervals_docs import register_tools as register_intervals_docs
+    from ._output_gate import register_hooks as register_output_gate
 
     register_intervals(ctx)
     register_weather(ctx)
@@ -42,3 +44,4 @@ def register(ctx):
     register_stats(ctx)
     register_strength(ctx)
     register_intervals_docs(ctx)
+    register_output_gate(ctx)

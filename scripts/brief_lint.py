@@ -216,8 +216,12 @@ LEAK_PATTERNS = [
     # "File-mutation verifier" block + write_file denial for /tmp/brief_draft.md
     # — the lint's own SLUTKONTROLL workflow leaked internal errors to athletes.
     (r"File-mutation verifier|HERMES_WRITE_SAFE_ROOT|Write denied\]|"
-     r"Traceback \(most recent call last\)|CORRUPTION-LINT:|to confirm",
+     r"Traceback \(most recent call last\)|CORRUPTION-LINT:",
      "internal tool-error leak"),
+    # Verdict prose from the lint/review workflow. Separate label because
+    # "to confirm" is also ordinary English, so the interactive output gate
+    # only logs it (plugins/training/_output_gate.py).
+    (r"to confirm", "verdict-prose leak"),
     (r"\u26a0\ufe0f", "internal warning-marker emoji in delivered body"),
     (r"brief_draft", "internal draft-file reference in delivered body"),
 ]
