@@ -1,5 +1,10 @@
 # Tool Improvement Workflow
 
+> Operator/developer reference (not shipped to the bot). Moved from
+> `skills/coaching/references/` on 2026-10-15. The self-improvement loop may
+> only add a new tool via `develop_tool` (Path B) or edit `coach-brain/`;
+> `scripts/pr_guard.py` enforces this. Everything else here is human work.
+
 How to fix or extend intervals.icu coaching tools and get changes merged.
 
 ## Where the plugin files live
@@ -210,3 +215,32 @@ Common CI failures:
 - **Mock assertion mismatch:** Adding a parameter to a function that existing tests mock — update `assert_called_once_with` calls
 - **Import errors:** New file not found on branch — ensure file was pushed via `create-pr.sh`
 - **Missing dependencies:** CI environment may lack packages available locally
+
+## `develop_tool` for new standalone tools (from the former coaching SKILL.md)
+
+Use for a brand-new endpoint rather than extending an existing tool.
+
+1. Confirm the endpoint and its shape first with `search_intervals_api_docs` /
+   `get_intervals_api_endpoint` — never guess URL patterns.
+2. Follow the `plugins/training/` credential pattern (`_require_user_id(kw)`,
+   `_load_credentials`, shared `_http` helpers with the
+   `User-Agent: hermes-coach/1.0` header on every method — Cloudflare blocks
+   requests without it, including DELETE/PUT). Strip `discord_id` from the
+   model-visible schema.
+3. Always include `register_tools(ctx)`; the generated `__init__.py` silently
+   skips registration without it.
+4. Write pytest tests mocking `_load_credentials` and the HTTP helpers; pass
+   them as `test_code`. `_post_json(athlete_id, api_key, path, payload)` — the
+   payload is `call_args[0][3]`.
+
+## Dev pitfalls (from create-pr-workflow.md and pitfalls-tool-contracts.md)
+
+- `create-pr.sh` takes a single-line PR body; the four-field body format is
+  enforced by `pr_guard.py`.
+- Module-level caches must be keyed by input identity (e.g. directory), not
+  just a TTL, or tests that repoint the source get stale data; add a
+  `conftest.py` fixture that clears them.
+- Check the Dockerfile before declaring a dependency missing (e.g. `fit-tool`
+  is installed there; `create_planned_event` imports it at call time).
+- Before changing a shared function signature, grep every test file for
+  `assert_called_once_with` on it.

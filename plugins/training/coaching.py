@@ -36,15 +36,96 @@ _OMNIBUS_SECTIONS = {
     "nutrition", "strength_programming", "exercise_database",
     "strength_standards", "strength_principles", "strength_training",
 }
-# Omnibus key words too generic to count as naming the section.
+# Key words too generic to count as naming a section (omnibus or not).
 _GENERIC_KEY_WORDS = {"training"}
+
+
+# Words with no topic signal; "to" alone substring-matched most keys.
+_STOPWORDS = {
+    "a", "an", "and", "the", "to", "for", "of", "in", "on", "with", "during",
+    "after", "before", "och", "för", "med", "under", "efter", "före", "i", "på",
+    "av", "till",
+}
+# ~4k tokens. Irrelevant context degrades answers even when the relevant part
+# is present (Du et al., arXiv:2510.05381); before this cap a topic containing
+# "training" returned ~70 KB of mostly unrelated sections.
+_MAX_KNOWLEDGE_CHARS = 15_000
+
+
+def _size(value: Any) -> int:
+    return len(json.dumps(value, ensure_ascii=False))
+
+
+def _key_score(key: str, keywords: set[str]) -> int:
+    """Number of topic keywords found in the section key (0 = no key match)."""
+    # Omnibus sections need a non-generic key word in the topic (ADR 0001):
+    # "polarized training" must not pull strength_training.
+    if key in _OMNIBUS_SECTIONS and not keywords & (set(key.split("_")) - _GENERIC_KEY_WORDS):
+        return 0
+    # Generic words ("training") only count when the topic has nothing else:
+    # "nutrition during training" must rank nutrition, not every *_training key.
+    specific = keywords - _GENERIC_KEY_WORDS or keywords
+    key_text = key.lower().replace("_", " ").replace("-", " ")
+    return sum(1 for kw in specific if kw in key_text)
+
+
+def _nested_keys(value: Any) -> set[str]:
+    """All dict keys below a section, lower-cased."""
+    if isinstance(value, dict):
+        return {str(k).lower() for k in value} | {
+            n for v in value.values() for n in _nested_keys(v)}
+    if isinstance(value, list):
+        return {n for v in value for n in _nested_keys(v)}
+    return set()
+
+
+def _rank(brain: dict[str, Any], keywords: set[str], topic_order: list[str]) -> list[str]:
+    """Key matches, best first; content matches only when no key names the topic."""
+    scores = {key: _key_score(key, keywords) for key in brain}
+    hits = [key for key, score in scores.items() if score]
+    if hits:
+        return sorted(hits, key=lambda k: (-scores[k], _size(brain[k])))
+    # A non-omnibus section that has the topic as a sub-key ("medical referral" ->
+    # coaching_safety.medical_referral) wins outright: before this, four small
+    # sections that merely mentioned both words pushed the safety section out.
+    joined = "_".join(sorted(keywords, key=topic_order.index))
+    owners = [key for key, value in brain.items()
+              if key not in _OMNIBUS_SECTIONS and joined in _nested_keys(value)]
+    if owners:
+        return sorted(owners, key=lambda k: _size(brain[k]))
+    # Content fallback keeps only the sections mentioning the MOST topic words
+    # (any-word matching pulled most of the corpus) and never serves omnibus.
+    content = {
+        key: sum(1 for kw in keywords if kw in json.dumps(value, ensure_ascii=False).lower())
+        for key, value in brain.items() if key not in _OMNIBUS_SECTIONS
+    }
+    best = max(content.values(), default=0)
+    if not best:
+        return []
+    return sorted((k for k, n in content.items() if n == best), key=lambda k: _size(brain[k]))
+
+
+def _within_budget(brain: dict[str, Any], ranked: list[str]) -> tuple[dict[str, Any], list[str]]:
+    """Best match always; further sections while under the size budget."""
+    picked: dict[str, Any] = {}
+    more: list[str] = []
+    used = 0
+    for key in ranked:
+        size = _size(brain[key])
+        if picked and used + size > _MAX_KNOWLEDGE_CHARS:
+            more.append(key)
+            continue
+        picked[key] = brain[key]
+        used += size
+    return picked, more
 
 
 def get_coaching_knowledge(topic: str, **_: Any) -> str:
     """Retrieve coaching knowledge relevant to a topic.
 
-    Searches all coach-brain YAML files for sections whose keys or content
-    match the topic string.  Returns matched sections as structured JSON.
+    Ranks coach-brain sections by how many topic words their key contains;
+    falls back to sections whose content mentions every topic word. Returns
+    the best matches within a size budget and names the rest.
 
     Args:
         topic: Topic to search for, e.g. "threshold intervals", "recovery",
@@ -57,31 +138,11 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
             "topic": topic,
         })
 
-    topic_lower = topic.lower()
-    keywords = set(topic_lower.replace("-", " ").split())
+    words = [w for w in topic.lower().replace("-", " ").split() if w not in _STOPWORDS]
+    keywords = set(words)
+    ranked = _rank(brain, keywords, words) if keywords else []
 
-    matched: dict[str, Any] = {}
-    for key, value in brain.items():
-        # Skip omnibus sections unless the topic names one of their key words.
-        # Generic words don't count: "polarized training" must not pull
-        # strength_training into an endurance answer.
-        if key in _OMNIBUS_SECTIONS:
-            if not keywords & (set(key.split("_")) - _GENERIC_KEY_WORDS):
-                continue
-
-        key_lower = key.lower().replace("_", " ").replace("-", " ")
-        # Match if any keyword appears in the key
-        if any(kw in key_lower for kw in keywords):
-            matched[key] = value
-        else:
-            # Fuzzier fallback: keyword in serialised content (but only for
-            # non-omnibus sections to avoid pulling nutrition into every query)
-            if key not in _OMNIBUS_SECTIONS:
-                content_str = json.dumps(value).lower()
-                if any(kw in content_str for kw in keywords):
-                    matched[key] = value
-
-    if not matched:
+    if not ranked:
         # Fall back: return top-level keys so the agent knows what's available
         return json.dumps({
             "topic": topic,
@@ -90,12 +151,17 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
             "note": "No direct match found. Use one of the available_topics above.",
         })
 
-    return json.dumps({
+    knowledge, more = _within_budget(brain, ranked)
+    result: dict[str, Any] = {
         "source": "coach-brain",
         "topic": topic,
         "matched": True,
-        "knowledge": matched,
-    })
+        "knowledge": knowledge,
+    }
+    if more:
+        result["more_sections"] = more
+        result["note"] = "More sections matched; call again with one of more_sections as the topic."
+    return json.dumps(result)
 
 
 def register_tools(ctx) -> None:

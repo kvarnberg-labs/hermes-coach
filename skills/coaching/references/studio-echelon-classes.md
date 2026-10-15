@@ -1,5 +1,8 @@
 # Studio Echelon — Indoor Cycling Classes
 
+Load when an athlete who trains at Studio l'Echelon asks about classes or
+needs an indoor option in Stockholm.
+
 Reference for coaching athletes who are members of Studio l'Echelon
 cycling studio (Nybrogatan 74, Östermalm, Stockholm).
 
@@ -55,40 +58,27 @@ match the class to the day's goal:
 - Echelon also offers Zwift and Sufferfest sessions in their library
 - Booking: via website (studiolechelon.com) or app
 
-## Checking the Live Schedule Online
+## The live schedule
 
-When an athlete asks "kan du kolla Echelons pass?" or you need to see the
-actual weekly schedule:
+You cannot open the website or booking app from chat. When the athlete asks
+which classes fit ("kan du kolla Echelons pass?"), ask them to paste or
+screenshot the week's schedule, then:
 
-1. Navigate to `https://studiolechelon.com/schema` directly — the
-   homepage "BOKA KLASS | SCHEMA" button does NOT reliably navigate
-   to the schedule page.
-2. The schedule page has tabs: "KLASSER INOMHUS", "KLASSER UTOMHUS",
-   "PÅ DISTANS (ONLINE)". Default is indoors.
-3. The page shows a weekly grid with day headers (idag, imorgon,
-   lördag, etc.) and class entries containing: time, duration, class
-   name, instructor, booking status, and spots available.
-4. Use `browser_snapshot(full=true)` to extract the full schedule
-   content — the compact snapshot truncates after ~20 entries.
-5. Filter to the athlete's time windows BEFORE presenting options.
-   Do NOT list all classes with ❌ markers for unavailable times —
-   only show the classes that fit the athlete's schedule.
-6. Note any "Closed for Holidays" or "Closed for maintenance" slots
-   so you don't recommend a class that's actually cancelled.
-7. If no classes match the athlete's time windows, say so clearly
-   and recommend outdoor/self-directed training instead.
+1. Filter to the athlete's own time windows (from memory or ask) and show
+   only matching classes — no list of non-fitting slots.
+2. Match class type to the day's planned session (table above).
+3. Skip slots marked "Closed for Holidays" / maintenance.
+4. If nothing fits both time and intensity, say so and recommend outdoor or
+   self-directed training.
+
+A class title is schedule evidence, not a verified workout structure
+(`coach-brain/coaching-safety.yaml → evidence_fidelity`).
 
 ## Pitfalls
 
 - **Summer schedule is limited.** During weeks 28–31 many slots show
   "Closed for Holidays." Don't recommend Echelon classes in summer
-  without checking the current schedule first.
-- **Athlete's time windows — filter BEFORE presenting.** Millberg can
-  ride at 07:00 and 18:00+ on weekdays. When checking the live
-  schedule, filter class recommendations to these windows and ONLY
-  present matching options. Do NOT show all classes with ❌ markers
-  for midday slots — that's noise the athlete has to scan through.
-  If nothing matches, say so and recommend alternatives.
+  without seeing the current schedule first.
 - **Class intensity must match the planned session.** Don't recommend
   a threshold class (Thin Red Line) when the plan calls for Z2
   endurance, or vice versa. Always cross-reference the day's planned
@@ -96,33 +86,6 @@ actual weekly schedule:
 - **Echelon classes are complementary, not a replacement** for outdoor
   rides when weather is good. Use them for structured quality sessions
   (threshold, VO2max) or when weather forces indoor.
-
-## Headless schedule check (Zoezi API — no browser needed)
-
-The live schedule also has a plain-JSON API on the Zoezi platform that
-backs both studiolechelon.com/schema and echelon.zoezi.se/schema (both
-are JS apps that render nothing over plain HTTP — do not scrape them):
-
-```
-GET https://echelon.zoezi.se/api/public/workout/get/all?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD
-Headers: User-Agent + Accept (public endpoint, no auth)
-Response: {"workouts": [...]}
-```
-
-Verified live 2026-09-09 (25 workouts returned). Field mapping:
-
-| Field | Meaning |
-|-------|---------|
-| `startTime` / `endTime` | Local Stockholm time, `YYYY-MM-DD HH:MM:SS` — duration = end − start |
-| `workoutType.name` | Class name (e.g. "Thin Red Line (Lactate Threshold Training) 60min"); `name` on the workout object itself is null |
-| `numBooked` / `space` | Booking fill; `numQueue` exists for waitlists |
-| `bookable` / `bookableForCustomer` | Whether the slot can be booked |
-| `description` | HTML blob from the class type |
-
-Use this endpoint for cron/headless sessions and quick checks; keep the
-browser walkthrough above for interactive sessions. Verify classes and
-class types against the live response before recommending — the schedule
-rotates and evening classes fill fast.
 
 ## Class-data logging note
 
@@ -134,9 +97,3 @@ regardless of the room. Class apps may display percentages against the
 bike's locally configured FTP, which can differ from intervals.icu FTP —
 class power data logs physical watts either way, so post-ride analysis
 is unaffected.
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Echelon class recommendations must match both time windows AND planned intensity.** When checking the live Echelon schedule for an athlete, filter to their available time slots (e.g. 07:00 and 18:00+ for Millberg) AND cross-reference against the day's planned workout type. Do NOT present a threshold class (Thin Red Line) when the plan calls for Z2, even if the time slot fits. If no class matches both constraints, say so and recommend outdoor or self-directed training.

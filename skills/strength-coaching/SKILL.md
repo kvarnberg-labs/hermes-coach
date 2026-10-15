@@ -22,7 +22,16 @@ dependency — works for any athlete, endurance or not.
 For **endurance coaching** (cycling, running, triathlon), use the sibling skill
 `coaching` — it provides intervals.icu integration, workout analysis, and
 sport-specific training guidance. When an athlete trains both endurance and
-strength, load both skills.
+strength, load both skills. (Where strength sessions sit inside a runner's
+week is the `coaching` skill's `strength-for-runners` reference; what goes in
+the session is this skill.)
+
+**Assess first.** If you do not know this athlete's strength level, goal and
+equipment, call `assess_strength_level` before any advice or workout — also for
+experienced endurance athletes. An advanced programme given to a novice is
+dangerous. Before lower-body work, ask about current pain, swelling, injury
+return or post-illness symptoms (`coach-brain/coaching-safety.yaml →
+strength_boundary`); red flags mean referral, not a workout.
 
 ## When to Use
 
@@ -32,15 +41,6 @@ strength, load both skills.
 - Athlete asks about exercise form, technique, or alternatives
 - Athlete asks about strength standards or benchmarks
 - **Athlete asks specifically about endurance/cycling/running → load `coaching` skill instead** (this skill covers strength only)
-
-## Prerequisites
-
-- `coach-brain/` directory populated with strength YAML knowledge files:
-  `exercise-database.yaml`, `strength-general.yaml`, `strength-programming.yaml`,
-  `strength-standards.yaml`, `strength-training.yaml`
-- Tools registered via `strength_coach.py`:
-  `assess_strength_level`, `exercise_lookup`, `generate_strength_workout`,
-  `design_strength_program`
 
 ## Available Tools
 
@@ -53,10 +53,9 @@ strength, load both skills.
 
 ## Procedure
 
-### Step 1: Assess (always first)
+### Step 1: Assess
 
-If you don't know the athlete's strength training background, call
-`assess_strength_level` before giving ANY advice. This returns:
+`assess_strength_level` returns:
 
 - **Interview questions** — ask these CONVERSATIONALLY, not as a dump:
   1. Training history (how long, what type)
@@ -76,12 +75,21 @@ Based on the assessment classification:
 
 **Single workout** → `generate_strength_workout(goal, level, equipment, days, session_duration_min, focus)`
 - Returns full session with exercise selections, parameters, warm-up, and notes
-- The `focus` parameter auto-selects upper/lower/full_body based on days/week
+- Omitting `focus` always gives a **full-body** session. For a split, pass
+  `focus` explicitly: `upper`, `lower`, `push`, `pull` or `legs`.
 
 **Multi-week program** → `design_strength_program(goal, level, equipment, weeks, days_per_week)`
 - Returns phased program with split templates, progression methods, and deload schedule
 
-### Step 3: Explain
+### Step 3: Track prescribed vs completed
+
+At the next contact, compare what was prescribed (sets × reps × load) with what
+the athlete completed. Progress only when all reps were clean; three sessions
+in a row of missed reps at the same load → follow `stall_protocol`
+(`get_coaching_knowledge("strength programming")` → `linear_progression.stall_protocol`:
+deload 10–15 % and rebuild).
+
+### Step 4: Explain
 
 For any new exercise prescribed, call `exercise_lookup(name)` to get:
 - Setup and execution cues
@@ -92,42 +100,40 @@ For any new exercise prescribed, call `exercise_lookup(name)` to get:
 
 ## Knowledge Retrieval
 
-All strength knowledge lives in coach-brain YAML files. Use `get_coaching_knowledge`
-for deeper dives:
+Prefer the four tools — they already read the YAML. `get_coaching_knowledge`
+matches top-level section names and returns up to ~15 KB, so ask for one
+section by name and only when the tools do not answer the question:
 
-| Topic | Tool Call | Content |
-|-------|-----------|---------|
-| Strength principles | `get_coaching_knowledge("strength principles")` | Progressive overload, specificity, recovery, periodization |
-| Exercise database | `get_coaching_knowledge("exercise database")` or use `exercise_lookup` | Complete exercise library |
-| Programming methods | `get_coaching_knowledge("strength programming")` | Goal parameters, periodization models, progression methods |
-| Strength standards | `get_coaching_knowledge("strength standards")` | Classification benchmarks, assessment questions |
+| Need | Call |
+|---|---|
+| Principles (overload, specificity, recovery, deloads) | `get_coaching_knowledge("strength principles")` |
+| Programming methods, progression, stall protocol | `get_coaching_knowledge("strength programming")` |
+| Classification benchmarks | `assess_strength_level` (or `get_coaching_knowledge("strength standards")`) |
+| One exercise | `exercise_lookup(name)` — never the whole exercise database |
+| Endurance-athlete and masters specifics | `get_coaching_knowledge("strength training")` |
 
 ## Key Principles
 
-1. **Assess before prescribing.** Never give a workout without knowing the athlete's
-   level, goal, and equipment. An advanced powerlifting program given to a novice
-   is dangerous.
-
-2. **Form over load.** When prescribing a new exercise, ALWAYS call `exercise_lookup`
+1. **Form over load.** When prescribing a new exercise, ALWAYS call `exercise_lookup`
    to provide proper form instructions. Mention at least the top 2 common errors.
 
-3. **Progressive overload is the foundation.** Every program must specify how the
+2. **Progressive overload is the foundation.** Every program must specify how the
    athlete progresses — session-to-session for novices, weekly for intermediates,
    mesocycle-based for advanced.
 
-4. **Concurrent training rules.** For endurance athletes who strength train:
+3. **Concurrent training rules.** For endurance athletes who strength train:
    - ≥6 hours separation between hard bike/run sessions and heavy leg days
    - Avoid heavy lower-body work the day before threshold/VO2max sessions
    - In-season: 1–2×/week maintenance, off-season: 2–3×/week building
 
-5. **Recovery and deload.** Every program beyond 4 weeks must include deload weeks
-   (every 4th week for intermediates, every 4–8 weeks for advanced).
+4. **Recovery and deload.** Every program beyond 4 weeks includes planned
+   deloads (`strength-general.yaml → deload_guidelines`): novice every 8–12
+   weeks, intermediate every 4–6, advanced every 3–5; deload by cutting sets
+   40–50 % (keep intensity) or load to 60–70 % (keep volume).
+   `design_strength_program` returns the cadence for the athlete's level.
 
 ## Pitfalls
 
-- **Don't skip the assessment for returning athletes.** If you haven't classified
-  this athlete's strength level, call `assess_strength_level` first — even if
-  they're an experienced endurance athlete.
 - **Don't prescribe Olympic lifts without coaching.** The exercise database covers
   squats, deadlifts, presses, rows, and accessories — not snatch/clean & jerk.
   Refer to a qualified coach for technical lifts.
@@ -135,8 +141,9 @@ for deeper dives:
   `assess_strength_level` for classification, not max-effort testing.
 - **Equipment matters.** A program designed for full_gym won't work with
   dumbbell_only. Always confirm equipment before prescribing.
-- **Masters athletes (50+) need modifications:** lower volume, longer warm-ups,
-  emphasis on power (RPE 6–8) over maximal strength, 2×/week frequency preferred.
+- **Masters athletes (50+)** (`strength-training.yaml → masters_athletes_50_plus`):
+  2×/week year-round (never below 1), 8–12 reps at moderate load, avoid ≥ 90 %
+  1RM, move submaximal loads fast, longer warm-ups.
 
 ## Quick Reference
 

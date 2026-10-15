@@ -1,136 +1,77 @@
-# Activity Sync Troubleshooting — Missing Activities
+# Activity sync troubleshooting — missing or empty activities
 
-When an athlete reports that activities visible in Garmin Connect are
-missing from intervals.icu, use this diagnostic procedure.
+Load when an athlete says sessions are missing from intervals.icu, or activities
+arrive with empty fields (no type, distance, duration or HR).
 
-## Step 1: Verify the gap is real
+## Step 1: Is the gap real?
 
-Pull 90 days of activities and identify gaps of 3+ days with no activity.
-Map them against the athlete's training log or ask the athlete directly.
+Pull `get_recent_activities(days=90)` and list gaps of 3+ days. Ask the athlete
+what they did on those dates — most gaps are genuine rest.
 
-## Step 2: Check wellness CTL decay during gaps
+## Step 2: Read CTL/ATL during the gap
 
-The most reliable way to distinguish genuine rest from a sync failure is
-to examine the CTL/ATL/TSB curves during the gap period.
+`get_wellness(days=<covering the gap>)`, day by day:
 
-**Genuine rest pattern:**
-- CTL decays smoothly and continuously (e.g., 37.6 → 36.7 → 35.9 → 35.0)
-- ATL drops sharply (fatigue dissipating)
-- TSB rises steadily from negative toward positive
-- No sudden jumps in CTL that would indicate a belatedly-synced activity
+- **Genuine rest:** CTL decays smoothly, ATL drops, TSB rises steadily.
+- **Sync problem:** CTL flat or jumping mid-gap, ATL rising with no activity in
+  the list, or TSB dropping unexpectedly.
 
-**Sync failure pattern (hypothetical):**
-- CTL is flat or jumps suddenly mid-gap (activity arrived late)
-- ATL spikes without a corresponding activity in the list
-- TSB drops unexpectedly during the gap
+If today's activity is missing but today's wellness already moved, widen the
+window (`days=3`, no sport filter) before concluding it has not synced.
 
-Call `get_wellness` with `days` covering the gap period and inspect the
-day-by-day CTL/ATL/TSB values. If CTL decays smoothly with no jumps,
-the gap is genuine rest, not a sync problem.
+## Step 3: Check the device-side settings (ask the athlete)
 
-## Step 3: Check Garmin sync settings
+The tools do not return the athlete's sync settings, so ask the athlete to
+check in intervals.icu → Settings:
 
-Fetch the athlete profile and verify:
-- `icu_garmin_sync_activities` is `True`
-- `garmin_sync_activity_types` is `None` (means all types sync)
-- `icu_garmin_upload_filters` is `None` (no activity filtering)
-- `icu_garmin_last_upload` is recent (within hours of the last activity)
+- Garmin: activity sync enabled, no activity-type or upload filters, and a
+  recent "last upload" time.
+- Strava: still authorised, if they rely on it.
+- Then in Garmin Connect: the activity exists, has a recorded file (not a
+  manual entry), and a manual sync has been tried.
 
-If any of these are misconfigured, activities may be filtered out.
+## Step 4: Sports or names that do not fit
 
-## Step 4: Check for sport-type mismatch
+Activities that do not match the athlete (wrong sports, unknown names) are an
+identity problem, not a sync problem: stop and follow
+`references/identity-verification.md`.
 
-If the wrong athlete's credentials were active (see
-`references/credential-path-mismatch.md`), you will see activities
-belonging to a different person — potentially including sport types
-the real athlete does not do. For example, if the athlete is a cyclist
-and you see "Run" activities, this is a red flag that you are looking
-at the wrong athlete's data.
+## Apple Watch
 
-## Step 5: Zwift integration — "Download Old Data" stuck
+Apple Watch has no direct intervals.icu integration. The reliable chain is
+Apple Watch → Apple Health → HealthFit → intervals.icu. Syncing via Strava often
+drops HR and detail.
 
-When an athlete connects Zwift to intervals.icu and clicks "Download
-Old Data" but activities don't appear, check the following:
+**Signature of the broken Strava path:** CTL/ATL update but activities show
+`type: null`, `distance_km: 0.0`, `duration_min: 0.0`, `avg_hr: null`, with
+`training_load` populated. The athlete is training; you just cannot analyse it.
 
-### Symptoms
-- "downloading in progress, please be patient" message persists for hours
-- No new VirtualRide activities appear despite the connection being active
-- Existing VirtualRide activities may be from a different source (e.g.,
-  Wahoo trainer + Garmin Edge, not Zwift) — don't assume "VirtualRide"
-  means Zwift. Ask the athlete what device recorded each activity.
+**Fix to recommend:** install HealthFit (one-time purchase) → Settings → sync to
+intervals.icu → enable automatic upload; verify after the next session. It also
+forwards HR, cadence, laps, sleep and HRV. Strava can stay for social use.
+Alternatives: RunGap, HealthSync, or the Strava watch app (better than the
+Health→Strava import, still less complete).
 
-### Root cause: Zwift profile privacy
+## Zwift "Download Old Data" stuck
 
-The most common cause is that the athlete's **Zwift profile is set to
-private**. intervals.icu fetches Zwift activities via Zwift's public
-profile API — if the profile is private, the import silently fails or
-hangs indefinitely.
-
-**Fix — check Zwift privacy settings:**
-1. Go to **my.zwift.com** in a web browser (not the Zwift app)
-2. Log in with Zwift credentials
-3. Click profile picture (top right) → Settings / Profile
-4. Look for **Privacy** section
-5. Ensure **"Make my profile public"** (or "Public Profile") is enabled
-
-**Verification:** Copy the Zwift profile URL (e.g.
-`zwift.com/athlete/1234567`) and open it in an incognito/private window
-where you are NOT logged in. If you can see activities, the profile is
-public. If prompted to log in, it is private.
-
-**Alternative — check in the Zwift app:**
-1. Open Zwift app
-2. Settings (gear icon)
-3. Look under Profile or Privacy for a Public Profile toggle
-
-### Other causes
-
-- **Import still running:** "Download Old Data" runs on intervals.icu's
-  server, not the athlete's computer. For athletes with extensive Zwift
-  history, the import can take 12–24 hours. The "downloading in progress"
-  message is legitimate — advise patience.
-- **Cannot re-trigger while running:** If the athlete tries to click
-  "Download Old Data" again while a download is in progress, intervals.icu
-  shows "downloading in progress, please be patient." They must wait for
-  the current import to finish or disconnect/reconnect Zwift.
-- **Stuck import (24h+):** If import has been "in progress" for more than
-  24 hours, advise the athlete to disconnect Zwift on intervals.icu
-  (Settings → Integrations → Zwift → Disconnect), then reconnect and
-  click "Download Old Data" again.
-- **Wrong Zwift account:** Ensure the Zwift account linked to
-  intervals.icu matches the athlete's actual Zwift profile. Check the
-  Zwift athlete ID in the profile URL.
-
-### Identifying Zwift-imported activities
-
-Zwift-imported activities on intervals.icu typically appear with:
-- Type: `VirtualRide`
-- Name prefix: `Zwift -` followed by the Zwift activity name
-- May include route name (e.g., "Tempus Fugit in Watopia")
-
-However, not all `VirtualRide` activities are from Zwift — indoor
-trainer sessions recorded via Garmin Edge (with Wahoo or other smart
-trainers) also classify as VirtualRide. **Ask the athlete to confirm
-the source** before assuming Zwift import is working.
+- Most common cause: the Zwift profile is private. Ask the athlete to open
+  my.zwift.com → profile → Settings/Privacy → enable the public profile, and
+  test the profile URL in a private browser window.
+- A first import can run 12–24 h on intervals.icu's side; "downloading in
+  progress" is normal and blocks re-triggering. After 24 h+, disconnect Zwift
+  in intervals.icu (Settings → Integrations), reconnect, retry.
+- Check that the linked Zwift account is the athlete's.
+- Not every `VirtualRide` is Zwift — Garmin Edge + smart trainer sessions are
+  also `VirtualRide`. Zwift imports usually start with `Zwift -`. Ask which
+  device recorded them before judging the import.
 
 ## Common causes of genuinely missing activities
 
-1. **Garmin Edge battery died mid-ride** — ride saved locally but never
-   uploaded to Garmin Connect
-2. **Manual activities** — if the athlete logs a ride manually in Garmin
-   Connect without a .fit file, intervals.icu may not sync it
-3. **GPS signal loss** — ride recorded but too short/corrupted to sync
-4. **Strava deauthorization** — if `strava_authorized` is `False`,
-   activities that used to sync via Strava will no longer appear
-5. **Genuine rest periods** — most "gaps" are real rest, not sync failures
+Head unit battery died before upload; manual entries without a file; corrupted
+or very short recordings; Strava deauthorised; genuine rest.
 
 ## When you cannot resolve it
 
-If sync settings look correct and CTL shows genuine jumps without
-corresponding activities, the issue is on Garmin's side. Ask the athlete
-to:
-1. Open Garmin Connect and verify the missing activity exists there
-2. Check if the activity has a .fit file (not a manual entry)
-3. Force a manual sync in Garmin Connect → Settings → Garmin Sync
-4. Check intervals.icu web UI directly to see if the activity appears there
-   but not via the API (rare but possible)
+If settings look right and CTL shows jumps without matching activities, the
+problem is upstream (Garmin/Strava). Tell the athlete what you checked and ask
+them to look at the intervals.icu web calendar directly.

@@ -1,5 +1,9 @@
 # Strength Training for Runners
 
+Load when placing strength sessions inside a runner's week (Strength A/B, time
+budget, spacing around threshold runs). Exercise technique, loads, levels and
+full programmes belong to the `strength-coaching` skill and its tools.
+
 ## Why runners need more than legs
 
 Runners who only do lower-body strength (squats, deadlifts, lunges, hip thrusts) miss three critical areas:

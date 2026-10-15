@@ -13,7 +13,7 @@ for the athlete to re-run `/start` (coach_onboard), which writes to the per-user
 directory at `/opt/data/users/<snowflake>/`.
 
 For a **temporary live-pod fix** (reverts on pod restart) — this recipe was also
-moved from `skills/coaching/references/credential-path-mismatch.md`
+moved from `skills/coaching/references/credential-path-mismatch.md` (retired 2026-10-15)
 ("Live-pod credential fix"), which was an identical copy:
 
 ```bash
@@ -28,7 +28,7 @@ rm -f $HERMES_HOME/users/<snowflake>/cache/*.json
 Without the name file, `verify_athlete_identity` returns `verified: false` with
 `mismatched_fields: ["no_stored_name"]`. See
 `skills/coaching/references/identity-verification.md` and
-`skills/coaching/references/credential-isolation.md` (repo paths — `docs/` and
+`skills/coaching/references/credential-isolation.md` (retired 2026-10-15; repo paths — `docs/` and
 `skills/` are different trees).
 
 ## Credential recovery for the removed discord_dm shared dir (legacy)
@@ -46,7 +46,7 @@ echo -n "<discord_name>" > /opt/data/users/discord_dm/intervals_athlete_name
 chmod 600 /opt/data/users/discord_dm/intervals_*
 ```
 
-## Live-pod plugin edit + end-to-end test (former SKILL.md tool-improvement steps 3–4; also from tool-improvement-workflow.md)
+## Live-pod plugin edit + end-to-end test (former SKILL.md tool-improvement steps 3–4; also from tool-improvement-workflow.md, now docs/ops/)
 
 The `patch` and `write_file` tools block the live path `/opt/hermes/plugins/training/`,
 but the sandbox path `/opt/data/plugins/training/` is writable.
@@ -72,7 +72,7 @@ but the sandbox path `/opt/data/plugins/training/` is writable.
    This catches API endpoint errors, field-name mismatches, and response-size
    issues before they become test debt.
 
-## Reading credentials for manual API calls (from tool-improvement-workflow.md)
+## Reading credentials for manual API calls (from tool-improvement-workflow.md, now docs/ops/)
 
 For verifying an endpoint's shape before implementing a tool (Step 0), reading
 the athlete's key directly is acceptable FOR OPS ONLY:
@@ -94,7 +94,7 @@ GitHub token, for manual git/API operations when create-pr.sh is unavailable:
 export GITHUB_TOKEN=$(cat /opt/data/.github_token)
 ```
 
-## Snowflake enumeration for ops (from cron-coaching.md)
+## Snowflake enumeration for ops (from cron-coaching.md, merged into cron-coaching-runtime-recipe.md 2026-10-15)
 
 Human/ops use only — an athlete session must never be able to enumerate other
 users. Lists every onboarded athlete's snowflake and display name:

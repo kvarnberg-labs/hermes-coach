@@ -7,6 +7,19 @@ This is NOT about RED-S diagnosis (that requires medical referral). This is abou
 day-to-day coaching conversations where an athlete catastrophizes a single treat or
 asks "can I eat this?" from a place of fear rather than performance.
 
+## Red lines — check first, escalate to medical referral
+
+This file covers *anxiety* about normal eating while training hard. Stop coaching
+the food question and refer (sports physician / GP / registered dietitian; see
+`coach-brain/coaching-safety.yaml → red_s_screening, medical_referral`; do not
+increase training load) if the athlete:
+
+- Reports intentionally skipping meals to "save calories"
+- Mentions purging, laxatives, or extreme restriction
+- Has lost >5% body weight unintentionally in <3 months
+- Reports amenorrhea (missing 3+ consecutive periods)
+- Describes binge-restrict cycles with distress
+
 ## When This Pattern Applies
 
 Athlete says any of:
@@ -92,18 +105,7 @@ When the athlete is at a restaurant before a training day and anxious about choi
 4. If they keep cycling through options: "Du har snurrat på tre nästan identiska
    rätter. Du är hungrig, du är på restaurang. Välj den du är sugen på. Alla är rätt."
 
-## Red Lines (when to escalate)
-
-These patterns are for *anxiety* about normal eating while training hard. Escalate
-to medical referral if the athlete:
-
-- Reports intentionally skipping meals to "save calories"
-- Mentions purging, laxatives, or extreme restriction
-- Has lost >5% body weight unintentionally in <3 months
-- Reports amenorrhea (missing 3+ consecutive periods)
-- Describes binge-restrict cycles with distress
-
-## Example Dialogue (from Wilma session)
+## Example dialogue
 
 ```
 Athlete: "Nu åt jag en stor bit morotskaka och fick sån sjuk ångest"

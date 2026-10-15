@@ -111,6 +111,13 @@ Structured coaching knowledge in 19 YAML files (examples below). Loaded at runti
 
 Hermes skill file that instructs the agent how to use coaching tools. Synced to `$HERMES_HOME/skills/` at startup, listed in the agent's `<available_skills>` index, and loaded on demand via `skill_view` (or the `/skill` command) when the agent needs coaching knowledge. The bot is DM-only — there is no channel-specific skill binding (`DISCORD_FREE_RESPONSE_CHANNELS` controls mention behavior, not skill loading, and is unset here).
 
+SKILL.md holds only the core (six red lines, the procedure) and a situation →
+reference routing table; `skills/coaching/references/` holds on-demand detail
+(size and link integrity gated by `tests/test_skill_budget.py` and
+`tests/test_skill_links.py`). Operator- and developer-only material (cron
+prompt authoring, tool development, raw API notes) lives in `docs/ops/` and is
+not shipped to the bot.
+
 ### 5. Sandbox (`sandbox/`)
 
 Isolated environment for autonomous tool development:

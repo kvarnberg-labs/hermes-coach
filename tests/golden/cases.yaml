@@ -7,9 +7,10 @@
 #
 # label:  bad  = the verifier must block delivery
 #         good = the verifier must let it through
-# known_miss: true = a real bad case the verifier misses today. Tracked as a
-#         strict xfail; when a fix catches it the test fails until the flag is
-#         removed. Never set known_miss to make a regression pass.
+# known_miss: [verifier, ...] = a real bad case that verifier misses today.
+#         Tracked as a strict xfail per verifier; when a fix catches it the
+#         test fails until the name is removed. Never add a name to make a
+#         regression pass.
 # failure_class: key from coach-brain/headless-coaching-failures.yaml.
 
 cases:
@@ -22,12 +23,14 @@ cases:
 
   - id: regnarplan-2026-09-13
     label: bad
+    known_miss: [output_gate]  # CamelCase rule is log-only in chat (product names)
     failure_class: output_corruption
     source: "Millberg morning brief 2026-09-13"
     text: " och egnarplan i lax — RegnarPlan B:\n"
 
   - id: livri-bilh-2026-09-12
     label: bad
+    known_miss: [output_gate]  # unknown-word (SOFT) findings never block in chat
     failure_class: output_corruption
     source: "Millberg morning brief 2026-09-12 (brief_lint.py docstring)"
     text: "vid Livri TSB +11 bilh\n"
@@ -35,12 +38,13 @@ cases:
   - id: pentalk-2026-09-12
     label: bad
     failure_class: output_corruption
-    known_miss: true
+    known_miss: [brief_lint, output_gate]
     source: "Millberg morning brief 2026-09-12/13 (brief_lint.py docstring). 'pentalk' decomposes as a compound and lints clean."
     text: "bakom pentalk på lax\n"
 
   - id: tsbtooldata-2026-09-17
     label: bad
+    known_miss: [output_gate]  # CamelCase rule is log-only in chat (product names)
     failure_class: output_corruption
     source: "Wilma brief 2026-09-17"
     text: "TSBToolData — ATL faller snabbt och TSB pendlar tillbaka mot noll.\n"
@@ -81,6 +85,7 @@ cases:
 
   - id: empty-output
     label: bad
+    known_miss: [output_gate]  # empty replies are left to the framework, not replaced with a notice
     failure_class: semantic_failure
     source: "synthetic (brief_lint.main empty-input rule)"
     text: "  \n"

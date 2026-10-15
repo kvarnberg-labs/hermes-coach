@@ -93,6 +93,7 @@ If you find nothing in those 2 sessions, pick 2 more athletes and repeat.
 - **Cron output:** Read the most recent cron output files from `/opt/data/cron/output/` — are agents fabricating data?
 
 **The goal is not to run queries — it's to READ and UNDERSTAND what actually happened.**
+Worked technique and case study: `references/gap-discovery-pattern.md`.
 Think like a coach reviewing tape: you watch the whole play, not just the highlight reel.
 
 **⛔ PITFALL — session_search crash loop:** Do NOT call `session_search()` without a
@@ -174,7 +175,8 @@ Apply the CONTRACT.md verification rubric for the path you took.
 
 PR body must be a single line with those four fields (CONTRACT.md → PR body).
 Never edit `tests/golden/` or `tests/test_golden_verifiers.py`. If
-`create-pr.sh` fails, stop and write a blocker signal — do not retry.
+`create-pr.sh` fails or prints `REFUSED:` (the contract checks in
+`scripts/pr_guard.py`), stop and write a blocker signal — do not retry or work around it.
 
 ## Append to worklog before stopping
 

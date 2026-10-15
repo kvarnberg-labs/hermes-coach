@@ -8,7 +8,13 @@
 #               The file must exist at /opt/data/<file-path>
 #   branch-slug Short identifier, e.g. add-heat-knowledge
 #   pr-title    Title for the PR, e.g. "improve: heat acclimatization knowledge"
-#   pr-body     Optional body text (single line). Defaults to the title.
+#   pr-body     Body text (single line) with the CONTRACT.md fields:
+#               "Failure class: … · Anchor: … · Golden check: … · Evidence: …"
+#
+# Contract checks (scripts/pr_guard.py) refuse, before anything is written:
+# paths other than coach-brain/*.yaml or a NEW plugins/training/<tool>.py,
+# titles without "improve: ", bodies missing the fields, 50+ added lines,
+# and a second improve/ PR on the same day. On refusal: stop, file a signal.
 #
 # Exits 0 and prints the PR URL on success.
 # Exits 1 and prints a clear error message on failure.
@@ -22,12 +28,14 @@ set -eu
 FILE_PATH="${1:-}"
 SLUG="${2:-}"
 PR_TITLE="${3:-}"
-PR_BODY="${4:-$PR_TITLE}"
+PR_BODY="${4:-}"
+GUARD="$(dirname "$0")/pr_guard.py"
 
 if [ -z "$FILE_PATH" ] || [ -z "$SLUG" ] || [ -z "$PR_TITLE" ]; then
-    echo "Usage: create-pr.sh <file-path> <branch-slug> <pr-title> [pr-body]" >&2
+    echo "Usage: create-pr.sh <file-path> <branch-slug> <pr-title> <pr-body>" >&2
     exit 1
 fi
+python3 "$GUARD" check "$FILE_PATH" "$PR_TITLE" "$PR_BODY" || exit 1
 
 # ---------------------------------------------------------------------------
 # Resolve token
@@ -71,6 +79,16 @@ if [ -z "$MAIN_SHA" ]; then
     exit 1
 fi
 echo "main SHA: $MAIN_SHA"
+
+# Contract checks that need GitHub state — before any branch or file write.
+BASE_FILE=$(mktemp)
+trap 'rm -f "$BASE_FILE"' EXIT
+BASE_SHA=$(curl -sf "$API/repos/$REPO/contents/${FILE_PATH}?ref=${BASE_REF}" -H "$(auth)" \
+    | python3 "$GUARD" base-file "$BASE_FILE")
+python3 "$GUARD" existing-file "$FILE_PATH" "$BASE_SHA" || exit 1
+python3 "$GUARD" added-lines "$LOCAL_FILE" "$BASE_FILE" || exit 1
+curl -sf "$API/repos/$REPO/pulls?state=open&per_page=100" -H "$(auth)" \
+    | python3 "$GUARD" open-today || exit 1
 
 # ---------------------------------------------------------------------------
 # 2. Create branch (ignore 422 = already exists)

@@ -1,79 +1,42 @@
-# Identity Verification Flow
+# Identity verification and credential isolation
 
-New tool: `verify_athlete_identity` (PR #15) — validates that stored credentials
-belong to the expected athlete before any training data is pulled.
+Load when `verify_athlete_identity` returns `verified: false`, a tool returns
+"User identity not available", or the athlete says the data is not theirs.
 
-## What it checks
+## Rules
 
-1. **Credentials exist** — key and athlete_id files present and non-empty
-2. **Stored name exists** — `intervals_athlete_name` file present (proves onboarding ran)
-3. **API matches** — the /athlete/{id} endpoint returns a valid profile
+- Call `verify_athlete_identity` before any training data, every session, then
+  `get_athlete_profile` as a secondary check (name, athlete ID).
+- `verified: false` → stop all training-data calls. The only fix you offer is
+  for the athlete to re-run `/start` (coach_onboard), which writes key,
+  athlete ID and display name in one step. Re-verify afterwards.
+- Never use, infer or mention another athlete's credentials, IDs or data, and
+  never fall back to a shared slot. Each Discord user has their own credential
+  directory; the plugin refuses calls without a valid Discord identity.
+- If the athlete says "that's not me" or the data shows sports or names that do
+  not fit, re-verify immediately. Do not defend the data.
 
-Returns `verified: true` only when all three pass.
+## What `verify_athlete_identity` returns
 
-## Verification output
+| Result | Meaning | Say / do |
+|---|---|---|
+| `verified: true` | Key, athlete ID, stored name and API profile all match | Proceed |
+| `mismatched_fields: [credentials]` | No key files — never onboarded | Ask for `/start` |
+| `mismatched_fields: [no_stored_name]` | Credentials not written by onboarding | Ask for `/start` |
+| `mismatched_fields: [api_request]` | Key invalid or expired | Ask for `/start` with a fresh intervals.icu API key |
 
-```json
-{
-  "verified": false,
-  "mismatched_fields": ["no_stored_name"],
-  "error": "Credentials were not written through the onboarding flow...",
-  "stored_athlete_id": "i000000",
-  "stored_name": null,
-  "api_name": "Millberg"
-}
-```
+A stored Discord display name may legitimately differ from the intervals.icu
+account name; the athlete ID match and the presence of a stored name are what
+count.
 
-| Field | Signal |
-|---|---|
-| `verified: false, mismatched_fields: [no_stored_name]` | Credentials manually placed — unverified |
-| `verified: false, mismatched_fields: [credentials]` | No key files at all — never onboarded |
-| `verified: false, mismatched_fields: [api_request]` | Key is invalid or expired |
-| `verified: true` | Everything matches — proceed |
+## "User identity not available — the Discord gateway did not provide a valid user ID"
 
-## When to call
+The session lost its Discord identity; the credentials are fine. In a DM, tell
+the athlete to start a new conversation with `/new`. Do not attempt any
+credential repair. (Scheduled runs: see `references/cron-coaching-runtime-recipe.md`.)
 
-1. **Start of every coaching session** — before `get_athlete_profile`
-2. **After manually writing credentials** — verify they took effect
-3. **When athlete questions the data** — confirm the key belongs to them
+## After a deploy
 
-## Manual credential placement
-
-Credentials should arrive via onboarding only. If `verify_athlete_identity`
-returns `verified: false` with `mismatched_fields: ["no_stored_name"]`,
-credentials were placed without onboarding — the sanctioned fix is for the
-athlete to re-run `/start` (coach_onboard), which writes the key, athlete_id,
-and display name in one step and verifies against the API. Break-glass
-recovery (ops only, not shipped to athlete sessions) lives in the repo's
-`docs/OPS-BREAKGLASS.md`.
-
-## How it prevents the wrong-athlete bug
-
-**Before:** credentials silently loaded → API returns data for whichever
-athlete_id is in the file → no way to detect mismatch without manually
-checking profile name.
-
-**After:** `verify_athlete_identity` called first → checks for stored name +
-API match → if `verified: false`, the agent knows credentials are stale or
-unverified and stops before pulling any training data.
-
-## Credential persistence on pod restart
-
-Historical incident: after a PR merge triggered a Flux deployment, an
-athlete's credentials appeared to revert to a stale state (the persistent
-volume survived, but credentials were evidently overwritten during
-startup). **Impact as recorded then:** the athlete had to re-provide their
-API key after deploys until the root cause was found.
-
-**Recovery (sanctioned):** after any deploy, if `verify_athlete_identity`
-returns `verified: false`, ask the athlete to re-run `/start` — onboarding
-re-writes the per-user credential files and the stored name in one step,
-then re-verify. Manual credential-file re-writing is a break-glass operation
-and is documented only in the repo's `docs/OPS-BREAKGLASS.md` (not shipped
-to athlete sessions).
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Verify athlete identity every session — use `verify_athlete_identity` first.** Call `verify_athlete_identity` before pulling any training data. If it returns `verified: false`, stop — credentials are stale, wrong, or manually placed without onboarding. Do not proceed until the athlete re-runs `/start` (`coach_onboard`). After verification passes, call `get_athlete_profile` as secondary confirmation that the name and athlete_id match expectations. This has been the #1 recurring bug (wrong athlete's data silently returned).
+If verification fails right after a bot update, the sanctioned recovery is the
+same: `/start`, then re-verify. Manual credential repair is an operator
+break-glass procedure (repo `docs/OPS-BREAKGLASS.md`, not available in chat).
