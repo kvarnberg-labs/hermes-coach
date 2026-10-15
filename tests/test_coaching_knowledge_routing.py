@@ -21,7 +21,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "plugins"))
 
-from training.coaching import _OMNIBUS_SECTIONS, get_coaching_knowledge, register_tools
+from training.coaching import (
+    _MAX_KNOWLEDGE_CHARS,
+    _OMNIBUS_SECTIONS,
+    get_coaching_knowledge,
+    register_tools,
+)
 
 REPO_BRAIN = Path(__file__).parent.parent / "coach-brain"
 
@@ -113,7 +118,18 @@ def test_nutrition_query_pulls_only_nutrition_omnibus():
 
 
 def test_strength_skill_keeps_explicit_access():
-    assert {"strength_principles", "strength_standards"} <= _keys("strength")
+    result = json.loads(get_coaching_knowledge("strength"))
+    reachable = set(result["knowledge"]) | set(result.get("more_sections", []))
+    assert {"strength_principles", "strength_standards"} <= reachable
+    assert "strength_principles" in _keys("strength principles")
+
+
+@pytest.mark.parametrize("topic", [*EXPECTED_KEY, *ENDURANCE_TOPICS, "nutrition during training"])
+def test_result_stays_within_budget_beyond_best_match(topic: str):
+    result = json.loads(get_coaching_knowledge(topic))
+    sections = list(result["knowledge"].values())
+    rest = len(json.dumps(sections[1:], ensure_ascii=False))
+    assert rest <= _MAX_KNOWLEDGE_CHARS, (topic, list(result["knowledge"]))
 
 
 @pytest.mark.parametrize("topic,key", [
