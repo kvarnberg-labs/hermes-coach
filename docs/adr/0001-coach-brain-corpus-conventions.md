@@ -25,7 +25,10 @@ strength. To stop the endurance skill from fuzzy-matching strength sections via
 content-fallback, `strength_standards`, `strength_principles`, and
 `strength_training` join `_OMNIBUS_SECTIONS` — omnibus blocks content-fallback
 but not explicit key-match, so the strength skill's
-`get_coaching_knowledge("strength principles")` still works.
+`get_coaching_knowledge("strength principles")` still works. Explicit
+key-match ignores generic key words (`_GENERIC_KEY_WORDS`, currently
+`training`): until 2026-10-15 "polarized training" key-matched
+`strength_training`.
 
 **D2 — Cross-file key collisions: warn + keep last at runtime; fail in CI.**
 `_brain.py` logs a warning and keeps the last definition (preserving the

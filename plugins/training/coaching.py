@@ -36,6 +36,8 @@ _OMNIBUS_SECTIONS = {
     "nutrition", "strength_programming", "exercise_database",
     "strength_standards", "strength_principles", "strength_training",
 }
+# Omnibus key words too generic to count as naming the section.
+_GENERIC_KEY_WORDS = {"training"}
 
 
 def get_coaching_knowledge(topic: str, **_: Any) -> str:
@@ -60,9 +62,11 @@ def get_coaching_knowledge(topic: str, **_: Any) -> str:
 
     matched: dict[str, Any] = {}
     for key, value in brain.items():
-        # Skip omnibus sections unless the topic explicitly names them
+        # Skip omnibus sections unless the topic names one of their key words.
+        # Generic words don't count: "polarized training" must not pull
+        # strength_training into an endurance answer.
         if key in _OMNIBUS_SECTIONS:
-            if not any(kw in key for kw in keywords):
+            if not keywords & (set(key.split("_")) - _GENERIC_KEY_WORDS):
                 continue
 
         key_lower = key.lower().replace("_", " ").replace("-", " ")
