@@ -1,5 +1,8 @@
 # Training Summary Workflow
 
+Load when an athlete asks for a summary of a past period (week, month, season,
+holiday block).
+
 How to efficiently produce a comprehensive training period summary
 (weekly, monthly, seasonal, or vacation block) using the Hermes coaching tools.
 
@@ -29,7 +32,7 @@ instead of sequential. All are independent reads.
 
 ### Phase 2: Monthly stat comparison
 
-Pull `get_athlete_stats` for each month in the period. For a **weekly** report, pull the current week AND the previous week and present a week-over-week delta table (distance, training load, % change) — the athlete wants the trend, not just totals. This gives:
+Pull `get_athlete_stats` for each month in the period. For a **weekly** report, pull the current week AND the previous week and present a week-over-week delta table (distance, training load, % change) — the athlete wants the trend, not just totals. When the period had a plan, add planned vs completed sessions (from `get_planned_events(days_back=…)` and `paired_event_id`) with the variance. This gives:
 - Total activities, distance, duration, calories, training load
 - Per-sport breakdown (Ride, VirtualRide, Run, WeightTraining, etc.)
 
@@ -70,8 +73,8 @@ Attach the chart as MEDIA in the response for visual context.
 - **Use configured FTP from `get_sport_settings`, not eFTP from fitness chart** for zone
   calculations. eFTP is a model estimate; configured FTP is what the athlete's zones
   are actually based on.
-- **Cross-reference power zones AND HR zones** when concluding ride intensity. See
-  the main coaching SKILL.md pitfall on this.
+- **Cross-reference power zones AND HR zones** when concluding ride intensity
+  (`references/post-ride-review-quality.md`, item 12).
 - **Present both eFTP and configured FTP** when they disagree, and flag the discrepancy.
 - **Weather context is optional for period summaries** — only include it if the athlete
   asks or if it explains a specific training decision (indoor vs outdoor).
@@ -82,9 +85,9 @@ Attach the chart as MEDIA in the response for visual context.
   zone percentages requires pulling `get_activity_detail` for every activity, which
   is impractical for long periods. Skip the zone chart or estimate qualitatively
   from IF values — but be explicit that it's an estimate.
-- **Planned events are NOT part of a historical summary.** The summary covers what
-  was actually done, not what was planned. Only pull `get_planned_events` for
-  forward-looking analysis.
+- **Planned events are not completed training.** Totals and narrative cover what
+  was actually done; planned sessions appear only in the planned-vs-completed
+  comparison, never counted as training.
 
 ## Example Output Structure (Swedish)
 
@@ -117,16 +120,12 @@ Attach the chart as MEDIA in the response for visual context.
 ### 🎯 Slutsats
 ```
 
-### Early delivery of a scheduled report ("Kan jag få min veckorapport nu?")
+### Scheduled report asked for early
 
-When the athlete asks for a scheduled report (weekly plan, morning brief, etc.) interactively BEFORE its cron fire time, deliver it immediately and coordinate the cron job so they don't receive the same report twice:
-
-1. Deliver the report in this session (full data pull + narrative).
-2. Pause the recurring job: `cronjob(action='pause', job_id=...)` — prevents the near-term duplicate.
-3. Schedule a one-shot resume so the recurring job is not lost: `cronjob(action='create', schedule=<ISO timestamp after the skipped fire>, deliver='local', repeat=1, prompt="Resume job <job_id> via cronjob action='resume'; verify enabled=true and next_run_at; reply with a short confirmation; do nothing else.")`.
-4. Verify the paused state and the resume job's next_run_at from the responses before telling the athlete.
-
-Why the resume job: pausing is silent — without the one-shot, the recurring report stays disabled forever. Use `deliver='local'` on the resume job (internal housekeeping, no user-facing content). The resume must fire AFTER the skipped occurrence (e.g. job paused Sunday 17:16 UTC before an 18:00 UTC fire → resume Monday 07:30 UTC, so next recurring run lands on the following Sunday).
+If the athlete asks for their weekly report now, deliver it in this session.
+You cannot pause or reschedule cron jobs from chat: tell the athlete the
+scheduled version will still arrive at its usual time unless the operator
+changes it.
 
 ## Related References
 

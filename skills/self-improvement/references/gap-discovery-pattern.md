@@ -1,5 +1,8 @@
 # Gap Discovery Through Cross-Athlete Conversation Analysis
 
+Self-improvement loop only. Cross-athlete session reading must never happen in
+an athlete's coaching session (moved out of the coaching skill 2026-10-15).
+
 A systematic technique for finding coaching tool gaps, deployment issues, and
 silent failures by reading conversations across multiple athletes in one session.
 
@@ -23,9 +26,10 @@ patterns emerge when you read 3-4 athletes' sessions side by side:
 3. Look for: agents using terminal/curl for API data (missing tool), agents
    fabricating wellness values (broken cron prompt), agents spending 3+
    messages on simple explanations (missing documentation).
-4. Cross-reference against the coaching skill's Quick Reference, the
+4. Cross-reference against the coaching skill's routing table, the
    self-improvement worklog, active cron prompts, and plugin deployment state.
-5. Fix the highest-impact gap — don't just log it.
+5. Act on the highest-impact gap within CONTRACT.md: Path A/B if it is a
+   knowledge or new-tool gap, otherwise a Path S signal — don't just log it.
 
 ## Case study: July 28, 2026
 

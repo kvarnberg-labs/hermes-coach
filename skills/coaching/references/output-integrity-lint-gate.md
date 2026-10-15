@@ -37,6 +37,8 @@ tables — and do not refer to the lost text.
 
 ## Cron runs
 
-Cron prompts keep their SLUTKONTROLL step (`python3 /opt/data/scripts/brief_lint.py`,
-exit 0 required, soft findings justified or rewritten) — it lets the run
-regenerate before the gate has to block. See `references/cron-prompt-templates.md`.
+The same gate covers cron output. Some operator-written cron prompts also run
+`brief_lint.py` themselves (a SLUTKONTROLL step) so the run can regenerate
+before the gate blocks; if your prompt has that step, follow it. The final text
+you send must be one complete message — no small appended continuation after
+the check.

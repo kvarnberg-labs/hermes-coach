@@ -1,243 +1,87 @@
-# Event Creation Pitfalls
+# Calendar writes — tool rules and pitfalls
 
-## Datetime format: time component required
+Load before any `create_planned_event`, `create_planned_events_bulk`,
+`update_planned_event` or `delete_planned_event` call.
 
-The intervals.icu API `POST /api/v1/athlete/{id}/events` requires `start_date_local`
-to include a time component. A date-only string like `2026-07-31` returns:
+## Before writing
 
-```
-HTTP 422: {"status":422,"error":"Invalid start date: java.time.format.DateTimeParseException: Text '2026-07-31' could not be parsed at index 10"}
-```
+- Approval first: show the plan table and wait for explicit approval. A direct
+  instruction to create now ("Gör veckans pass", "lägg in det") is the
+  approval — do not ask twice.
+- Fresh data first: identity, recent activities, wellness, sport settings and
+  profile, so the week reflects current load, fatigue, FTP, age and life
+  commitments.
+- Rest days get no event (there is no `REST` category); name them in the plan
+  table. Valid categories are enforced by the tool.
+- Only future dates.
 
-**Correct format:** `2026-07-31T09:00:00` (ISO 8601 with seconds, no timezone suffix needed).
-The API appends the athlete's timezone automatically.
+## Which tool
 
-## Required fields for POST
+| Need | Tool |
+|---|---|
+| One session, or any session with structured `steps` | `create_planned_event` (generates the Garmin FIT file) |
+| Many unstructured sessions from an approved plan | `create_planned_events_bulk` (no FIT/steps) |
+| Change name/date/duration/description/load of an existing event | `update_planned_event` — fetches the event and writes it back whole, so fields you omit are kept |
+| Change a structured workout's steps | delete it and create it again with `create_planned_event` |
+| Remove a superseded event | `delete_planned_event` |
 
-```json
-{
-    "name": "Workout name",
-    "type": "Ride",
-    "category": "WORKOUT",
-    "start_date_local": "2026-07-31T09:00:00",
-    "description": "Optional description",
-    "icu_training_load": 110,
-    "icu_intensity": 100
-}
-```
+There is no bulk edit: change events one at a time. Pairing a completed
+activity to a planned event is not possible through the tools — the athlete
+can drag-and-drop it in the intervals.icu UI; read `paired_event_id` to check
+adherence. If a calendar capability is genuinely missing, say so; never fall
+back to raw API calls.
 
-Note: `icu_intensity` may appear as `null` in the response even when set — this is a known API quirk.
+## Structured steps
 
-## Structured workout steps — FIT file via `file_contents_base64`
+Step fields: `name`, `duration_sec`, `type` (`WARMUP`/`ACTIVE`/`REST`/`COOLDOWN`),
+one target pair, optional `description` (shown on the device).
 
-**The `workout_doc` PUT approach does NOT work for Garmin sync.** The intervals.icu
-API parses structured workout data from FIT files uploaded via `file_contents_base64`,
-NOT from `workout_doc` in the POST/PUT payload. Steps stored via `workout_doc` are
-never converted to proper Garmin workout targets.
+| Target | Fields | Notes |
+|---|---|---|
+| Power | `power_pct_min/max` (%FTP) | Preferred for rides |
+| HR | `hr_min/hr_max` (BPM) | Tool converts with the sport's `max_hr`; refuses if none is set |
+| Pace | `pace_min/pace_max` ("5:40" or m/s) | Pace targets work on Garmin — never tell an athlete otherwise |
 
-### Correct approach: FIT file in a single POST
+- **One target type per step** (FIT limitation). If a step carries several,
+  the sport's primary target wins (pace for runs, power for rides), otherwise
+  HR > power > pace, and the rest is dropped silently. Runs: pace on work reps,
+  HR on warm-up/cool-down/recovery. Need both on a rep? Pace as target, HR range
+  in the step `description`.
+- Easy runs and Z2 rides are a single step (see `references/pitfalls-calendar.md`).
+- Event duration matches the prescription (35–50 min → 45 min), not a default.
 
-```python
-import base64
+## power_pct is against configured FTP, not eFTP
 
-# Build a FIT workout file (use fit-tool or the embedded builder)
-fit_bytes = _build_fit_file(sport="Run", steps=[...], max_hr=185, ftp=286)
+The trainer and Garmin compute watts from the **configured** FTP
+(`get_sport_settings`). If configured FTP and eFTP (`get_wellness →
+sport_info[].eftp`) differ by > 10 W:
 
-payload = {
-    "name": "Easy Run",
-    "type": "Run",
-    "category": "WORKOUT",
-    "start_date_local": "2026-08-05T09:00:00",
-    "description": "35-50 min easy, RPE 2-3.",
-    "moving_time": 3600,
-    "target": "PACE",
-    "file_contents_base64": base64.b64encode(fit_bytes).decode(),
-    "filename": "workout.fit",
-}
+1. Decide the intended real watts (from the FTP the athlete agrees is right).
+2. Set `power_pct` = intended watts / configured FTP.
+3. Reverse-check: configured FTP × pct / 100 = displayed watts, and confirm
+   they sit in the intended zone. Example: configured 286 W, eFTP 274 W,
+   sweet spot 240–257 W → `power_pct` 84–90 %, not 88–94 %.
+4. The athlete's device is the arbiter: if they say the watts look wrong, check
+   which FTP you used.
 
-event = post_json(athlete_id, api_key, f"/athlete/{athlete_id}/events", payload)
-# Steps are parsed automatically — no PUT needed
-```
+## Pace windows
 
-The `create_planned_event` tool handles all of this automatically when you
-pass the `steps` parameter. Just provide reasonable step dicts with
-`hr_min/hr_max`, `power_min/power_max`, `power_pct_min/power_pct_max`,
-or `pace_min/pace_max`.
+Outdoor running: 15–20 s/km wide (e.g. threshold 4:40–4:55/km). Treadmill:
+5–8 s/km. When an athlete says a window is too narrow, widen it at once and
+save the preference to memory.
 
-See `references/fit-workout-generation.md` for the full FIT encoding details.
+## After writing
 
-### Step format for the tool
+- Re-read the range with `get_planned_events` and report what actually exists
+  (count, key sessions, date range). This catches partial writes.
+- Compare the returned names, descriptions, targets and planned load/intensity
+  with your prescription; a malformed target can be accepted yet produce wrong
+  zones or loads. Fix any mismatch before you report success.
+- More events than days in the window usually means stale duplicates from an
+  older plan — reconcile them (see `references/training-plan-creation.md`).
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Step name (informational) |
-| `duration_sec` | integer | Duration in seconds |
-| `type` | string | `WARMUP`, `ACTIVE`, `REST`, or `COOLDOWN` |
-| `hr_min`, `hr_max` | integer | Heart rate bounds in BPM (auto-converted to %max HR for FIT) |
-| `power_min`, `power_max` | integer | Power bounds in watts (auto-converted to %FTP if >20) |
-| `power_pct_min`, `power_pct_max` | number | Power bounds as % FTP |
-| `pace_min`, `pace_max` | string/number | Pace bounds: `"5:40"` (min:sec/km) or m/s |
-| `description` | string | Optional step description |
+## Related data question: calorie sums
 
-⚠️ **ONE target type per step.** Auto-detection is sport-driven: PACE for runs, POWER for rides (the sport's primary), falling back to HR > POWER > PACE. A run step with both pace and HR keeps pace and drops HR. Use one target per step — pace for run work intervals, HR for warmup/cooldown.
-
-### Easy runs should NOT have warmup/cooldown
-
-Athletes explicitly prefer this. An easy run is one steady block — not
-warmup + main + cooldown. Example:
-
-```json
-{"steps": [{"duration_sec": 3600, "type": "ACTIVE", "pace_min": "5:40", "pace_max": "6:00", "name": "Easy Run"}]}
-```
-
-Only add warmup/cooldown steps when the workout involves a meaningful
-intensity change (intervals, threshold, VO2max). For Z1/Z2 steady runs,
-a single step is cleaner and more usable on Garmin.
-
-### power_pct uses configured FTP, NOT eFTP
-
-**This is the #1 cause of incorrect power targets on planned events.**
-The `create_planned_event` tool calculates actual watts from `power_pct_min/max`
-against the athlete's **configured FTP** in intervals.icu (from `get_sport_settings`),
-NOT the eFTP from wellness data. If configured FTP is 286W and eFTP is 274W:
-
-| Desired real target | Must set power_pct | NOT |
-|---------------------|-------------------|-----|
-| 240-257W sweet spot (88-94% eFTP) | **84-90%** | 88-94% |
-| 260-274W threshold (95-100% eFTP) | **91-96%** | 95-100% |
-
-93% of 286W = 266W, not 255W. When the athlete says the power is wrong on
-Zwift/Garmin, check whether you calculated against eFTP or configured FTP.
-
-**Always cross-reference before creating an event:**
-1. Pull `get_sport_settings(sport="Ride")` → `ftp` (configured)
-2. Pull `get_wellness(days=1)` → `sport_info[].eftp` (estimated)
-3. If gap >10W: calculate BOTH the trainer-displayed watts and the real physiological zone
-4. Set `power_pct` against configured FTP so the trainer shows the right number
-5. But verify the resulting watts fall in the intended zone when mapped against eFTP
-
-**Double-check pattern:** after calculating percentages, do the reverse math:
-`configured_ftp × pct / 100 = displayed_watts` and verify it's in the right
-real-world zone.
-
-### Event-level target field
-
-Set based on sport:
-
-| Sport | Event-level `target` |
-|-------|---------------------|
-| Run, TrailRun, VirtualRun | `"PACE"` |
-| Ride, VirtualRide, GravelRide, MountainBikeRide | `"POWER"` |
-| Swim, OpenWaterSwim, Walk, Hike, Rowing | none (no default target) |
-
-### HR values: percentage of max HR in FIT
-
-The FIT format stores HR targets as absolute BPM, but intervals.icu's
-internal representation uses %max HR. The `create_planned_event` tool
-auto-converts BPM → %max by fetching the athlete's max HR from their
-per-sport settings (`GET /athlete/{id}/sport-settings/{sport}` — the profile
-endpoint does NOT return max_hr). If the fetch fails or returns no max_hr,
-the tool refuses HR targets rather than guessing.
-
-### Pace values: m/s in FIT — PACE TARGETS WORK, DO NOT TELL THE ATHLETE OTHERWISE
-
-Pace in FIT files is stored in m/s (metres per second). The tool's
-`_parse_pace_to_ms()` converts human-readable `"5:40"` → 2.94 m/s.
-
-**`pace_min`/`pace_max` in `create_planned_event` steps WORKS for running workouts.**
-The tool converts `"4:44"` → m/s and embeds it in the FIT file as a SPEED target.
-Garmin displays this as a pace target on the workout screen.
-
-⚠️ **DO NOT confuse the old `workout_doc` pace bug with the current FIT-based tool.**
-Before PR #53 (FIT file support), pace targets sent via `workout_doc` were broken —
-intervals.icu's internal ZWO/workout_doc parser mangled pace units (s/km, km/h,
-min/km, m/s all produced wrong values on Garmin). This was an intervals.icu upstream
-bug in the `workout_doc` code path, NOT in the FIT file path.
-
-The `create_planned_event` tool uses `file_contents_base64` with a generated FIT
-file — it bypasses `workout_doc` entirely. Pace targets in FIT files are correct.
-If an athlete asks "can you include pace targets?", the answer is YES.
-
-⚠️ **ONE target type per step — FIT limitation.** The FIT file format allows
-only ONE target type per workout step (HR, power, OR pace — not multiple).
-The `create_planned_event` auto-detection is sport-driven: it prefers the
-sport's primary target (PACE for runs, POWER for rides) when the step supplies
-it, falling back to HR > POWER > PACE. **A run step with both
-`hr_min/hr_max` AND `pace_min/pace_max` keeps pace and drops HR** — the step
-gets a pace target only.
-
-**Rule: use pace OR HR per step, never both on the same step.**
-- Threshold/interval reps: use **pace** targets (the primary anchor for running)
-- Warmup/cooldown/recovery: use **HR** targets (where exact pace matters less)
-- If the athlete needs both pace and HR guidance for a work interval, put pace
-  on the step and include the HR range in the step `description` field
-
-**Self-correction protocol:** If you recall that "pace is broken on intervals.icu",
-STOP and check which code path you're thinking of. The `workout_doc` path was
-broken. The `file_contents_base64` FIT path works. The `create_planned_event` tool
-uses the FIT path. Do not tell the athlete pace can't be added — it can. But do
-NOT mix pace and HR on the same step — pick one per step.
-
-### intervals.icu UI does not render API-created steps
-
-The intervals.icu web UI shows the event on the calendar but does NOT
-render `workout_doc` steps from API-created events. This is a UI
-limitation — the steps ARE stored correctly (30-second push cycle, `push_errors: null`).
-The athlete must check their Garmin device for step-by-step guidance.
-
-## Valid event categories — `category` must match intervals.icu enum
-
-The `create_planned_event` tool validates the `category` parameter against the intervals.icu
-API enum. Passing an invalid value like `"REST"` returns a tool-level error (not an API call):
-
-```
-{"error": "Invalid category 'REST'. Valid values: FITNESS_DAYS, HOLIDAY, INJURED, NOTE, ..."}
-```
-
-**Valid categories** (14 total): `WORKOUT`, `RACE_A`, `RACE_B`, `RACE_C`, `NOTE`, `PLAN`,
-`HOLIDAY`, `SICK`, `INJURED`, `SET_EFTP`, `FITNESS_DAYS`, `SEASON_START`, `TARGET`,
-`SET_FITNESS`.
-
-There is no `REST` category, and rest days get no event: leave the date empty and name it in the plan table (see `pitfalls-calendar.md`).
-
-The tool schema includes an `enum` constraint, so the LLM should only propose valid values.
-
-## Getting events by ID
-
-GET `/api/v1/athlete/{id}/events/{eventId}` returns a single event including its
-`workout_doc`. The events list endpoint (`GET /events?oldest=...&newest=...`) may
-not return events created in the current session due to eventual consistency
-delays — prefer GET-by-ID after creation.
-
-## Auth header
-
-```
-Authorization: Basic base64("API_KEY:{api_key}")
-User-Agent: hermes-coach/1.0
-```
-
-Cloudflare blocks requests without a `User-Agent` header.
-
-## When the calendar tools cannot do it
-
-Use `create_planned_event` / `create_planned_events_bulk` /
-`update_planned_event` / `delete_planned_event` for all calendar writes.
-If a capability is genuinely missing (an endpoint or field the tools do not
-cover), the gap goes through a PR or `develop_tool` — do not fall back to
-direct API calls with the athlete's key. (The historical raw-POST recipe is
-preserved in the repo's `docs/OPS-BREAKGLASS.md`, not shipped to athlete
-sessions.)
-
-Editing an existing event uses `update_planned_event` (a `PUT`); `PATCH` is not
-supported. See `references/planned-event-editing-limits.md`.
-
----
-
-## Moved from SKILL.md (2026-09-14)
-
-- **Configured FTP vs eFTP gap — flag it, but don't treat eFTP as gospel.** On every post-ride analysis, cross-reference `get_sport_settings` configured FTP with eFTP from `get_wellness` → `sport_info`. A gap >10W means zone times, IF, and sweet-spot ranges are all calculated against potentially the wrong baseline. Flag the gap first, then present both interpretations. An IF of 0.76 at 284W FTP is very different from an IF of 0.92 at 234W eFTP.
-
-**When creating planned events: `power_pct_min/max` uses configured FTP, not eFTP.** If you prescribe 88-94% of eFTP 274W (241-258W) but set `power_pct` to 88-94%, the trainer displays 252-269W (88-94% of configured 286W). Always compute percentages against configured FTP for the event payload, then verify the displayed watts match the intended physiological zone. Cross-reference after creation: ask "what does Zwift/Garmin show for the target?" — the athlete's device is the final arbiter.
-
-**eFTP is a model estimate, not a measurement.** It derives from the power-duration curve across ALL rides and cannot distinguish maximal efforts from training rides. **Warning signs that eFTP is UNDERESTIMATING:** (1) eFTP is trending DOWN while CTL is trending UP — the athlete is getting fitter, not weaker; (2) no recent maximal efforts (FTP test, race, hill-climb PR, Zwift race) in the past 4–6 weeks; (3) the athlete reports feeling strong at power levels that eFTP says should be VO2max. In these cases: flag the discrepancy, present both interpretations, **explicitly ask the athlete which FTP feels right**, and if they push back on eFTP — trust them. Propose a structured FTP test (20-min all-out or ramp test) to resolve the question definitively. Do NOT insist on eFTP when the athlete disagrees and the data context supports their position.
-- **Pace window width — use 15–20 sec/km for outdoor running prescriptions.** Narrow pace windows (e.g. 4:44–4:52/km, an 8-second band) are unrealistic for outdoor GPS running where pacing granularity, terrain, and GPS drift make hitting a tight range frustrating. Use **15–20 second pace windows** for all running prescriptions: threshold (e.g. 4:40–4:55/km), easy (e.g. 5:20–5:40/km), and interval work. This applies to both `create_planned_event` step targets and verbal pace guidance in coaching messages. Indoor/treadmill running can use tighter windows (5–8 sec) since pace is machine-controlled. When an athlete corrects a pace window as too narrow, widen immediately and save the preference — do not re-prescribe narrow windows in future sessions.
+For "how many calories did I burn cycling between X and Y", use
+`get_athlete_stats` and sum only the requested categories ("cycling" = `Ride`
++ `VirtualRide`, not `WeightTraining`). Report the date range and the exact sum.

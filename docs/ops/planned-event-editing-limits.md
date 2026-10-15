@@ -1,5 +1,9 @@
 # Planned-event editing — PUT works, PATCH does not
 
+> Developer reference (not shipped to the bot). Moved from
+> `skills/coaching/references/` on 2026-10-15; the bot's rule set lives in
+> `skills/coaching/references/event-creation-pitfalls.md`.
+
 ## The constraint
 
 The intervals.icu planned-events API supports these write operations:
@@ -49,4 +53,4 @@ uploading the activity file.
 API behaviour discovered in a session belongs in class-level references like this
 file, not in one athlete's private memory store — otherwise every other session (and
 main-side agent) lacks it. When a session discovers an API constraint, add it to the
-relevant reference (or `intervals-icu-api.md`) in the same improvement pass.
+relevant reference (or `docs/ops/intervals-icu-api.md`) in the same improvement pass.

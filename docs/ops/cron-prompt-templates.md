@@ -1,5 +1,10 @@
 # Cron Prompt Templates for Scheduled Coaching Briefs
 
+> Operator reference (not shipped to the bot). Moved from
+> `skills/coaching/references/` on 2026-10-15: athlete DM sessions have no
+> `cronjob` or terminal tool, so job authoring is operator work. The cron run
+> itself follows `skills/coaching/references/cron-coaching-runtime-recipe.md`.
+
 ## Why this exists
 
 Old cron jobs for morning briefs and weekly plans failed silently because their
@@ -135,3 +140,62 @@ When an athlete re-onboards (new API key) or requests new cron jobs:
 3. Create fresh jobs with updated prompts
 4. Test with `action='run'`
 5. `deliver` must be the athlete's own DM channel — never `"origin"` from another user's chat, never a hardcoded channel copied from another job
+
+
+## Job setup rules (from the former coaching SKILL.md cron block and cron-coaching.md)
+
+- **Schedule in UTC.** Convert from the athlete's local timezone: daily 06:10
+  Stockholm in summer (CEST, UTC+2) = `10 4 * * *`; Sunday 17:00 Stockholm =
+  `0 15 * * 0`; in winter (CET, UTC+1) shift one hour later in UTC. After
+  creating/updating a job, read back `schedule` and `next_run_at` and confirm
+  weekday/time in the athlete's timezone — an extra cron field can silently
+  change the meaning.
+- Keep morning-brief and weekly-plan jobs separate, with explicit names.
+- **Delivery routing.** `deliver: origin` only when the job's origin is the
+  intended athlete. For any other athlete use
+  `deliver: discord:<channel_id>:<channel_id>` with that athlete's own DM
+  channel (find it with `grep "user=<Name>" /opt/data/logs/gateway.log | tail -1`,
+  `chat=<id>`). Never copy a channel from another job. Confirm the athlete's
+  credential directory exists for that snowflake only
+  (`ls /opt/data/users/<snowflake>/intervals_athlete_name`) — never enumerate
+  other users' directories.
+- **Identity in prompts.** The prompt must embed the direct-call recipe with the
+  athlete's snowflake; vague prompts ("analyse wellness") make the model call
+  gateway tools that fail, and it then fabricates. Do not tell the run to skip
+  `verify_athlete_identity` — the direct call works and is required.
+- **Stale prompt values.** FTP/weight hard-coded in prompts go stale; the run
+  uses live values (the recipe says so), and the operator should refresh
+  prompts when an athlete's goal or schedule changes.
+- **Semantic-failure check.** After each run, read the output: identity
+  unavailable, onboarding required, placeholder or tool-error text = failed run
+  even when `last_status: ok` (`coach-brain/headless-coaching-failures.yaml`).
+  Reproduction (2026-08-21): a morning brief ended "could not be generated
+  because the athlete identity was unavailable" while the scheduler reported
+  `ok`.
+
+## Early delivery of a scheduled report (from training-summary-workflow.md)
+
+When an athlete gets a scheduled report interactively before its fire time,
+avoid a duplicate: pause the recurring job (`cronjob(action='pause')`) and
+create a one-shot resume job after the skipped occurrence
+(`deliver='local'`, `repeat=1`, prompt: resume job `<id>`, verify `enabled` and
+`next_run_at`). Pausing alone disables the report forever. The DM bot cannot do
+this; the operator does.
+
+## Daily check-in prompt rules (from training-plan-creation.md)
+
+- TSB < −20 → rest or max 30 min Z1; TSB −10 to −20 → distance OK, replace
+  threshold with Z2; TSB > −10 → run the plan (combine with
+  `scheduled_brief_gate`: missing feel keeps readiness conditional).
+- Short, direct, the athlete's language, max ~4 lines; no routes unless asked;
+  never ask "how do you feel?" in a push message — give the conditional.
+- The plan lives in the intervals.icu calendar; a prompt may also embed the
+  agreed weekly structure.
+
+## Studio Echelon live schedule (headless; from studio-echelon-classes.md)
+
+Public no-auth Zoezi API backing studiolechelon.com/schema (verified
+2026-09-09): `GET https://echelon.zoezi.se/api/public/workout/get/all?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD`
+(send User-Agent + Accept) → `{"workouts": [...]}`; `startTime`/`endTime`
+(local time), `workoutType.name` (class name), `numBooked`/`space`,
+`bookable`. Usable from a cron prompt with terminal access, not from DMs.

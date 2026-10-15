@@ -1,5 +1,10 @@
 # intervals.icu API — how to look it up
 
+> Developer reference (not shipped to the bot). Moved from
+> `skills/coaching/references/` on 2026-10-15; `tests/test_intervals_field_contract.py`
+> already gates `fields=` names. Consult the spec before implementing any
+> intervals.icu integration.
+
 The **OpenAPI spec is authoritative** and is already in the tool surface. Never
 guess field names, payload shapes, or URL paths — look them up.
 
@@ -64,3 +69,22 @@ print(sorted(data[0].keys()))
 A field that is absent from the response is either misspelled or genuinely null —
 the two are indistinguishable from a projection alone, so also fetch the record with
 no `fields` param and list its keys.
+
+
+## Raw event API notes (from event-creation-pitfalls.md and fit-workout-generation.md)
+
+- `POST /athlete/{id}/events` needs `start_date_local` with a time
+  (`2026-07-31T09:00:00`); a date-only string returns 422. `icu_intensity` may
+  read back `null` even when set.
+- Structured steps reach Garmin only via a FIT file in `file_contents_base64`;
+  the `workout_doc` path stored steps without valid Garmin targets (the old
+  "pace is broken" bug, pre-PR #53). The web UI may not render API-created
+  steps even though they are stored.
+- FIT targets: power is %FTP (raw watts would be misread, so the tool refuses
+  watts without FTP), HR is %max HR (the tool reads `max_hr` from the
+  per-sport settings endpoint and refuses HR targets when it is missing),
+  pace is m/s. One target type per FIT step; `_step_message` prefers the
+  sport's primary target (PACE run / POWER ride), else HR > POWER > PACE, and
+  honours an explicit valid `target`.
+- The events list can lag just after creation; GET-by-ID is reliable.
+- Auth: `Basic base64("API_KEY:{key}")` plus a `User-Agent`.
