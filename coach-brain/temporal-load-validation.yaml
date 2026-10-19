@@ -2,6 +2,25 @@ temporal_load_validation:
   purpose: >
     Prevent historical training load, stale wellness records, or mismatched
     comparison windows from being presented as current fatigue or readiness.
+  clock_discipline:
+    purpose: >
+      Resolve the current instant before any day-relative statement. A session's
+      earlier turns are not a clock: yesterday-evening wording carried into this
+      morning silently rewrites today, tonight and tomorrow.
+    rules:
+      - "Establish the current date, ISO weekday and local time in the athlete's timezone from a fresh source at the start of every response; never reuse the day, time or implied 'today' of an earlier turn in the same session."
+      - "Relative words — today, tonight, tomorrow, this morning, yesterday — resolve only against that freshly checked instant; wording written last evening makes 'tonight' and 'tomorrow' false now."
+      - "When the athlete contradicts the draft's day or time (\"today is Monday\"), re-derive from the clock and correct the prescription itself, not just the label; never restate the stale frame."
+      - "Name the ISO date and weekday in any prescription for a specific day, so a stale frame shows up in the draft instead of in the athlete's correction."
+      - "Measure rest or gap length from the fresh clock against the last verified activity date, never from the previous reply's relative wording."
+    source_notes: >
+      Recurred five times Jul–Oct 2026, each time corrected by the athlete:
+      msg 4547 (20260718_082523_f5701307), msg 9764 (20260805_152606_0076885a,
+      'Fel dag igen'), msg 10996 (20260812_041635_ac38f528), msg 22704
+      (20260831_043233_5e644b44), and msgs 22802–22807 (20260901_084628_a93bbd82:
+      on Monday 08:17 CEST the bot opened with it being 18:10 and prescribed
+      45 min instead of the 60 min due, then needed the athlete's correction
+      plus a terminal date call to recover).
   timeline_workflow:
     - "Anchor every assessment to an explicit as-of date and timezone."
     - "Separate today's record, the recent 7–14 day load, and the longer baseline; do not substitute one window for another."
