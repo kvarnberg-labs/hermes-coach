@@ -1,0 +1,36 @@
+detraining_layoff_rebuild:
+  purpose: >-
+    Guidance for an athlete back after a layoff (illness, injury, travel, lost
+    motivation). A detrained athlete and an overtrained athlete show the same
+    marker - a higher HR at the same submaximal power or pace - and need opposite
+    prescriptions. Diagnose before dosing.
+  physiology:
+    - "Plasma volume falls ~5-10% within the first 1-2 weeks of inactivity (Convertino 1991; Coyle 1986); stroke volume falls with it, so HR rises at any fixed submaximal workload."
+    - "VO2max declines ~6-20% after 2-4 weeks off (Coyle 1984; Mujika & Padilla 2000); most of the loss is in the first two weeks and most of it is recoverable."
+    - "Expect 2-4 weeks of consistent training before HR at a fixed workload is near its pre-layoff value; CTL rebuilds inside the documented +3 to +8 points per week, not faster."
+  distinguishing_from_fatigue:
+    detraining: "HR 10-25 bpm above the athlete's own pre-layoff value at the same workload, while CTL has fallen or stayed flat for weeks, ATL is low, TSB positive, and no decline preceded the break."
+    accumulated_fatigue: "The same HR rise, but load has been high and sustained: resting HR up, HRV suppressed, RPE rising at fixed pace, CTL high or still climbing."
+    decision_rule: "Load history decides, not the HR number. Fatigue means load has been coming in; detraining means load has been absent."
+  readiness_gate_for_intensity:
+    - "Do not restore quality work on a positive TSB alone. After a layoff CTL has decayed, so TSB turns positive while fitness is low: the positive range in recovery_heuristics.tsb_interpretation is a fatigue gauge that assumes an intact CTL, and by itself it is not evidence of readiness here."
+    - "Second gate: submaximal HR within roughly 5 bpm of the athlete's own pre-layoff HR at the same power or pace, on a comparable session, before the first threshold-type session. This is a coaching heuristic, not a measured threshold - say so when using it."
+    - "Third gate: the reason for the layoff is absent for the whole rebuild (no pain on load, no illness symptoms), not only on the day of the session."
+    - "If a gate is unmet, extend aerobic volume. Never add intensity to \"test\" whether fitness has returned."
+  dosing:
+    - "Volume before intensity: restore duration and frequency first, intensity last."
+    - "Cap by HR, not by watts: early in a rebuild the athlete reaches old wattage only at a much higher HR. Hold the HR ceiling and let power come back up to it."
+    - "First week back: about 50% of the pre-layoff load, then no more than 10% per week, as in injury_return_to_training.general_principles."
+    - "Expect 3-4 easy weeks after 2-3 weeks off, and longer after 6+ weeks off or a significant illness."
+  reporting_rule: >-
+    Name the cause explicitly when HR is elevated at fixed power after a break
+    ("this is what detraining looks like, not lost fitness") and say which gate is
+    in use. Do not present a detraining number as a performance regression.
+  evidence_basis: >-
+    Coyle et al. 1984 (J Appl Physiol) on VO2max loss with detraining; Mujika and
+    Padilla 2000 on detraining and retraining; Convertino 1991 on blood volume and
+    inactivity.
+  see_also:
+    - coach-brain/injury-return.yaml
+    - coach-brain/recovery-heuristics.yaml
+    - skills/coaching/references/hr-pace-drift-analysis.md
