@@ -75,6 +75,10 @@ recovery_heuristics:
       - "Use TSB, HRV, sleep, resting HR, and recent load as context—not a substitute for subjective feel; update the decision when the athlete reports how they feel."
       - "When required current inputs are missing, describe only the objective trend (for example, lower ATL or improving HRV); do not call the recovery picture solid/good, say the athlete is ready/recovered, or imply readiness through an unqualified progression recommendation."
       - "Do not convert a favorable objective trend into a global recovery verdict (for example, 'good recovery continues'); report the trend and keep readiness conditional until current inputs are available."
+      - "For an athlete inside a documented return after a layoff or injury (a detraining_layoff_rebuild or injury_return_to_training return), give the day's ceiling in the unit the return is gated on: an HR ceiling taken from the athlete's own sport settings, with the power band described as the value the athlete grows into. A power band on its own is not a ceiling."
+      - "If HR and power disagree during a return, the HR ceiling wins: an elevated HR at the prescribed wattage is a reason to hold or lower power, never a reason to keep the power because the band allows it."
+      - "Attribute an elevated submaximal HR to a named cause (detraining, heat, sleep loss, illness) and say which return gate is in use; never hand the athlete an unexplained HR number to 'watch' as if it were a training signal."
+    rebuild_dosing_evidence: "HR at a fixed submaximal load is the first marker to move after inactivity and the last to normalise (Coyle et al. 1984; Mujika & Padilla 2000), so a pre-layoff wattage is not a safe ceiling for early return sessions; see detraining_layoff_rebuild.dosing."
     evidence_basis: "Autonomic and sleep markers are context-sensitive and should be interpreted with subjective effort and symptoms rather than as standalone readiness tests (Halson, 2014; Buchheit, 2014)."
 
   consecutive_hard_days:
