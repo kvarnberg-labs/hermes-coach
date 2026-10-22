@@ -22,6 +22,18 @@ detraining_layoff_rebuild:
     - "Cap by HR, not by watts: early in a rebuild the athlete reaches old wattage only at a much higher HR. Hold the HR ceiling and let power come back up to it."
     - "First week back: about 50% of the pre-layoff load, then no more than 10% per week, as in injury_return_to_training.general_principles."
     - "Expect 3-4 easy weeks after 2-3 weeks off, and longer after 6+ weeks off or a significant illness."
+  prescription_contract:
+    purpose: >-
+      During a rebuild the session text is what the athlete and the headless
+      brief actually see: on 2026-10-22 the morning brief reproduced that day's
+      calendar entry almost verbatim ("Z2 45-60 min @ 145-165 W if the knee
+      stays quiet"), so a power-only entry produced a power-only prescription and
+      the cap-by-HR rule never reached the athlete.
+    return_session_entry_must_state:
+      - "The ceiling in the gated unit: an HR ceiling taken as the top of the athlete's aerobic (Z2) band from get_sport_settings hr_zones[1]. With no HR zones configured, use about 88-89% of LTHR (Friel zone model) and label it a heuristic; LTHR 164 gives a Z2 top near 146 bpm."
+      - "The gate for that specific day by name (knee quiet through the warm-up, no illness symptoms), not the generic 'if recovery is fine'."
+      - "The power band labelled as the value the athlete grows into, never as the ceiling itself."
+      - "What to do when HR and power disagree: hold the HR ceiling, keep the duration, let power fall."
   reporting_rule: >-
     Name the cause explicitly when HR is elevated at fixed power after a break
     ("this is what detraining looks like, not lost fitness") and say which gate is
