@@ -1,0 +1,39 @@
+# Alcohol and training: dose-dependent recovery effects, the next-day session
+# decision, and the interaction with return-to-training gates. Complements
+# sleep.yaml (no alcohol within 3 h of bed). Swedish aliases route here too.
+
+alcohol_training:
+  query_aliases: [alkohol, bakfylla, hangover, drinking, wine, beer]
+
+  principle: >
+    Alcohol is a dose-dependent recovery stressor, not a binary one, and it is
+    never a moral question: social life outranks sessions (life-first
+    scheduling). Adjust the plan; do not lecture. Judge the next day from the
+    dose, the sleep, and the athlete's own morning numbers.
+
+  dose_effects:
+    one_to_two_drinks: "Sleep latency shortens but REM is suppressed in the second half of the night (Irwin et al. 2016), so hours can look normal while architecture is worse. Morning resting HR up ~2-4 bpm and HRV mildly down, usually inside night-to-night noise. Train as planned, no compensatory intensity."
+    three_to_five_drinks: "Clear REM suppression and second-half fragmentation; resting HR up ~4-8 bpm, HRV down more than 10% next morning; endurance capacity and pacing judgement can fall a few percent while RPE rises at the same power. Easy or rest only - Z1 to low Z2, no quality, never 'sweat it out'."
+    intoxication: "Worst night of the week, resting HR up 8 bpm or more, strong HRV suppression plus dehydration. Rest, and do not chase the missed key session with extra intensity later in the week."
+
+  mechanisms:
+    hydration: "Alcohol suppresses vasopressin, adding roughly 100 mL of urine per 10 g of alcohol. Replace with water and some salt, not more caffeine."
+    glycogen: "Moderate alcohol with adequate carbohydrate does NOT meaningfully impair muscle glycogen resynthesis after exercise (Burke et al. 2003, J Appl Physiol). Do not repeat the folk claim that it does - eating too little is the real risk."
+    protein: "At ~1.5 g/kg alcohol blunts post-exercise myofibrillar protein synthesis by roughly a quarter to a third; 25-30 g protein alongside partially offsets it (Parr et al. 2014)."
+    thermoregulation: "Alcohol impairs thermoregulation and diuresis - no sauna, hot bath or heat session with a hangover."
+    cardiac: "Binge drinking is associated with atrial fibrillation ('holiday heart'). New palpitations or an irregular pulse after drinking is a refer-and-stop sign, not a training question."
+
+  next_day_decision:
+    rule: "Headache, nausea, resting HR 5 bpm or more above the athlete's own baseline, or HRV more than 10% below baseline -> rest or 20-40 min Z1. No symptoms and normal morning numbers -> the session stands as planned."
+    never:
+      - "Read a post-alcohol morning HR as a fitness, detraining or illness signal."
+      - "Pass or fail a return-to-training gate on a post-alcohol morning; the gate needs the next clean night."
+      - "Prescribe intensity to compensate for the session that was missed."
+    race_window: "In the 24 h before a race or key session keep to 1-2 drinks and finish 3 h or more before bed; the cost there is residual alcohol, sleep loss and dehydration, not a metabolic block."
+    nsaids: "Alcohol plus NSAIDs raises GI-bleed risk - flag it before suggesting painkillers for a hangover headache."
+
+  reporting: >
+    One short block: what the dose does, what today's numbers say, what the
+    session becomes, and fluid/food for the day. Name the uncertainty when the
+    athlete's own baseline is unknown; never quote a mechanism the corpus does
+    not support.
