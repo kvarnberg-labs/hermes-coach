@@ -23,6 +23,35 @@ injury_return_to_training:
           - "Avoid seated climbing until pain-free for 2 weeks."
           - "Check bike fit — saddle height is the most common cause."
           - "Strengthen glutes and VMO off the bike."
+        flare_pattern:
+          trigger: >
+            A second flare inside a month, or pain returning within 48 h of a ride, is a
+            load-tolerance problem rather than a bike-fit one: cyclists who tolerate a single
+            ride often flare on consecutive riding days, so the spacing of the days matters as
+            much as the session itself.
+          rule: >
+            Space rides with at least one rest day between them until two consecutive pain-free
+            rides are logged, and hold duration flat while that is being established.
+        first_step_after_flare: >
+          The first ride back is about half the duration of the session that provoked the flare,
+          at the same intensity, on flat roads or the small ring at 90+ rpm, not a repeat of it;
+          then add at most 10 min per step, and only after two consecutive pain-free rides.
+        pain_monitoring:
+          - "Use the athlete's own 0-10 scale: pain at or below 2/10 during the ride and no worse the next morning permits repeating the same duration, not advancing it."
+          - "Pain that is worse 24 h after a ride means that load was too high: repeat the previous step instead of adding time."
+          - "A flare within a week of resuming means the last step was too big: drop back one step rather than restarting the return from complete rest."
+        return_gate: >
+          A step is passed only on the athlete's own confirmation that the knee was pain-free
+          during and after it. Elapsed rest days are not a pass, and any session offered before
+          that confirmation must be conditional on it.
+        keep_strength: >
+          Off-bike hip and quadriceps strengthening does not provoke the knee and is the load to
+          keep progressing while riding volume is held: it is treatment, not cross-training to be
+          dropped during a flare.
+        basis: >
+          Patellofemoral pain responds to load management, activity modification and graded return
+          with pain monitoring, and hip and quadriceps strengthening is first-line treatment
+          (Willy et al., JOSPT clinical practice guideline 2019; Neal et al., BJSM 2019).
         red_flags: ["Swelling", "Locking", "Giving way"]
         medical_referral: "If not improving within 2 weeks"
 
