@@ -1,0 +1,28 @@
+{
+ "case_id": "cet-stale-clock-weekday-mixup-2026-10-19",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Lördagens pass var 60 min i Z2 - 165w. Tekniken fungerade inte utan jag tappade 30 minuter pga \"disconnect\". Idag vill jag cykla, vad är din rekommendation?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_recent_activities",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "1 activity 2026-10-17, 33.5 min, load 22"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Formen är okej — TSB är positiv, så 45 min Z2 idag räcker."
+  }
+ ]
+}

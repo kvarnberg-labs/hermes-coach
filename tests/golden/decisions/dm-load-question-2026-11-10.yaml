@@ -15,8 +15,8 @@ source: >-
   DM session 20260901_101521_7335a14c (2026-11-10, 196 operator-tool calls in
   the same DM). Tool payloads: get_athlete_profile 2026-09-16 18:04 UTC,
   get_wellness 2026-11-10 09:02 UTC, get_recent_activities 2026-11-10 09:02 UTC,
-  verify_athlete_identity 2026-11-10 09:01 UTC. Ids anonymised, profile
-  timezone/date_of_birth dropped.
+  verify_athlete_identity 2026-11-10 09:01 UTC. Identifiers null, profile
+  keys kept in the projection's shape.
 note: >-
   verify_athlete_identity must land before the first data read — the profile,
   wellness, or activities payload, whichever comes first.

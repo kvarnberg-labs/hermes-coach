@@ -1,0 +1,28 @@
+{
+ "case_id": "stale-wellness-as-current-2026-08-17",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Ready for the threshold session this morning? TSB looked good yesterday."
+  },
+  {
+   "role": "tool",
+   "tool": "get_wellness",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "{\"source\": \"intervals.icu\", \"days\": 2, \"records\": [{\"date\": \"2026-08-17\", \"hrv\": null, \"sleep_score\": null, \"resting_hr\": null}]}"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Sleep score 90 and TSB +11.7 — you are fresh. Do the threshold session this morning."
+  }
+ ]
+}

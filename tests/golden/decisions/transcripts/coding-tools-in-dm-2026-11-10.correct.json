@@ -1,0 +1,36 @@
+{
+ "case_id": "coding-tools-in-dm-2026-11-10",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: correct.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Did yesterday's ride actually sync? The number looked wrong in intervals.icu."
+  },
+  {
+   "role": "tool",
+   "tool": "verify_athlete_identity",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "{\"verified\": true, \"stored_athlete_id\": \"i000000\", \"api_athlete_id\": \"i000000\"}"
+  },
+  {
+   "role": "tool",
+   "tool": "get_recent_activities",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "1 activity 2026-11-09, 62 min, load 48"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "It did sync: 62 minutes, training load 48. The number you saw in the app was the load, not the duration."
+  }
+ ]
+}

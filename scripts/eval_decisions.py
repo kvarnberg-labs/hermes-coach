@@ -5,13 +5,16 @@ costs one model call per case, twice that with `--twice`.
 
 Two modes:
   default   re-score saved transcripts (`--transcripts DIR`, one
-            <case_id>.json per case). Free, deterministic, what CI and the
-            weekly cron use.
+            <case_id>.json or <case_id>.correct.json per case; defaults to
+            tests/golden/decisions/transcripts). Free, deterministic, offline.
   --live    drive a model through the driver command in $HERMES_EVAL_DRIVER
             (or --driver): it reads one case JSON on stdin and must print a
             transcript JSON (see decision_predicates for the shape). This
             runner never imports hermes and never holds an API key — the
-            driver owns the model call.
+            driver owns the model call. The driver is spawned with
+            shell=True and inherits this process's environment, so anything
+            exported here (API keys included) reaches the driver: never run
+            --live in CI, and keep secrets out of the calling shell.
 
 Output JSON is the Phase 1 exit gate: pass rate and per-predicate variance.
 
@@ -34,6 +37,8 @@ import decision_predicates as dp  # noqa: E402
 import yaml  # noqa: E402
 
 DEFAULT_CASES = Path(__file__).resolve().parent.parent / "tests" / "golden" / "decisions"
+# Default transcript dir: one synthetic <case_id>.correct.json per case.
+DEFAULT_TRANSCRIPTS = DEFAULT_CASES / "transcripts"
 
 
 def load_cases(cases_dir: Path) -> list[dict]:
@@ -53,14 +58,31 @@ def load_fixtures(case: dict, cases_dir: Path) -> dict[str, dict]:
     return fixtures
 
 
+def require_chat_type(case: dict, transcript: dict) -> dict:
+    """Score only a transcript that was produced under the case's chat_type.
+
+    no_coding_tools_in_dm disables itself on any other chat_type, so a silent
+    mismatch would score the case green for the wrong reason.
+    """
+    if transcript.get("chat_type") != case.get("chat_type"):
+        raise SystemExit(
+            f"{case['id']}: transcript chat_type {transcript.get('chat_type')!r} "
+            f"!= case chat_type {case.get('chat_type')!r}"
+        )
+    return transcript
+
+
 def saved_transcript(case: dict, transcripts_dir: Path | None) -> dict | None:
+    """Saved transcript for a case: <id>.json (a live run) first, then the
+    committed synthetic <id>.correct.json."""
     if transcripts_dir is None:
         return None
-    path = transcripts_dir / f"{case['id']}.json"
-    if not path.exists():
-        return None
-    with path.open(encoding="utf-8") as handle:
-        return json.load(handle)
+    for name in (f"{case['id']}.json", f"{case['id']}.correct.json"):
+        path = transcripts_dir / name
+        if path.exists():
+            with path.open(encoding="utf-8") as handle:
+                return require_chat_type(case, json.load(handle))
+    return None
 
 
 def drive_live(case: dict, cases_dir: Path, driver: str) -> dict:
@@ -73,8 +95,7 @@ def drive_live(case: dict, cases_dir: Path, driver: str) -> dict:
         raise SystemExit(f"driver failed for {case['id']}: {result.stderr.strip()[:400]}")
     transcript = json.loads(result.stdout)
     transcript.setdefault("case_id", case["id"])
-    transcript.setdefault("chat_type", case.get("chat_type"))
-    return transcript
+    return require_chat_type(case, transcript)
 
 
 def score(cases: list[dict], runs: list[dict], out: Path) -> dict:
@@ -112,7 +133,8 @@ def score(cases: list[dict], runs: list[dict], out: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cases", default=str(DEFAULT_CASES), help="case directory")
-    parser.add_argument("--transcripts", help="directory of saved <case_id>.json transcripts")
+    parser.add_argument("--transcripts", default=str(DEFAULT_TRANSCRIPTS),
+                        help="directory of saved <case_id>.json transcripts")
     parser.add_argument("--out", default="decisions-report.json", help="report path")
     parser.add_argument("--twice", action="store_true", help="run each case twice, report flips")
     parser.add_argument("--live", action="store_true", help="drive a model via the driver command")
@@ -126,6 +148,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"no cases in {cases_dir}")
     rounds = 2 if args.twice else 1
 
+    if args.live and os.environ.get("CI"):
+        raise SystemExit("--live is a paid model run: never in CI")
     if args.live and not args.driver:
         raise SystemExit("--live needs --driver or $HERMES_EVAL_DRIVER")
     if not args.live and not args.transcripts:

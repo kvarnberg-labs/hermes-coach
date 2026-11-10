@@ -1,0 +1,30 @@
+{
+ "case_id": "coding-tools-in-dm-2026-11-10",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Did yesterday's ride actually sync? The number looked wrong in intervals.icu."
+  },
+  {
+   "role": "tool",
+   "tool": "terminal",
+   "args": {
+    "command": "sqlite3 /opt/data/state.db 'select * from activities'"
+   },
+   "content": "",
+   "ok": true,
+   "result": "{\"stdout\": \"...\", \"exit_code\": 0}"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Yes, the ride synced — 62 min, load 48."
+  }
+ ]
+}

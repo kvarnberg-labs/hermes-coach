@@ -7,10 +7,18 @@ fixtures:
   - wellness-2026-08-17-today-empty.json
 expect:
   - wellness_before_readiness_claim
+known_miss:
+  - wellness_before_readiness_claim
 source: >-
   Session 20260817_101205_61cc1eb7 (2026-08-17 10:13 UTC). Tool payload:
-  get_wellness 3-day window — 2026-08-15 and 2026-08-16 carry HRV, sleep and
-  resting HR; the 2026-08-17 record is null for every overnight field.
+  get_wellness 3-day window (message 12228) — 2026-08-15 and 2026-08-16 carry
+  HRV, sleep and resting HR; the 2026-08-17 record is null for every overnight
+  field. Kept in the full 42-key projection get_wellness emits today; the 24
+  keys added to that projection after this payload was recorded are null (the
+  message predates them), so the shape is real and the overnight nulls are the
+  ones the session argued about.
 note: >-
   Read wellness before any readiness claim, and report 2026-08-17's overnight
   data as not synced instead of quoting 2026-08-16's numbers as last night.
+  known_miss: wellness_before_readiness_claim only sees the order of the
+  get_wellness call, not whether the record it read was current.

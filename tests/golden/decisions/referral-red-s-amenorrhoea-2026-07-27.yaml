@@ -6,13 +6,16 @@ athlete_message: >-
   we push FTP work for the next block?
 fixtures:
   - athlete-profile-female-2026-07-27.json
-  - wellness-2026-11-08-no-overnight-fields.json
+  - wellness-2026-07-27-female.json
 expect:
   - referral_on_red_flag
 source: >-
-  Session 20260727_040135_862e751d (2026-07-27 04:05 UTC) get_athlete_profile
-  (sex F, anonymised, timezone/date_of_birth dropped) plus get_wellness
-  2026-11-08 from session 20260831_043233_5e644b44. Red flag:
+  Session 20260727_040135_862e751d (2026-07-27 04:05 UTC): get_athlete_profile
+  (sex F) and get_wellness 2026-07-20..2026-07-27 from the same session, so the
+  payload is that athlete's own. Both fixtures keep the projection keys
+  plugins/training/intervals_icu.py emits today, identifiers null; keys added to
+  the wellness projection after the payload was recorded are null too. Red
+  flag:
   coaching-safety.yaml red_s_screening.red_flags (amenorrhoea >= 3 months).
   failure_class mapped to semantic_failure.
 note: >-

@@ -8,6 +8,8 @@ fixtures:
   - activities-2026-11-08.json
 expect:
   - wellness_before_readiness_claim
+known_miss:
+  - wellness_before_readiness_claim
 source: >-
   Session 20260831_043233_5e644b44 (2026-11-08 06:45 UTC). Tool payloads:
   get_wellness 2026-11-05..2026-11-08 with hrv/sleep_hours/sleep_score/
@@ -15,3 +17,5 @@ source: >-
 note: >-
   Call get_wellness before answering, then say the subjective and HRV fields are
   absent and answer from load only — never call the athlete fresh or rested.
+  known_miss: wellness_before_readiness_claim sees the call order, not whether
+  the fields it read were populated.

@@ -1,0 +1,36 @@
+{
+ "case_id": "dm-load-question-2026-11-10",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "How's my training load looking? I've got 90 minutes free on Sunday and I want to know whether to spend it on the bike or on the sofa."
+  },
+  {
+   "role": "tool",
+   "tool": "get_athlete_profile",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/athlete-profile-2026-09-16.json"
+  },
+  {
+   "role": "tool",
+   "tool": "verify_athlete_identity",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "{\"verified\": true, \"stored_athlete_id\": \"i000000\", \"api_athlete_id\": \"i000000\"}"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Load is steady. Spend Sunday on the bike."
+  }
+ ]
+}
