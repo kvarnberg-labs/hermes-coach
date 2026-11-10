@@ -16,9 +16,10 @@ Two modes:
             exported here (API keys included) reaches the driver: never run
             --live in CI, and keep secrets out of the calling shell.
 
-Output JSON is the Phase 1 exit gate: pass rate and per-predicate variance.
+`--out` is the full run detail. `--report PATH` writes the Phase 1 exit gate:
+per-predicate pass counts, `variance` (only under --twice) and the git commit.
 
-stdout is a short table; the full report goes to --out.
+stdout is a short table.
 """
 
 from __future__ import annotations
@@ -99,17 +100,21 @@ def drive_live(case: dict, cases_dir: Path, driver: str) -> dict:
 
 
 def score(cases: list[dict], runs: list[dict], out: Path) -> dict:
-    """Evaluate one transcript per case, plus predicate flips across repeats."""
-    rows, flips = [], {}
+    """Evaluate one transcript per case, with per-predicate counts."""
+    rows, outcomes = [], {}
     for case, transcript in zip(cases, runs):
         report = dp.evaluate(case, transcript)
         rows.append({"case_id": case["id"], "expect": case["expect"], **report})
         for row in report["results"]:
-            flips.setdefault(row["predicate"], set()).add(row["passed"])
+            outcomes.setdefault(row["predicate"], set()).add(row["passed"])
     passed = sum(1 for row in rows if row["passed"])
     per_predicate = {
         name: {
             "cases": sum(1 for row in rows for r in row["results"] if r["predicate"] == name),
+            "passed": sum(
+                1 for row in rows
+                for r in row["results"] if r["predicate"] == name and r["passed"]
+            ),
             "failures": sum(
                 1 for row in rows
                 for r in row["results"] if r["predicate"] == name and not r["passed"]
@@ -122,7 +127,9 @@ def score(cases: list[dict], runs: list[dict], out: Path) -> dict:
         "passed": passed,
         "pass_rate": round(passed / len(rows), 3) if rows else 0.0,
         "per_predicate": per_predicate,
-        "variance": sorted(name for name, seen in flips.items() if len(seen) > 1),
+        # A predicate that passes one case and fails another is case mix, not
+        # instability. Only --twice measures variance: see variance_report.
+        "mixed_outcomes": sorted(name for name, seen in outcomes.items() if len(seen) > 1),
         "results": rows,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -136,6 +143,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--transcripts", default=str(DEFAULT_TRANSCRIPTS),
                         help="directory of saved <case_id>.json transcripts")
     parser.add_argument("--out", default="decisions-report.json", help="report path")
+    parser.add_argument("--report", default=None,
+                        help="write the Phase 1 exit gate (per-predicate counts, variance, commit)")
     parser.add_argument("--twice", action="store_true", help="run each case twice, report flips")
     parser.add_argument("--live", action="store_true", help="drive a model via the driver command")
     parser.add_argument("--driver", default=os.environ.get("HERMES_EVAL_DRIVER"),
@@ -170,8 +179,13 @@ def main(argv: list[str] | None = None) -> int:
             runs.append(transcript)
 
     if rounds > 1:
-        return variance_report(cases, runs, Path(args.out))
+        merged = variance_report(cases, runs, Path(args.out))
+        if args.report:
+            write_exit_gate(merged, Path(args.report), args.live)
+        return 0 if not merged["variance"] else 1
     report = score(cases, runs, Path(args.out))
+    if args.report:
+        write_exit_gate(report, Path(args.report), args.live)
     print(f"{report['passed']}/{report['cases']} cases passed (pass_rate {report['pass_rate']})")
     for row in report["results"]:
         if not row["passed"]:
@@ -181,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0 if report["passed"] == report["cases"] else 1
 
 
-def variance_report(cases: list[dict], runs: list[dict], out: Path) -> int:
+def variance_report(cases: list[dict], runs: list[dict], out: Path) -> dict:
     """Score each repeat separately and list the predicates that flip."""
     rounds = len(runs) // len(cases)
     reports = [
@@ -193,18 +207,56 @@ def variance_report(cases: list[dict], runs: list[dict], out: Path) -> int:
         for name in a["per_predicate"]
         if (a["per_predicate"][name]["failures"] > 0) != (b["per_predicate"][name]["failures"] > 0)
     })
+    per_predicate = {
+        name: {
+            "cases": row["cases"] * rounds,
+            "passed": sum(r["per_predicate"][name]["passed"] for r in reports),
+            "failures": sum(r["per_predicate"][name]["failures"] for r in reports),
+        }
+        for name, row in reports[0]["per_predicate"].items()
+    }
     merged = {
         "cases": reports[0]["cases"],
         "runs": rounds,
         "pass_rate": [r["pass_rate"] for r in reports],
-        "per_predicate": reports[0]["per_predicate"],
+        "per_predicate": per_predicate,
         "variance": flips,
     }
     out.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
     print(f"pass_rate per run: {merged['pass_rate']}")
     print(f"flipping predicates: {flips or 'none'}")
     print(f"report: {out}")
-    return 0 if not flips else 1
+    return merged
+
+
+def git_commit() -> str:
+    """Commit the run was scored at, so a report cannot outlive its code."""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parent,
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def write_exit_gate(report: dict, path: Path, live: bool) -> None:
+    """Phase 1 exit gate: per-predicate pass counts, variance, commit — on disk.
+
+    A transcript re-score is not a model baseline: without --live the report says
+    `baseline: "not run"` instead of dressing fixtures up as one.
+    """
+    gate = {
+        "commit": git_commit(),
+        "baseline": "live" if live else "not run",
+        "per_predicate": report["per_predicate"],
+    }
+    for key in ("cases", "passed", "pass_rate", "runs", "variance"):
+        if key in report:
+            gate[key] = report[key]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(gate, indent=1) + "\n", encoding="utf-8")
+    print(f"exit gate: {path}")
 
 
 if __name__ == "__main__":
