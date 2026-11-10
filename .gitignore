@@ -23,3 +23,7 @@ build/
 # decision-eval artifacts (scripts/eval_decisions.py writes these into CWD)
 decisions-report.json
 decisions-report.run*.json
+
+# research artifacts: they quote real athlete telemetry, so they stay local
+outputs/
+experiments/
