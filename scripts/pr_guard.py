@@ -28,6 +28,13 @@ MAX_ADDED_LINES = 50
 BODY_FIELDS = ("Failure class:", "Anchor:", "Golden check:", "Evidence:")
 KNOWLEDGE = re.compile(r"^coach-brain/[a-z0-9][a-z0-9_-]*\.ya?ml$")
 NEW_TOOL = re.compile(r"^plugins/training/[a-z][a-z0-9_]*\.py$")
+# A knowledge edit must point at something that failed. "No standing backlog"
+# used to mean the loop invented gaps from nothing; with a decision eval and
+# loops/signals/ on the PVC there is always a trace to cite, or the edit is a
+# guess. Accepts a signal path, a decision-case id, or the failure class alone
+# when the anchor is an operator instruction.
+TRACE = re.compile(r"(?:loops/signals/[a-z0-9._-]+\.md|tests/golden/decisions/|"
+                   r"failure_class=\w+|case=[a-z0-9_-]+)", re.IGNORECASE)
 
 
 def check(path: str, title: str, body: str) -> list[str]:
@@ -40,6 +47,9 @@ def check(path: str, title: str, body: str) -> list[str]:
     missing = [f for f in BODY_FIELDS if f not in body]
     if missing:
         errors.append(f"body is missing {', '.join(missing)} (CONTRACT.md → PR body)")
+    if KNOWLEDGE.match(path) and not TRACE.search(body):
+        errors.append("a coach-brain edit needs a trace: a loops/signals/<file>.md path "
+                      "or a decision-case id in the body (case=<id>)")
     return errors
 
 

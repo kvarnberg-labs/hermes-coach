@@ -17,7 +17,8 @@ sys.path.insert(0, str(SCRIPTS))
 
 import pr_guard  # noqa: E402
 
-BODY = "Failure class: knowledge_gap · Anchor: signal x · Golden check: n/a · Evidence: Lorenzo 2010"
+BODY = ("Failure class: knowledge_gap · Anchor: loops/signals/2026-11-01-signal-x.md"
+        " · Golden check: n/a · Evidence: Lorenzo 2010")
 
 
 @pytest.mark.parametrize("path", ["coach-brain/heat.yaml", "plugins/training/new_tool.py"])
@@ -87,3 +88,28 @@ def test_create_pr_refuses_before_any_network_call(tmp_path):
                         "improve: x", BODY], capture_output=True, text=True, env=env)
     assert r.returncode == 1
     assert "REFUSED" in r.stderr and "no GitHub token" not in r.stderr
+
+
+@pytest.mark.parametrize("anchor", [
+    "loops/signals/2026-11-01-readiness.md",
+    "case=stale-wellness-as-current-2026-08-17",
+    "tests/golden/decisions/stale-wellness-as-current-2026-08-17.yaml",
+])
+def test_knowledge_edit_needs_a_trace(anchor):
+    """A knowledge edit without a traced failure is a guess. The loop used to
+    invent gaps when the backlog was empty; a signal path or a decision case
+    is the cheapest thing that makes the edit reviewable."""
+    body = f"Failure class: knowledge_gap · Anchor: {anchor} · Golden check: n/a · Evidence: X"
+    assert pr_guard.check("coach-brain/heat.yaml", "improve: x", body) == []
+
+
+def test_knowledge_edit_without_a_trace_is_refused():
+    body = "Failure class: knowledge_gap · Anchor: (none) · Golden check: n/a · Evidence: X"
+    errors = pr_guard.check("coach-brain/heat.yaml", "improve: x", body)
+    assert any("needs a trace" in e for e in errors)
+
+
+def test_new_tool_needs_no_trace_but_needs_a_test():
+    """Tools are graded by the eval, not by an anchor; the body rule is unchanged."""
+    body = "Failure class: tool_gap · Anchor: (none) · Golden check: n/a · Evidence: X"
+    assert pr_guard.check("plugins/training/get_athlete_state.py", "improve: x", body) == []

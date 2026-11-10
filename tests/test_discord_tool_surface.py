@@ -114,3 +114,21 @@ def test_self_improve_is_never_in_the_dm_toolset_list():
     """self-improve holds develop_tool, which starts k8s Jobs. It must be
     excluded explicitly, not by omission."""
     assert "self-improve" not in _discord_toolsets()
+def test_scan_signals_rotates_an_oversized_worklog(tmp_path):
+    """The 4 KB prompt cap cannot hold if worklog.md grows to 437 KB again:
+    the tail of a giant file is still giant. Rotation keeps it bounded."""
+    home = tmp_path
+    (home / "loops" / "signals").mkdir(parents=True)
+    worklog = home / "loops" / "worklog.md"
+    worklog.write_text("## 2026-11-01 12:00 UTC\n" + ("y" * 900 + "\n") * 400,
+                       encoding="utf-8")
+    assert worklog.stat().st_size > 200_000
+
+    out = subprocess.run(
+        ["sh", str(SCAN)], capture_output=True, text=True,
+        env={**os.environ, "HERMES_HOME": str(home)}, check=True,
+    ).stdout
+
+    assert worklog.stat().st_size <= 200_000
+    assert (home / "loops" / "worklog.md.rotations").exists()
+    assert len(out) < 8_000
