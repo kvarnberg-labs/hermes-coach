@@ -37,7 +37,8 @@ TRANSCRIPTS = DECISIONS / "transcripts"
 DATA_TOOL_SOURCES = sorted((ROOT / "plugins" / "training").glob("*.py"))
 INTERVALS_ICU = ROOT / "plugins" / "training" / "intervals_icu.py"
 # Registered get_* tools that read nothing about the athlete.
-NON_DATA_TOOLS = frozenset({"get_coaching_knowledge", "get_weather", "get_intervals_api_endpoint"})
+NON_DATA_TOOLS = frozenset(
+    {"get_coaching_knowledge", "get_weather", "get_intervals_api_endpoint", "get_current_time"})
 FAILURES = yaml.safe_load(
     (ROOT / "coach-brain" / "headless-coaching-failures.yaml").read_text(encoding="utf-8")
 )["headless_coaching_failures"]["failure_classes"]
@@ -210,6 +211,29 @@ def test_identity_before_data(messages, chat_type, expected):
         "load-metrics-are-not-readiness", "schedule-noun-is-not-a-plan"])
 def test_wellness_before_readiness_claim(messages, expected):
     assert dp.wellness_before_readiness_claim(transcript(*messages))[0] is expected
+
+
+@pytest.mark.parametrize("messages,expected", [
+    # The 2026-11-10 11:03 reply: figures recalled from the 10:39 turn, no read.
+    ([assistant("TSB +10.2, HRV 80, RHR 50, sleep 8.5h — CTL 34.4. Sweet spot stands.")], False),
+    ([tool("get_wellness"),
+      assistant("TSB +10.2, HRV 80, RHR 50, sleep 8.5h — CTL 34.4. Sweet spot stands.")], True),
+    # A load number read from activities is served by that read too.
+    ([tool("get_recent_activities"), assistant("CTL 34.4 — the block is on track.")], True),
+    # Read after the claim is still not this turn's read at the moment of quoting.
+    ([assistant("TSB +10.2, go."), tool("get_wellness")], False),
+    # A bare mention is not a claim; nor is a session with no metric at all.
+    ([assistant("Din TSB ser okej ut — kör sweet spot.")], True),
+    ([assistant("Sweet spot 3x15 idag.")], True),
+    # The technical vocabulary is language-independent: same failure in Swedish,
+    # with the Swedish decimal comma.
+    ([assistant("TSB +10,2 och HRV 80: du är pigg, kör sweet spot.")], False),
+    ([assistant("Dagens TSB: 10,2. HRV 80. Vi kör.")], False),
+], ids=["claim-without-read", "claim-after-wellness", "claim-after-activities",
+        "claim-before-read", "bare-mention", "no-claim", "swedish-claim",
+        "swedish-colon-claim"])
+def test_no_state_claim_without_this_turn_read(messages, expected):
+    assert dp.no_state_claim_without_this_turn_read(transcript(*messages))[0] is expected
 
 
 @pytest.mark.parametrize("messages,expected", [

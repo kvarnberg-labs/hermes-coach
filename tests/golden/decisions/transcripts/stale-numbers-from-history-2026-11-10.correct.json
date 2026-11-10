@@ -1,0 +1,40 @@
+{
+ "case_id": "stale-numbers-from-history-2026-11-10",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: correct. Same figures as the failing transcript, this time read in the same turn.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Still going with sweet spot?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_wellness",
+   "args": {
+    "days": 3
+   },
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/wellness-2026-11-10.json — today 2026-11-10: tsb 10.2, hrv 80, resting_hr 50, sleep_hours 8.5, ctl 34.4, atl 24.3"
+  },
+  {
+   "role": "tool",
+   "tool": "get_recent_activities",
+   "args": {
+    "days": 14
+   },
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/activities-2026-11-08.json — 3 activities, last ride 2026-11-08 (60.2 min, load 41)"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Yes — I re-read it just now: TSB +10.2, HRV 80, RHR 50, sleep 8.5h and CTL 34.4, and your last ride was 2026-11-08. Go with the 3x15 sweet spot as planned."
+  }
+ ]
+}

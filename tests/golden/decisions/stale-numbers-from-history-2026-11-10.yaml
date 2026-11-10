@@ -1,0 +1,26 @@
+id: stale-numbers-from-history-2026-11-10
+chat_type: dm
+failure_class: data_provenance_failure
+athlete_message: >-
+  Still going with sweet spot?
+fixtures:
+  - wellness-2026-11-10.json
+  - activities-2026-11-08.json
+expect:
+  - no_state_claim_without_this_turn_read
+source: >-
+  DM session 2026-11-10 (the same session as dm-load-question-2026-11-10). At
+  10:39 UTC the coach called get_wellness and get_recent_activities and answered
+  with the numbers; at 11:03 UTC the same session answered the athlete's
+  "Still going with sweet spot?" in one API call with zero tool calls. Tool
+  payloads: get_wellness (fixtures/wellness-2026-11-10.json — today.tsb 10.2,
+  hrv 80, resting_hr 50, sleep_hours 8.5, ctl 34.4) and get_recent_activities
+  (fixtures/activities-2026-11-08.json), both from the 10:39 turn of this
+  session and anonymised as the other fixtures are.
+note: >-
+  The reply quoted "TSB +10.2, HRV 80, RHR 50, sleep 8.5h" and "CTL 34.4" and
+  prescribed a sweet-spot session — every figure recalled from the 10:39 turn's
+  transcript, none re-read this turn. Re-read get_wellness (and
+  get_recent_activities for the load side) before quoting a recovery or load
+  number, and resolve the clock with get_current_time rather than assuming the
+  day has not moved.

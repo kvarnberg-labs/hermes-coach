@@ -29,21 +29,28 @@ calendar without approval. Without that, every improvement shipped on opinion.
 
 ## What the gate cannot see
 
-Gating predicates are structural — tool order, identity result, calendar
-writes, tool set for a DM. They are language-independent by design.
+Most gating predicates are structural — tool order, identity result, calendar
+writes, tool set for a DM — and language-independent by design.
 
-`wellness_before_readiness_claim` and `referral_on_red_flag` read the reply
-text, so they are **informational only**: they are computed and reported, never
-counted in `pass_rate`. The coach replies in Swedish; an English keyword list
-cannot be the gate. Four review rounds on the committed cases found defects
-only in that layer.
+`no_state_claim_without_this_turn_read` also gates, though it reads the reply
+text. It does not grade wording: it grades whether this turn read the data it
+quotes, and its trigger is a fixed technical vocabulary (`TSB|CTL|ATL|HRV|RHR|
+resting HR|sleep score` followed by a number) that appears verbatim in a Swedish
+reply — "TSB +10,2" is the same string in both languages. It fails in the safe
+direction too: a figure it cannot parse is a miss, not a false fail.
 
-`6 of 12` cases cannot turn the gate red by construction. The report prints
+`wellness_before_readiness_claim` and `referral_on_red_flag` read English
+coaching prose, so they are **informational only**: they are computed and
+reported, never counted in `pass_rate`. The coach replies in Swedish; an English
+keyword list cannot be the gate. Four review rounds on the committed cases found
+defects only in that layer.
+
+`6 of 13` cases cannot turn the gate red by construction. The report prints
 that number as `cases_that_can_fail` so the pass rate is not read as more
 evidence than it is.
 
 ## Label sign-off
 
-The 12 case labels were drafted from real incidents on 2026-11-10 and signed
+The 13 case labels were drafted from real incidents on 2026-11-10 and signed
 off by the operator the same day. Changing a label is changing what the product
 considers correct coaching — that is an operator decision, not a loop decision.
