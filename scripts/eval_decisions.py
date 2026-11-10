@@ -187,11 +187,14 @@ def main(argv: list[str] | None = None) -> int:
     if rounds > 1:
         merged = variance_report(cases, runs, Path(args.out))
         if args.report:
-            write_exit_gate(merged, Path(args.report), args.live)
-        return 0 if not merged["variance"] else 1
+            write_exit_gate(merged, Path(args.report), args.live, cases)
+        # Only a gated predicate flipping is a failure signal. Advisory flips are
+        # expected by design (the keyword layer is bilingual and heuristic), and a
+        # wrapper reading exit 1 must not act on one.
+        return 0 if not [n for n in merged["variance"] if n in dp.GATING] else 1
     report = score(cases, runs, Path(args.out))
     if args.report:
-        write_exit_gate(report, Path(args.report), args.live)
+        write_exit_gate(report, Path(args.report), args.live, cases)
     print(f"{report['passed']}/{report['cases']} cases passed (pass_rate {report['pass_rate']})")
     for row in report["results"]:
         for failure in row["failures"]:
@@ -228,12 +231,12 @@ def variance_report(cases: list[dict], runs: list[dict], out: Path) -> dict:
     merged = {
         "cases": reports[0]["cases"],
         "runs": rounds,
-        "pass_rate": [r["pass_rate"] for r in reports],
+        "pass_rate_per_run": [r["pass_rate"] for r in reports],
         "per_predicate": per_predicate,
         "variance": flips,
     }
     out.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
-    print(f"pass_rate per run: {merged['pass_rate']}")
+    print(f"pass_rate per run: {merged['pass_rate_per_run']}")
     print(f"flipping predicates: {flips or 'none'}")
     print(f"report: {out}")
     return merged
@@ -255,13 +258,18 @@ def tier_counts(per_predicate: dict, tier: str) -> dict:
     return {name: counts for name, counts in per_predicate.items() if counts["tier"] == tier}
 
 
-def write_exit_gate(report: dict, path: Path, live: bool) -> None:
+def write_exit_gate(report: dict, path: Path, live: bool, cases: list[dict] | None = None) -> None:
     """Phase 1 exit gate, split by tier — on disk.
 
     `gated` holds the structural predicates and the case counts derived from
     them; nothing in it depends on a prose predicate. `informational` is marked
     advisory. A transcript re-score is not a model baseline: without --live the
     report says `baseline: "not run"` instead of dressing fixtures up as one.
+
+    `cases_that_can_fail` exists because a pass rate over a denominator that is
+    half blind reads as stronger evidence than it is: a case whose `expect` is
+    informational-only, or which is excused by known_miss/gate_blind, cannot
+    turn the gate red by construction.
     """
     per_predicate = report["per_predicate"]
     gate = {
@@ -281,6 +289,12 @@ def write_exit_gate(report: dict, path: Path, live: bool) -> None:
     for key in ("cases", "passed", "pass_rate", "runs"):
         if key in report:
             gate["gated"][key] = report[key]
+    if cases:
+        blind = [c["id"] for c in cases
+                 if c.get("gate_blind") or c.get("known_miss")
+                 or not (dp.GATING & set(c["expect"]))]
+        gate["gated"]["gate_blind_cases"] = blind
+        gate["gated"]["cases_that_can_fail"] = len(cases) - len(blind)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(gate, indent=1) + "\n", encoding="utf-8")
     print(f"exit gate: {path}")

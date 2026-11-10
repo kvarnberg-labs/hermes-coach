@@ -19,3 +19,7 @@ build/
 
 # pi coding-agent subagent scratch (local session artifacts)
 .pi/
+
+# decision-eval artifacts (scripts/eval_decisions.py writes these into CWD)
+decisions-report.json
+decisions-report.run*.json

@@ -135,9 +135,35 @@ def test_data_tools_are_the_registered_athlete_reads():
     registered = {
         name
         for path in DATA_TOOL_SOURCES
-        for name in re.findall(r'name="(get_[a-z_]+)"', path.read_text(encoding="utf-8"))
+        for name in re.findall(r'name="(get_[a-z0-9_]+)"', path.read_text(encoding="utf-8"))
     } - NON_DATA_TOOLS
     assert registered == set(dp.DATA_TOOLS), f"drift: {registered ^ set(dp.DATA_TOOLS)}"
+
+
+def test_write_tools_are_the_registered_calendar_writers():
+    """WRITE_TOOLS must be every calendar mutation registered in the plugin.
+
+    Same hole as DATA_TOOLS: a fifth writer, or a rename, silently blinds both
+    gating write predicates while CI stays green.
+    """
+    registered = {
+        name
+        for path in DATA_TOOL_SOURCES
+        for name in re.findall(
+            r'name="((?:create|update|delete)_[a-z0-9_]*)"', path.read_text(encoding="utf-8"))
+        if "plan" in name or name == "create_planned_events_bulk"
+    }
+    assert registered == set(dp.WRITE_TOOLS), f"drift: {registered ^ set(dp.WRITE_TOOLS)}"
+
+
+def test_every_case_without_a_gating_predicate_declares_gate_blind():
+    """A case whose expect list is informational-only is gate-blind by
+    construction. If it does not say so, the report counts it as coverage it
+    cannot provide."""
+    undeclared = [c["id"] for c in CASES
+                  if not (dp.GATING & set(c["expect"]))
+                  and not c.get("gate_blind") and not c.get("known_miss")]
+    assert not undeclared, f"declare gate_blind: {undeclared}"
 
 
 # --- (b) one synthetic transcript per predicate, pass and fail -----------
@@ -468,8 +494,8 @@ def _known_miss_params() -> list:
 
 @pytest.mark.parametrize("case,predicate", _known_miss_params())
 def test_known_miss_predicate_does_not_catch_its_case(case, predicate):
-    """The xfail is the tripwire: the day the predicate catches the case it
-    xpasses, CI goes red and the name has to come out of the case."""
+    """Strict xfail on purpose — an XPASS here means the predicate now catches
+    the case, so drop it from the case's known_miss and re-grade."""
     passed, reason = dp.check(predicate, case, _synthetic(case, "failing"))
     assert not passed, f"{case['id']}: {predicate} now catches it ({reason}) — drop the known miss"
 
@@ -486,10 +512,10 @@ def test_gate_blind_case_is_still_caught_by_an_informational_predicate(case):
 
 @pytest.mark.parametrize("case", BLIND_CASES, ids=[c["id"] for c in BLIND_CASES])
 @pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="gate_blind: no GATING predicate sees this case")
+                   reason="gate_blind on purpose — XPASS means a GATING predicate now "
+                          "catches this case; promote it to gated and drop gate_blind")
 def test_gate_blind_case_has_no_gating_predicate_that_catches_it(case):
-    """The tripwire: a structural predicate catching the case xpasses this, so CI
-    goes red and the case gets promoted to gated (drop gate_blind)."""
+    """A structural predicate catching the case un-blinds it, so the marker must go."""
     failing = _synthetic(case, "failing")
     caught = [name for name in case["expect"]
               if name in dp.GATING and not dp.check(name, case, failing)[0]]
@@ -590,7 +616,7 @@ def test_variance_report_measures_flips_across_runs(tmp_path):
     merged = eval_decisions.variance_report(
         cases, [failing, passing], tmp_path / "variance.json")
     assert merged["variance"] == ["no_coding_tools_in_dm"]
-    assert merged["pass_rate"] == [0.0, 1.0]
+    assert merged["pass_rate_per_run"] == [0.0, 1.0]
 
 
 def test_runner_rejects_a_chat_type_mismatch(tmp_path):

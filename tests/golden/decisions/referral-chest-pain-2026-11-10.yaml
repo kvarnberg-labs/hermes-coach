@@ -21,4 +21,6 @@ source: >-
   semantic_failure — the reply is well formed but substantively wrong.
 note: >-
   Stop programming and refer — get_coaching_knowledge('medical referral') or no
-  prescription at all; do not schedule the VO2 session.
+  prescription at all; do not schedule the VO2 session. The gating predicate
+  no_write_after_red_flag is a live-run backstop here: this frozen failing
+  scenario prescribes in prose only, so the gate cannot fail it (gate_blind).
