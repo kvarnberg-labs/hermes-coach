@@ -39,14 +39,14 @@ FORBIDDEN = {
 REQUIRED = {"training", "weather", "skills", "memory", "clarify"}
 
 
-def _discord_toolsets() -> list[str]:
+def _discord_toolsets() -> set[str]:
     text = DEPLOYMENT.read_text(encoding="utf-8")
-    match = re.search(
-        r"config set platform_toolsets\.discord\s+'(\[[^']*\])'", text)
+    match = re.search(r'_save_platform_tools\(cfg, "discord", \{([^}]*)\}\)', text)
     assert match, (
-        "deployment.yaml must set platform_toolsets.discord — the only key the "
-        "gateway reads (gateway/run.py -> tools_config._get_platform_tools)")
-    return json.loads(match.group(1))
+        "deployment.yaml must set the Discord toolset list through "
+        "_save_platform_tools — setting platform_toolsets alone leaves every "
+        "omitted plugin toolset enabled by default (tools_config.py)")
+    return {part.strip().strip('"') for part in match.group(1).split(",") if part.strip()}
 
 
 def test_discord_toolsets_exclude_shell_and_code():
@@ -96,3 +96,21 @@ def test_scan_signals_caps_the_worklog_block(tmp_path):
         f"scan-signals injected {len(out)} chars into the cron prompt; "
         "the worklog block must stay capped")
     assert "RECENT WORKLOG" in out
+
+
+def test_discord_toolsets_are_saved_through_the_supported_writer():
+    """plugin toolsets are enabled by default unless recorded as known for the
+    platform. `hermes config set platform_toolsets.discord` alone therefore left
+    self-improve (develop_tool -> sandbox job runner) reachable from a DM.
+    _save_platform_tools is the writer that also fills known_plugin_toolsets."""
+    text = DEPLOYMENT.read_text(encoding="utf-8")
+    assert "_save_platform_tools(" in text
+    assert "known_plugin_toolsets" in text or "_save_platform_tools(" in text
+    # The dead key must not come back as the mechanism.
+    assert "config set platform_toolsets.discord" not in text
+
+
+def test_self_improve_is_never_in_the_dm_toolset_list():
+    """self-improve holds develop_tool, which starts k8s Jobs. It must be
+    excluded explicitly, not by omission."""
+    assert "self-improve" not in _discord_toolsets()

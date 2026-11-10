@@ -110,15 +110,25 @@ spec:
               fi
 
               # Discord platform toolsets: athletes get coaching tools only.
-              # The key is platform_toolsets.discord (gateway/run.py ->
-              # hermes_cli/tools_config._get_platform_tools). The previous key,
-              # tools.discord.enabled, was read by NO code, so every DM request
-              # carried the whole hermes-discord preset: 54 tools, 18.6k tokens
-              # of schema, including terminal, file, execute_code and cronjob.
-              # Three non-operator athletes ran shell commands that way.
-              # send_message is deliberately absent: DM replies go through the
-              # adapter, not through an agent-callable send tool.
-              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set platform_toolsets.discord '["training","weather","skills","memory","clarify","todo","vision"]'
+              #
+              # Two things had to be true. `tools.discord.enabled` (the old key)
+              # is read by NO code, so every DM request carried the whole
+              # hermes-discord preset: 54 tools including terminal, file,
+              # execute_code and cronjob, and three non-operator athletes ran
+              # shell commands that way. The real gate is platform_toolsets.
+              #
+              # And a plugin toolset the list merely omits is ENABLED by default
+              # unless it is recorded as "known" for the platform
+              # (tools_config.py: plugin toolsets are on `elif pts not in
+              # known_for_platform`). Setting platform_toolsets alone left
+              # self-improve — which carries develop_tool, a sandbox job runner —
+              # reachable from a DM. _save_platform_tools is the supported writer:
+              # it sets platform_toolsets.discord plus known_plugin_toolsets and
+              # known_builtin_toolsets for the platform.
+              #
+              # send_message is deliberately absent: replies go through the
+              # adapter, not an agent-callable send tool.
+              HOME=/opt/data /opt/hermes/.venv/bin/python -c 'import sys; sys.path.insert(0, "/opt/hermes"); from hermes_cli.config import load_config, save_config; from hermes_cli.tools_config import _save_platform_tools; cfg = load_config(); _save_platform_tools(cfg, "discord", {"training", "weather", "skills", "memory", "clarify", "todo", "vision"}); save_config(cfg)'
 
           envFrom:
             - configMapRef:
