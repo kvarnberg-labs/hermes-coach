@@ -69,8 +69,6 @@ For each, find their most recent coaching session:
 ```
 session_search(query="<athlete_name> coaching OR träning OR workout OR pass OR ride OR run", limit=3, sort="newest")
 ```
-Example: `session_search(query="Millberg träning OR pass OR ride", limit=3, sort="newest")`
-
 ### Turn 2 — Read the conversations (parallel)
 Scroll into both sessions and read at least 15-20 messages (window=10 around the
 midpoint, then scroll backward/forward). Look for:

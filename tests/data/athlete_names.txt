@@ -1,0 +1,8 @@
+# Athlete names that must never appear in SHIPPED content.
+# Add a name when an athlete joins. This denylist is for SHIPPED content only:
+# coach-brain/ and skills/ load into every athlete's session. Transcripts and
+# PR bodies may name athletes - they are not shipped.
+joey
+lars
+wilma
+millberg

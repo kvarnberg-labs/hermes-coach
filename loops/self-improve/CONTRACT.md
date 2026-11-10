@@ -32,6 +32,7 @@ Improvements target:
 - [ ] Does NOT contradict existing TSB thresholds or Coggan zone boundaries
 - [ ] Stays within documented safe physiological ranges
 - [ ] Fewer than 50 lines added per PR
+- [ ] Evidence generalises: no athlete name, and no personal health value tied to a named athlete; case history belongs in the PR body, which is not shipped
 
 ### New tool (via `develop_tool`)
 - [ ] Sandbox `pytest` passes with at least one meaningful assertion
