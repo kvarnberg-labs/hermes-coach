@@ -143,6 +143,14 @@ fi
 #    the whole request). Lines here are long bullet entries, so cap by bytes.
 # ---------------------------------------------------------------------------
 WORKLOG="${HERMES_HOME}/loops/worklog.md"
+# Rotate before reading: the file grows ~4 KB/day and reached 437 KB. Keep the
+# last 200 KB and one archived predecessor, so the tail we inject is bounded and
+# history is not lost.
+if [ -f "$WORKLOG" ] && [ "$(wc -c < "$WORKLOG" 2>/dev/null || echo 0)" -gt 200000 ]; then
+    tail -c 200000 "$WORKLOG" > "${WORKLOG}.new" 2>/dev/null && mv "${WORKLOG}.new" "$WORKLOG"
+    echo "worklog rotated to the last 200000 bytes at $(date -u +%Y-%m-%dT%H:%MZ)" \
+        >> "${WORKLOG}.rotations"
+fi
 if [ -f "$WORKLOG" ] && grep -q "^## 20" "$WORKLOG" 2>/dev/null; then
     echo "RECENT WORKLOG (last 4000 bytes):"
     tail -c 4000 "$WORKLOG"
