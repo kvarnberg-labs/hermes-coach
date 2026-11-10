@@ -168,10 +168,14 @@ def _post(config: dict, payload: dict) -> dict:
 
 def _tool_args(call: dict) -> dict:
     """Echoed args, minus identifiers a transcript must never carry."""
-    try:
-        args = json.loads(call["function"].get("arguments") or "{}")
-    except json.JSONDecodeError:
-        return {}
+    raw = call["function"].get("arguments")
+    if isinstance(raw, dict):  # some providers send the object, not a string
+        args = raw
+    else:
+        try:
+            args = json.loads(raw or "{}")
+        except (TypeError, json.JSONDecodeError):
+            return {}
     if not isinstance(args, dict):
         return {}
     return {key: value for key, value in args.items() if key != "discord_id"}
@@ -200,7 +204,13 @@ def drive(case: dict, schemas: list[dict], fixtures: dict[str, str], config: dic
     for _step in range(config["max_steps"]):
         reply = _post(config, {"model": config["model"], "temperature": 0,
                                "messages": api_messages, "tools": tool_specs})
-        reply_message = reply["choices"][0]["message"]
+        try:
+            reply_message = reply["choices"][0]["message"]
+        except (KeyError, IndexError, TypeError):
+            raise SystemExit(
+                "model reply has no choices[0].message — refusing to invent a "
+                f"transcript; provider said: {json.dumps(reply)[:200]}"
+            ) from None
         calls = reply_message.get("tool_calls") or []
         if not calls:
             messages.append(_message("assistant", reply_message.get("content") or ""))

@@ -272,3 +272,24 @@ def test_committed_case_fixtures_map_to_tools(committed):
     # One fixture per tool: a second wellness-*.json in one case would silently
     # shadow the first and grade the model with data the case never intended.
     assert len(table) == len(payloads)
+
+
+def test_tool_args_accepts_a_dict_and_drops_identifiers():
+    """Some providers send arguments as an object instead of a JSON string;
+    a TypeError there would look like a model failure in the transcript."""
+    assert live_driver._tool_args({"function": {"arguments": {"sport": "Ride"}}}) == {"sport": "Ride"}
+    assert live_driver._tool_args(
+        {"function": {"arguments": '{"sport": "Ride", "discord_id": "123"}'}}
+    ) == {"sport": "Ride"}
+    assert live_driver._tool_args({"function": {"arguments": "not json"}}) == {}
+
+
+def test_malformed_reply_exits_instead_of_inventing_a_transcript(monkeypatch):
+    """A 200 with no choices must fail loudly: a silent empty transcript would
+    score as a model that made no decisions at all."""
+    monkeypatch.setenv("HERMES_DRIVER_API_KEY", "test-key")
+    monkeypatch.setattr(live_driver, "_post", lambda config, payload: {"id": "x"})
+    with pytest.raises(SystemExit) as exc:
+        live_driver.drive({"id": "case", "chat_type": "dm", "athlete_message": "hej"},
+                          [], {}, live_driver.model_config())
+    assert "choices" in str(exc.value)
