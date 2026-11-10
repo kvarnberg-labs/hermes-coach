@@ -4,7 +4,8 @@ Decisions taken in the 2026-11-10 grill session, with the evidence that drove
 them. Each phase must clear its exit gate before the next starts; each PR is
 reviewed by an independent agent before merge.
 
-Sources of record:
+Sources of record (operator-local, gitignored because they quote real athlete
+telemetry — ask the operator for the files rather than expecting them in the repo):
 - `outputs/hermes-knowledge-vs-tools-vs-evals.md` — knowledge vs tools vs evals
 - `outputs/model-selection-evidence-review.md` — model tiers by role
 - `outputs/hermes-context-management-advisory-2026-11-10.md` — context levers
