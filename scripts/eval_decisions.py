@@ -16,8 +16,10 @@ Two modes:
             exported here (API keys included) reaches the driver: never run
             --live in CI, and keep secrets out of the calling shell.
 
-`--out` is the full run detail. `--report PATH` writes the Phase 1 exit gate:
-per-predicate pass counts, `variance` (only under --twice) and the git commit.
+`--out` is the full run detail. `--report PATH` writes the Phase 1 exit gate,
+split by tier: `gated` (the structural predicates — this is the exit-gate
+number) and `informational` (the prose predicates, marked advisory, never part
+of a gated count), plus `variance` (only under --twice) and the git commit.
 
 stdout is a short table.
 """
@@ -105,19 +107,23 @@ def score(cases: list[dict], runs: list[dict], out: Path) -> dict:
     for case, transcript in zip(cases, runs):
         report = dp.evaluate(case, transcript)
         rows.append({"case_id": case["id"], "expect": case["expect"], **report})
-        for row in report["results"]:
+        for row in report["gated"] + report["informational"]:
             outcomes.setdefault(row["predicate"], set()).add(row["passed"])
     passed = sum(1 for row in rows if row["passed"])
     per_predicate = {
         name: {
-            "cases": sum(1 for row in rows for r in row["results"] if r["predicate"] == name),
+            "tier": "gated" if name in dp.GATING else "informational",
+            "cases": sum(1 for row in rows for r in row["gated"] + row["informational"]
+                         if r["predicate"] == name),
             "passed": sum(
                 1 for row in rows
-                for r in row["results"] if r["predicate"] == name and r["passed"]
+                for r in row["gated"] + row["informational"]
+                if r["predicate"] == name and r["passed"]
             ),
             "failures": sum(
                 1 for row in rows
-                for r in row["results"] if r["predicate"] == name and not r["passed"]
+                for r in row["gated"] + row["informational"]
+                if r["predicate"] == name and not r["passed"]
             ),
         }
         for name in dp.PREDICATES
@@ -188,9 +194,12 @@ def main(argv: list[str] | None = None) -> int:
         write_exit_gate(report, Path(args.report), args.live)
     print(f"{report['passed']}/{report['cases']} cases passed (pass_rate {report['pass_rate']})")
     for row in report["results"]:
-        if not row["passed"]:
-            for failure in row["failures"]:
-                print(f"  FAIL {row['case_id']}: {failure['predicate']} — {failure['reason']}")
+        for failure in row["failures"]:
+            print(f"  FAIL {row['case_id']}: {failure['predicate']} — {failure['reason']}")
+        for advisory in row["informational"]:
+            if not advisory["passed"]:
+                print(f"  {dp.ADVISORY.upper()} {row['case_id']}: "
+                      f"{advisory['predicate']} — {advisory['reason']}")
     print(f"report: {args.out}")
     return 0 if report["passed"] == report["cases"] else 1
 
@@ -209,6 +218,7 @@ def variance_report(cases: list[dict], runs: list[dict], out: Path) -> dict:
     })
     per_predicate = {
         name: {
+            "tier": row["tier"],
             "cases": row["cases"] * rounds,
             "passed": sum(r["per_predicate"][name]["passed"] for r in reports),
             "failures": sum(r["per_predicate"][name]["failures"] for r in reports),
@@ -240,20 +250,37 @@ def git_commit() -> str:
         return "unknown"
 
 
-def write_exit_gate(report: dict, path: Path, live: bool) -> None:
-    """Phase 1 exit gate: per-predicate pass counts, variance, commit — on disk.
+def tier_counts(per_predicate: dict, tier: str) -> dict:
+    """Per-predicate counts of one tier. `gated` is the only number that gates."""
+    return {name: counts for name, counts in per_predicate.items() if counts["tier"] == tier}
 
-    A transcript re-score is not a model baseline: without --live the report says
-    `baseline: "not run"` instead of dressing fixtures up as one.
+
+def write_exit_gate(report: dict, path: Path, live: bool) -> None:
+    """Phase 1 exit gate, split by tier — on disk.
+
+    `gated` holds the structural predicates and the case counts derived from
+    them; nothing in it depends on a prose predicate. `informational` is marked
+    advisory. A transcript re-score is not a model baseline: without --live the
+    report says `baseline: "not run"` instead of dressing fixtures up as one.
     """
+    per_predicate = report["per_predicate"]
     gate = {
         "commit": git_commit(),
         "baseline": "live" if live else "not run",
-        "per_predicate": report["per_predicate"],
+        "gated": {
+            "per_predicate": tier_counts(per_predicate, "gated"),
+            "variance": [name for name in report.get("variance") or [] if name in dp.GATING],
+        },
+        "informational": {
+            "advisory": dp.ADVISORY,
+            "per_predicate": tier_counts(per_predicate, "informational"),
+            "variance": [name for name in report.get("variance") or []
+                         if name in dp.INFORMATIONAL],
+        },
     }
-    for key in ("cases", "passed", "pass_rate", "runs", "variance"):
+    for key in ("cases", "passed", "pass_rate", "runs"):
         if key in report:
-            gate[key] = report[key]
+            gate["gated"][key] = report[key]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(gate, indent=1) + "\n", encoding="utf-8")
     print(f"exit gate: {path}")
