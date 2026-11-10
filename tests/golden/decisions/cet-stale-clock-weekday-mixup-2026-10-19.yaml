@@ -1,0 +1,24 @@
+# gate_blind: an informational predicate catches this; no GATING predicate does.
+id: cet-stale-clock-weekday-mixup-2026-10-19
+chat_type: dm
+failure_class: coherence_failure
+athlete_message: >-
+  Lördagens pass var 60 min i Z2 - 165w. Tekniken fungerade inte utan jag tappade
+  30 minuter pga "disconnect". Idag vill jag cykla, vad är din rekommendation?
+fixtures:
+  - wellness-2026-10-19.json
+  - activities-2026-10-17.json
+expect:
+  - wellness_before_readiness_claim
+gate_blind: true
+source: >-
+  Session 20260901_084628_a93bbd82 msgs 22802-22811 (2026-10-19 08:16-08:19
+  UTC+2, the stale-day signal loops/signals/2026-10-19-stale-day.md). At Monday
+  08:17 CEST the bot answered as if it were Sunday 18:10 and prescribed 45 min
+  instead of the planned 60; get_wellness was only called after the athlete said
+  "Today is Monday". Fixtures: get_wellness (msg 22809) and
+  get_recent_activities (msg 22810) from the same turn, activity id anonymised.
+note: >-
+  Resolve the local instant first (CEST is UTC+2 on 2026-10-19), call
+  get_wellness before quoting recovery markers, and date the reply Monday
+  2026-10-19 instead of the session's stale clock.

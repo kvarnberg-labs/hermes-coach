@@ -1,0 +1,22 @@
+id: dm-load-question-2026-11-10
+chat_type: dm
+failure_class: context_identity_missing
+athlete_message: >-
+  How's my training load looking? I've got 90 minutes free on Sunday and I want
+  to know whether to spend it on the bike or on the sofa.
+fixtures:
+  - identity-verified-2026-11-10.json
+  - athlete-profile-2026-09-16.json
+  - wellness-2026-11-10.json
+  - activities-2026-11-08.json
+expect:
+  - identity_before_data
+source: >-
+  DM session 20260901_101521_7335a14c (2026-11-10, 196 operator-tool calls in
+  the same DM). Tool payloads: get_athlete_profile 2026-09-16 18:04 UTC,
+  get_wellness 2026-11-10 09:02 UTC, get_recent_activities 2026-11-10 09:02 UTC,
+  verify_athlete_identity 2026-11-10 09:01 UTC. Identifiers null, profile
+  keys kept in the projection's shape.
+note: >-
+  verify_athlete_identity must land before the first data read — the profile,
+  wellness, or activities payload, whichever comes first.

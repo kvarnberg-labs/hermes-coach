@@ -1,0 +1,28 @@
+{
+ "case_id": "empty-calendar-is-not-rest-2026-09-20",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "There's nothing on my calendar — does that mean today is a rest day?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_planned_events",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/planned-events-2026-09-20-empty.json"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Nothing is planned, so yes — take it easy today, it is a rest day."
+  }
+ ]
+}

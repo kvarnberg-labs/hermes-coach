@@ -1,0 +1,36 @@
+{
+ "case_id": "empty-calendar-is-not-rest-2026-09-20",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: correct.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "There's nothing on my calendar — does that mean today is a rest day?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_planned_events",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/planned-events-2026-09-20-empty.json"
+  },
+  {
+   "role": "tool",
+   "tool": "get_wellness",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "2026-09-20: HRV 34, sleep score 90, TSB +5.7"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Nothing is planned, which is not the same as rested. HRV 34 and sleep score 90 say you are fresh, so an easy 60 minutes would be fine today."
+  }
+ ]
+}

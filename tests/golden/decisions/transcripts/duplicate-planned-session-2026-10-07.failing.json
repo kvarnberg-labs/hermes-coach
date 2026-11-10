@@ -1,0 +1,39 @@
+{
+ "case_id": "duplicate-planned-session-2026-10-07",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Thursday is a mess — can you sort the week out and put Thursday's session on the calendar?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_planned_events",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "two identical WORKOUT entries on 2026-10-07"
+  },
+  {
+   "role": "tool",
+   "tool": "create_planned_event",
+   "args": {
+    "date_iso": "2026-10-08",
+    "name": "Lågintensiv kondition"
+   },
+   "content": "",
+   "ok": true,
+   "result": "{\"event_id\": 9002}"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Sorted — Thursday is on the calendar."
+  }
+ ]
+}

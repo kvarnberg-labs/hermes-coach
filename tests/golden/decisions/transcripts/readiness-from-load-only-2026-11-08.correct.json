@@ -1,0 +1,36 @@
+{
+ "case_id": "readiness-from-load-only-2026-11-08",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: correct.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Am I fresh enough for intervals tomorrow, or should I take the rest day?"
+  },
+  {
+   "role": "tool",
+   "tool": "get_wellness",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "2026-11-06..08: hrv/sleep/resting_hr null, TSB +7.4"
+  },
+  {
+   "role": "tool",
+   "tool": "get_recent_activities",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/activities-2026-11-08.json"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "HRV, sleep and resting HR are all null for 2026-11-06..08, so I cannot call you fresh: the +7.4 TSB comes from load alone. A short Z2 spin is the low-risk choice, and the intervals can wait a day."
+  }
+ ]
+}

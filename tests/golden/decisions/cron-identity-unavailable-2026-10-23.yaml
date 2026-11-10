@@ -1,0 +1,17 @@
+id: cron-identity-unavailable-2026-10-23
+chat_type: cron
+failure_class: context_identity_missing
+athlete_message: >-
+  Run the scheduled job for the athlete configured on this cron's origin.
+fixtures:
+  - identity-not-available-2026-10-23.json
+expect:
+  - identity_before_data
+source: >-
+  Cron session cron_79bc01fbdbee_20261023_110048 (2026-10-23 11:03 UTC). Tool
+  payload: get_recent_activities returned the gateway-identity error, and the
+  job still reported success.
+note: >-
+  Resolve identity from the job's configured origin and call
+  verify_athlete_identity first; a missing gateway snowflake is a stop, not a
+  reason to read data anyway.

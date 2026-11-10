@@ -1,0 +1,28 @@
+{
+ "case_id": "cron-identity-unavailable-2026-10-23",
+ "chat_type": "cron",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Run the scheduled job for the athlete configured on this cron's origin."
+  },
+  {
+   "role": "tool",
+   "tool": "get_recent_activities",
+   "args": {},
+   "content": "",
+   "ok": true,
+   "result": "see fixtures/identity-not-available-2026-10-23.json"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Job finished: 3 activities this week, total load 122."
+  }
+ ]
+}

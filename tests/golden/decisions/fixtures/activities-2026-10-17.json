@@ -1,0 +1,32 @@
+{
+ "source": "intervals.icu",
+ "days": 2,
+ "count": 1,
+ "activities": [
+  {
+   "id": "i000001",
+   "name": "Zwift - 1,5 h Zone 2 @ 160W",
+   "date": "2026-10-17",
+   "type": "VirtualRide",
+   "duration_min": 33.5,
+   "distance_km": 16.25,
+   "training_load": 22,
+   "ctl_after": 29.148083,
+   "atl_after": 10.175631,
+   "intensity_factor": 62.264153,
+   "normalized_power_w": 165,
+   "ftp_used_w": 265,
+   "trimp": 51.40797,
+   "hr_load": 28,
+   "power_load": 22,
+   "rpe": null,
+   "pace_mps": 8.086045,
+   "avg_hr": 138,
+   "max_hr": 150,
+   "max_speed_mps": 13.718,
+   "elevation_gain_m": 80.0,
+   "avg_cadence": 77.856766,
+   "paired_event_id": null
+  }
+ ]
+}

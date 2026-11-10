@@ -1,0 +1,7 @@
+{
+ "verified": false,
+ "error": "intervals.icu returned 401 Unauthorized. Your API key may have expired — please run /start to reconnect.",
+ "mismatched_fields": [
+  "api_request"
+ ]
+}
