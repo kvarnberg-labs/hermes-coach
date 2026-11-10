@@ -31,6 +31,7 @@ data:
   # Change to DEBUG temporarily when diagnosing a specific issue.
   LOG_LEVEL: "WARNING"
 
-  # Self-improvement loop: Discord channel where improvement summaries are announced.
-  # Loop always runs at 04:00 UTC and creates PRs. This channel gets the summary.
-  SELF_IMPROVE_CHANNEL: "1508814801869082758"
+  # Self-improvement loop delivery: Joey's DM (user chat id), not the guild
+  # #general channel 1508814801869082758 — repo/PR detail must not be visible to
+  # athletes (lars, wilma, sencit60 are members of #general).
+  SELF_IMPROVE_CHANNEL: "1508816099540602970"

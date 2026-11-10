@@ -109,8 +109,16 @@ spec:
                   --script scan-signals.sh
               fi
 
-              # Discord platform toolsets: members get training tools only
-              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set tools.discord.enabled '["training","weather","memory","skills","clarify"]'
+              # Discord platform toolsets: athletes get coaching tools only.
+              # The key is platform_toolsets.discord (gateway/run.py ->
+              # hermes_cli/tools_config._get_platform_tools). The previous key,
+              # tools.discord.enabled, was read by NO code, so every DM request
+              # carried the whole hermes-discord preset: 54 tools, 18.6k tokens
+              # of schema, including terminal, file, execute_code and cronjob.
+              # Three non-operator athletes ran shell commands that way.
+              # send_message is deliberately absent: DM replies go through the
+              # adapter, not through an agent-callable send tool.
+              HOME=/opt/data /opt/hermes/.venv/bin/hermes config set platform_toolsets.discord '["training","weather","skills","memory","clarify","todo","vision"]'
 
           envFrom:
             - configMapRef:

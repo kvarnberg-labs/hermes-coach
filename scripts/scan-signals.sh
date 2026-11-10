@@ -18,7 +18,7 @@ fi
 if [ -n "$open_files" ]; then
     echo "OPEN SIGNALS:"
     echo ""
-    echo "$open_files" | while IFS= read -r f; do
+    echo "$open_files" | head -8 | while IFS= read -r f; do
         title=$(grep "^title:" "$f" 2>/dev/null | head -1 | sed 's/^title:[[:space:]]*//')
         prio=$(grep "^priority:" "$f" 2>/dev/null | head -1 | sed 's/^priority:[[:space:]]*//')
         date_filed=$(grep "^date:" "$f" 2>/dev/null | head -1 | sed 's/^date:[[:space:]]*//')
@@ -137,12 +137,15 @@ if not alerts:
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Recent worklog (last 3 entries) — avoid re-doing recent work
+# 3. Recent worklog tail — avoid re-doing recent work.
+#    Capped at 4000 bytes: worklog.md reached 437 KB and `tail -40` lines pulled
+#    38,459 of the script's 41,910 output chars into every cron prompt (48% of
+#    the whole request). Lines here are long bullet entries, so cap by bytes.
 # ---------------------------------------------------------------------------
 WORKLOG="${HERMES_HOME}/loops/worklog.md"
 if [ -f "$WORKLOG" ] && grep -q "^## 20" "$WORKLOG" 2>/dev/null; then
-    echo "RECENT WORKLOG (last 3 entries):"
-    awk '/^## 20/{c++} c>=1{print}' "$WORKLOG" | tail -40
+    echo "RECENT WORKLOG (last 4000 bytes):"
+    tail -c 4000 "$WORKLOG"
     echo ""
 fi
 
