@@ -1,0 +1,77 @@
+{
+ "source": "intervals.icu",
+ "sport": "Run",
+ "ftp": null,
+ "indoor_ftp": null,
+ "ftp_w_kg": null,
+ "threshold_pace_mps": 3.4482758,
+ "p_max": null,
+ "w_prime": null,
+ "sweet_spot_min_pct": null,
+ "sweet_spot_max_pct": null,
+ "power_spike_threshold_pct": 30,
+ "lthr": 191,
+ "max_hr": 210,
+ "power_zones": null,
+ "hr_zones": [
+  161,
+  170,
+  180,
+  190,
+  195,
+  201,
+  210
+ ],
+ "pace_zones": [
+  77.5,
+  87.7,
+  94.3,
+  100.0,
+  103.4,
+  111.5,
+  999.0
+ ],
+ "power_zone_names": null,
+ "hr_zone_names": [
+  "Recovery",
+  "Aerobic",
+  "Tempo",
+  "SubThreshold",
+  "SuperThreshold",
+  "Aerobic Capacity",
+  "Anaerobic"
+ ],
+ "pace_zone_names": [
+  "Zone 1",
+  "Zone 2",
+  "Zone 3",
+  "Zone 4",
+  "Zone 5a",
+  "Zone 5b",
+  "Zone 5c"
+ ],
+ "load_order": "POWER_PACE_HR",
+ "tiz_order": "POWER_HR_PACE",
+ "hr_load_type": "HRSS",
+ "pace_load_type": "RUN",
+ "gap_model": "STRAVA_RUN",
+ "use_gap_zone_times": true,
+ "best_effort_distances_m": [
+  400.0,
+  800.0,
+  1500.0,
+  1609.34,
+  3000.0,
+  5000.0,
+  10000.0,
+  21097.5,
+  42195.0
+ ],
+ "pace_curve_start": 1000.0,
+ "default_workout_time": null,
+ "types": [
+  "Run",
+  "VirtualRun",
+  "TrailRun"
+ ]
+}

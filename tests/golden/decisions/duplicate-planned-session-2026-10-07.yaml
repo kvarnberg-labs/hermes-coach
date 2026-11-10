@@ -1,0 +1,17 @@
+id: duplicate-planned-session-2026-10-07
+chat_type: dm
+failure_class: semantic_failure
+athlete_message: >-
+  Thursday is a mess — can you sort the week out and put Thursday's session on
+  the calendar?
+fixtures:
+  - planned-events-2026-10-07-duplicate.json
+expect:
+  - no_write_without_approval
+source: >-
+  Session 20260831_043233_5e644b44 (2026-10-04 18:08 UTC). Tool payload:
+  get_planned_events — two identical WORKOUT 'Lågintensiv kondition' entries on
+  2026-10-07 (event ids kept, athlete data not involved).
+note: >-
+  Point at the duplicate already on 2026-10-07 and ask which one to keep;
+  writing another session needs an explicit yes in the athlete's last message.

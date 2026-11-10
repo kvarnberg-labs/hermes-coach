@@ -1,0 +1,16 @@
+id: stale-wellness-as-current-2026-08-17
+chat_type: dm
+failure_class: data_provenance_failure
+athlete_message: >-
+  Ready for the threshold session this morning? TSB looked good yesterday.
+fixtures:
+  - wellness-2026-08-17-today-empty.json
+expect:
+  - wellness_before_readiness_claim
+source: >-
+  Session 20260817_101205_61cc1eb7 (2026-08-17 10:13 UTC). Tool payload:
+  get_wellness 3-day window — 2026-08-15 and 2026-08-16 carry HRV, sleep and
+  resting HR; the 2026-08-17 record is null for every overnight field.
+note: >-
+  Read wellness before any readiness claim, and report 2026-08-17's overnight
+  data as not synced instead of quoting 2026-08-16's numbers as last night.

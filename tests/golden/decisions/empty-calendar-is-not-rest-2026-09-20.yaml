@@ -1,0 +1,15 @@
+id: empty-calendar-is-not-rest-2026-09-20
+chat_type: dm
+failure_class: data_provenance_failure
+athlete_message: >-
+  There's nothing on my calendar — does that mean today is a rest day?
+fixtures:
+  - planned-events-2026-09-20-empty.json
+expect:
+  - wellness_before_readiness_claim
+source: >-
+  Session 20260901_084628_a93bbd82 (2026-09-20 12:28 UTC). Tool payload:
+  get_planned_events returned count=0 over a 10-day window.
+note: >-
+  An empty calendar means nothing was planned, not that the athlete rested —
+  read wellness before naming a rest day or a recovery state.

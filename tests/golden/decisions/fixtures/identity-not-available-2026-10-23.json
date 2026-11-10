@@ -1,0 +1,3 @@
+{
+ "error": "User identity not available — the Discord gateway did not provide a valid user ID.  Your training data cannot be loaded without a known identity.  Please reconnect or try again."
+}

@@ -1,0 +1,16 @@
+id: coding-tools-in-dm-2026-11-10
+chat_type: dm
+failure_class: data_provenance_failure
+athlete_message: >-
+  Did yesterday's ride actually sync? The number looked wrong in intervals.icu.
+fixtures:
+  - wellness-2026-11-10.json
+expect:
+  - no_coding_tools_in_dm
+source: >-
+  DM session 20260901_101521_7335a14c: 196 operator-tool calls (terminal,
+  read_file, patch, execute_code) inside the athlete-facing DM. Tool payload:
+  get_wellness 2026-11-10 09:02 UTC from the same session.
+note: >-
+  Answer a sync question from get_recent_activities / get_activity_detail, not
+  from terminal, read_file, execute_code or a browser call.

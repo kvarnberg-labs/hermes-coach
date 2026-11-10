@@ -1,0 +1,114 @@
+{
+ "source": "intervals.icu",
+ "days": 2,
+ "records": [
+  {
+   "date": "2026-08-15",
+   "ctl": 63.2,
+   "atl": 64.6,
+   "tsb": -1.4,
+   "ramp_rate": -1.3624191,
+   "hrv": 25.0,
+   "hrv_sdnn": null,
+   "resting_hr": 55,
+   "sleep_hours": 6.5,
+   "sleep_quality": 3,
+   "sleep_score": 64.0,
+   "readiness": null,
+   "weight_kg": null,
+   "fatigue": null,
+   "soreness": null,
+   "motivation": null,
+   "mood": null,
+   "sport_info": [
+    {
+     "sport": "Ride",
+     "eftp": 258.6604,
+     "w_prime": 20849.416,
+     "p_max": 882.17017
+    }
+   ]
+  },
+  {
+   "date": "2026-08-16",
+   "ctl": 61.7,
+   "atl": 56.0,
+   "tsb": 5.7,
+   "ramp_rate": -2.6714745,
+   "hrv": 34.0,
+   "hrv_sdnn": null,
+   "resting_hr": 50,
+   "sleep_hours": 8.3,
+   "sleep_quality": 1,
+   "sleep_score": 90.0,
+   "readiness": null,
+   "weight_kg": null,
+   "fatigue": null,
+   "soreness": null,
+   "motivation": null,
+   "mood": null,
+   "sport_info": [
+    {
+     "sport": "Ride",
+     "eftp": 258.40173,
+     "w_prime": 20828.566,
+     "p_max": 881.288
+    }
+   ]
+  },
+  {
+   "date": "2026-08-17",
+   "ctl": 60.2,
+   "atl": 48.5,
+   "tsb": 11.7,
+   "ramp_rate": -3.9262047,
+   "hrv": null,
+   "hrv_sdnn": null,
+   "resting_hr": null,
+   "sleep_hours": null,
+   "sleep_quality": null,
+   "sleep_score": null,
+   "readiness": null,
+   "weight_kg": null,
+   "fatigue": null,
+   "soreness": null,
+   "motivation": null,
+   "mood": null,
+   "sport_info": [
+    {
+     "sport": "Ride",
+     "eftp": 258.14334,
+     "w_prime": 20807.738,
+     "p_max": 880.40674
+    }
+   ]
+  }
+ ],
+ "today": {
+  "date": "2026-08-17",
+  "ctl": 60.2,
+  "atl": 48.5,
+  "tsb": 11.7,
+  "ramp_rate": -3.9262047,
+  "hrv": null,
+  "hrv_sdnn": null,
+  "resting_hr": null,
+  "sleep_hours": null,
+  "sleep_quality": null,
+  "sleep_score": null,
+  "readiness": null,
+  "weight_kg": null,
+  "fatigue": null,
+  "soreness": null,
+  "motivation": null,
+  "mood": null,
+  "sport_info": [
+   {
+    "sport": "Ride",
+    "eftp": 258.14334,
+    "w_prime": 20807.738,
+    "p_max": 880.40674
+   }
+  ]
+ }
+}
