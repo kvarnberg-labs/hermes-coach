@@ -1,0 +1,20 @@
+{
+ "case_id": "stale-numbers-from-history-2026-11-10",
+ "chat_type": "dm",
+ "synthetic": true,
+ "note": "SYNTHETIC FIXTURE — tests PREDICATE SEMANTICS (tool order and wording), not model behaviour. Hand-written for tests/test_decision_eval.py; it is not a recording of a session. Scenario: failing. The metric figures are the real 11:03 DM reply's; the figures themselves come from fixtures/wellness-2026-11-10.json, read in the 10:39 turn.",
+ "messages": [
+  {
+   "role": "user",
+   "tool": null,
+   "args": null,
+   "content": "Still going with sweet spot?"
+  },
+  {
+   "role": "assistant",
+   "tool": null,
+   "args": null,
+   "content": "Yes — TSB +10.2, HRV 80, RHR 50, sleep 8.5h, so you are fresh enough and CTL 34.4 gives room for it. Go with the 3x15 sweet spot as planned."
+  }
+ ]
+}
