@@ -5,6 +5,10 @@ athlete's session. Before 2026-10-15 a reference carried a registry of four
 athletes' Discord snowflakes, DM channel IDs and intervals.icu athlete IDs, so
 one athlete's chat could pull in another athlete's identifiers. Use the
 placeholders below in examples; real mappings live only on the PVC.
+
+A name next to a physiology value leaks the same way, so `tests/data/athlete_names.txt`
+names must not appear either - in shipped content or in the golden decision fixtures,
+which were pulled from the live DB.
 """
 
 from __future__ import annotations
@@ -22,6 +26,10 @@ SHIPPED = [
 # Discord snowflakes / channel IDs (17-20 digits) and intervals.icu athlete IDs.
 IDENTIFIER = re.compile(r"\b(\d{17,20}|i\d{6})\b")
 PLACEHOLDERS = {"123456789012345678", "i000000"}
+# Golden decision fixtures were exported from the live DB, so they carry the same risk.
+FIXTURES = [ROOT / "tests" / "golden" / "decisions"]
+NAMES_FILE = ROOT / "tests" / "data" / "athlete_names.txt"
+NAME_SUFFIXES = {".md", ".yaml", ".yml", ".json"}
 
 
 def _hits(text: str) -> set[str]:
@@ -44,3 +52,41 @@ def test_shipped_content_has_no_athlete_identifiers():
         and (hits := _hits(p.read_text(encoding="utf-8")))
     }
     assert not found, f"real identifiers in shipped content (use placeholders): {found}"
+
+
+def _denylisted_names() -> list[str]:
+    names = [
+        line.strip()
+        for line in NAMES_FILE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    assert names, f"{NAMES_FILE} lists no names, so the name scan would check nothing"
+    return names
+
+
+def _name_pattern(names: list[str]) -> re.Pattern[str]:
+    return re.compile(r"\b(" + "|".join(map(re.escape, names)) + r")\b", re.IGNORECASE)
+
+
+def test_denylist_file_parses_and_is_not_empty():
+    names = _denylisted_names()
+    assert all(name == name.lower() for name in names), names
+
+
+def test_name_pattern_matches_whole_words_only():
+    pattern = _name_pattern(["lars"])
+    assert pattern.search("Lars wrote the brief")
+    assert not pattern.search("Larsen: feet elevated or off floor")
+
+
+def test_shipped_content_and_decision_fixtures_have_no_athlete_names():
+    pattern = _name_pattern(_denylisted_names())
+    hits = [
+        f"{p.relative_to(ROOT)}:{n}: {m.group(0)}"
+        for base in SHIPPED + FIXTURES
+        for p in sorted(base.rglob("*"))
+        if p.is_file() and p.suffix in NAME_SUFFIXES
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+        if (m := pattern.search(line))
+    ]
+    assert not hits, f"athlete names in shipped content or decision fixtures: {hits}"
