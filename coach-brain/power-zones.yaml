@@ -1,7 +1,8 @@
 # Power & Heart Rate Training Zones
 #
 # Structured zone definitions for evidence-based workout prescription.
-# Sources: Coggan & Allen (2019), Seiler et al. (2013), Esteve-Lanao et al. (2007).
+# Sources: Coggan & Allen (2019), Seiler et al. (2013), Esteve-Lanao et al. (2007),
+# Friel (2018) for the LTHR field test.
 
 overview:
   description: >
@@ -44,7 +45,15 @@ heart_rate_zones:
     HR zones are the primary tool for athletes without a power meter, and a
     valuable cross-check for everyone.  HR lags power by 2–3 minutes — prescribe
     short intervals (< 5 min) by RPE, not HR.  Derive zones from LTHR (Lactate
-    Threshold Heart Rate), not max HR.
+    Threshold Heart Rate), not max HR.  LTHR is a measured value, not a modelled
+    one: take it from a field test or a sustained 20–30 min maximal effort
+    (Friel's 30-minute test uses the last 20 minutes' average; a 20-minute test
+    is corrected by about 5%), or adopt the platform's LTHR only when an effort
+    supports it.  Before turning a percentage into a bpm target, compare that
+    LTHR with the highest heart rate the athlete has actually held for 20–30 min
+    and cap the band at the measured value: a band derived from an unvalidated
+    LTHR can sit above every heart rate the athlete has produced, and they can
+    only discover that by failing the session.
   zones:
     Z1_recovery: "< 80% LTHR — conversational, very easy"
     Z2_endurance: "80–89% LTHR — can speak in full sentences"
@@ -71,4 +80,5 @@ coaching_notes:
   - "Zone distribution charts from intervals.icu reflect the FULL ride (warm-up, cooldown, rests)."
   - "TSB < −20: limit to Z1–Z2 only. TSB < −25: active recovery or rest."
   - "Masters (50+): Z2 ceiling drops to ~70% FTP. Z4 once/week max."
+  - "An LTHR with no sustained effort behind it is a model, not a measurement: when a prescribed bpm band is above anything the athlete has held for 20–30 min, the anchor is wrong, and a maximal effort that misses the target is that measurement speaking — re-anchor before the next session instead of repeating the band."
   - "Refer to coach-brain/training-philosophies.yaml for the full intensity_zones reference."
