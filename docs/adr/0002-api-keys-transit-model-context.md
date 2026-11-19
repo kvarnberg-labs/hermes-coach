@@ -51,6 +51,12 @@ Facts established during the 2026-09 audit:
 
 - The key's confidentiality rests on: the model provider's handling of
   prompts, the PVC's access control, and the gateway's transcript storage.
+- **Retention changed 2026-11-19.** The primary model moved from
+  `deepseek-v4.1-flash` (0-day) to `claude-haiku-5-5`, which retains requests
+  for **30 days** under Anthropic's data policies. Accepted by the operator on
+  the same date; the provider was not changed, so the rest of this ADR stands.
+  Re-check this bullet on every model change — 0-day and 30-day models sit in
+  the same catalog and differ by one config string.
 - Revisit this ADR if any of these change: multi-tenant deployment, a
   provider change, or the bot gaining channel (non-DM) surfaces.
 - Related hardening already merged alongside this ADR: key files documented

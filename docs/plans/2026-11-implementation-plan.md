@@ -92,14 +92,26 @@ sessions.
   guess.
 - Signals stay on the PVC; the PR body inlines the signal text instead of a
   second file in the PR (no CONTRACT boundary change).
-- **Model stays `deepseek-v4.1-flash`.** The catalog's `deepseek-v4-pro` is the
-  previous-generation V4-Pro: V4.1-Flash beats it on agentic tasks
-  (AutomationBench 54.8 vs 43.2, Terminal-Bench 3.0 30.0 vs 11.8), costs 4.4×
-  less, and has a 7.3× cheaper cache-read. It is also region-gated — 2026-08-12
-  (`fix/switch-model-off-deepseek`) records every request failing 403
-  RegionError. If a strong tier is ever wanted, `mimo-v2.6-pro` is the only
-  candidate with both the evidence (ExploitBench 47.9 vs 25.3) and acceptable
-  cache economics, and only once the eval can measure a difference.
+- **Model: `claude-haiku-5-5` (switched 2026-11-19, was `deepseek-v4.1-flash`).**
+  `deepseek-v4-pro` was rejected on evidence: it is the previous-generation
+  V4-Pro — V4.1-Flash beats it on agentic tasks (AutomationBench 54.8 vs 43.2,
+  Terminal-Bench 3.0 30.0 vs 11.8) — and it is region-gated (2026-08-12,
+  `fix/switch-model-off-deepseek`, every request 403 RegionError).
+  Why Haiku 5.5: Go's allowance is one pool with a per-model exchange rate
+  (`GET /inference/go/v1/models` → `go.monthly_usage`), so the real ceiling is
+  allowance share, not $/MTok — and cache-read price varies 67× across models,
+  which dominates a workload that re-sends a large stable prefix. At measured
+  volume Haiku lands at ~15% of its $15 allowance; the flagship tier does not
+  fit (`kimi-k3.1-pro` 137%, `qwen4-max` 69%). It is also the only candidate
+  with published measurements on the axes this bot fails on: SWE-Bench Pro
+  64.8, HLE-with-tools 57.4, OSWorld 72.4, HealthBench Pro 64.8, ProgramBench
+  82.0 (beats Sonnet 5.5's 79.7 on long-context agentic work), tool-use
+  prompt-injection ASR 4.0 %, over-refusal 0.17 %.
+  Accepted costs: 5× repricing above 100k tokens, and 30-day prompt retention
+  (was 0-day) — operator-approved 2026-11-19, recorded in ADR 0002.
+  Gate: `scripts/eval_decisions.py --live` on both models, compared on
+  `cases_that_can_fail` (7 of 13). If Haiku does not beat the incumbent there,
+  the next step is Go Plus + `kimi-k3.1-pro`, not another flash-tier model.
 
 ## Phase 5 — hygiene (done 2026-11-10)
 

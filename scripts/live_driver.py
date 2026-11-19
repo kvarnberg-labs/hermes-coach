@@ -12,7 +12,7 @@ prompt author's imagination, not the coach.
 Model config from env only, never argv (argv is visible in `ps`):
   HERMES_DRIVER_API_KEY    required; a missing key exits 3, the key is never echoed
   HERMES_DRIVER_BASE_URL   default https://opencode.ai/zen/go/v1
-  HERMES_DRIVER_MODEL      default deepseek-v4.1-flash
+  HERMES_DRIVER_MODEL      default claude-haiku-5-5
   HERMES_DRIVER_MAX_STEPS  default 8 tool-call rounds per case
 
     PYTHONPATH=plugins python scripts/eval_decisions.py --live \
@@ -29,7 +29,7 @@ import urllib.request
 from pathlib import Path
 
 DEFAULT_BASE_URL = "https://opencode.ai/zen/go/v1"
-DEFAULT_MODEL = "deepseek-v4.1-flash"
+DEFAULT_MODEL = "claude-haiku-5-5"
 FIXTURES_DIR = (Path(__file__).resolve().parent.parent
                 / "tests" / "golden" / "decisions" / "fixtures")
 

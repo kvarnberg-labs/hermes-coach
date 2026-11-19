@@ -33,7 +33,7 @@ other finding becomes an operator signal (Path S).
 ## Mandatory first steps (every run)
 
 0. **Verify model pin** — check **Model:** and **Provider:** lines in your system prompt.
-   - Current target: `gpt-5.6-luna` / `opencode-go`.
+   - Current target: `claude-haiku-5-5` / `opencode-go`.
    - If model is wrong, you cannot fix it from cron (`cronjob` tool not available).
      Log the finding and proceed with the audit anyway.
    - Do NOT re-pin cron jobs to a hardcoded model, and do NOT treat the global config model as "drift" — the operator sets it intentionally. A job with `model: null` inherits the global config (correct, not a bug).

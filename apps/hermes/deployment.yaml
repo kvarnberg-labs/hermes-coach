@@ -17,7 +17,7 @@ spec:
         app: hermes
       annotations:
         # Bump this string to force a rolling restart without changing config
-        hermes.kvarnberg.io/config-generation: "main-b6460f6-87bfe13962ed"
+        hermes.kvarnberg.io/config-generation: "main-model-switch-haiku-5-5"
     spec:
       serviceAccountName: hermes-autonomy
       imagePullSecrets:
@@ -52,11 +52,15 @@ spec:
               # OPENCODE_GO_BASE_URL env var wins at runtime (hermes-agent
               # runtime_provider #6039), so persisting it is a no-op.
 
-              # Auxiliary tasks use Flash model (cheap)
+              # Aux tasks stay on a chat-completions model (mimo) rather than
+              # the primary's messages API: one bad protocol breaks the primary
+              # or the aux, not both (2026-08-12 took down all nine at once).
+              # mimo-v2.5-pro was dropped from the gateway catalog (absent from
+              # /models on 2026-11-19 with LOG_LEVEL=WARNING, so it failed silently).
               for t in compression curator title_generation triage_specifier \
                        profile_describer approval mcp skills_hub web_extract vision; do
                 HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.provider opencode-go
-                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model mimo-v2.5-pro
+                HOME=/opt/data /opt/hermes/.venv/bin/hermes config set auxiliary.$t.model mimo-v2.6-pro
               done
 
               # Memory limits — enough for several user profiles

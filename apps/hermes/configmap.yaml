@@ -8,9 +8,14 @@ data:
   HERMES_GID: "10000"
 
   # Model provider — opencode-go (same as homelab)
-  # deepseek-v4.1-flash verified live on the opencode-go model catalog (2026-10-18).
+  # claude-haiku-5-5 verified live on the opencode-go model catalog (2026-11-19).
+  # Chosen on allowance economics + published evidence; see
+  # docs/plans/2026-11-implementation-plan.md Phase 4.
+  # NOTE: haiku is Anthropic-messages-native. Both /chat/completions and
+  # /messages are served under this same base URL, so Hermes routes to the
+  # right one; do not add a per-API base URL.
   HERMES_INFERENCE_PROVIDER: "opencode-go"
-  HERMES_INFERENCE_MODEL: "deepseek-v4.1-flash"
+  HERMES_INFERENCE_MODEL: "claude-haiku-5-5"
   HERMES_INFERENCE_BASE_URL: "https://opencode.ai/zen/go/v1"
   OPENCODE_GO_BASE_URL: "https://opencode.ai/zen/go/v1"
 

@@ -164,7 +164,7 @@ Isolated environment for autonomous tool development:
 |----------|---------|
 | `HERMES_HOME` | Data directory (`/opt/data`) |
 | `HERMES_INFERENCE_PROVIDER` | LLM provider (`opencode-go`) |
-| `HERMES_INFERENCE_MODEL` | Primary model (`gpt-5.6-luna`) |
+| `HERMES_INFERENCE_MODEL` | Primary model (`claude-haiku-5-5`) |
 | `OPENCODE_GO_BASE_URL` | opencode-go API endpoint (read at runtime; wins over persisted `model.base_url` — hermes-agent runtime_provider #6039) |
 | `API_SERVER_ENABLED` | Enable health probe endpoint |
 | `API_SERVER_PORT` | Health probe port (`8642`) |
